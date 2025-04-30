@@ -1,0 +1,25 @@
+stages:
+  - test
+
+image: python:3.13.3
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+
+before_script:
+  - python --version
+  - pip install -r server/requirements.txt
+  - pip install pytest pytest-cov
+
+server_tests:
+  stage: test
+  script:
+    - pytest --cov=server --cov-report=term-missing server/tests/
+  coverage: '/TOTAL\s+\d+\s+\d+\s+\d+\s+(\d+%)$/'
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
