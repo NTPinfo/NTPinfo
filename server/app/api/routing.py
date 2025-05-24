@@ -61,9 +61,9 @@ async def read_data_measurement(payload: MeasurementRequest, request: Request) -
     times = payload.measurements_no if payload.measurements_no else 0
     response = measure(server, client_ip, payload.jitter_flag, times)
     if response is not None:
-        result, jitter = response
+        result, jitter, other_server_ips = response
         return {
-            "measurement": get_format(result, jitter)
+            "measurement": get_format(result, jitter, other_server_ips)
         }
     else:
         return {

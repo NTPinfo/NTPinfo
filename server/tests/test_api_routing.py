@@ -43,8 +43,7 @@ def mock_measurement() -> NtpMeasurement:
             ntp_server_ip=IPv4Address("192.168.0.1"),
             ntp_server_name="pool.ntp.org",
             ntp_server_ref_parent_ip=None,
-            ref_name=None,
-            other_server_ips=None
+            ref_name=None
         ),
         timestamps=NtpTimestamps(
             client_sent_time=mock_precise(1),
@@ -137,7 +136,7 @@ def test_read_root():
 def test_read_data_measurement_success(mock_is_ip, mock_insert, mock_perform_measurement):
     mock_is_ip.return_value = None
     measurement = mock_measurement()
-    mock_perform_measurement.return_value = measurement
+    mock_perform_measurement.return_value = (measurement, ["83.25.24.10"])
 
     headers = {"X-Forwarded-For": "83.25.24.10"}
     response = client.post("/measurements/", json={"server": "pool.ntp.org", "jitter_flag": False}, headers=headers)
@@ -170,7 +169,7 @@ def test_read_data_measurement_missing_measurement_no(mock_is_ip, mock_insert, m
 def test_read_data_measurement_with_jitter(mock_jitter, mock_is_ip, mock_insert, mock_perform_measurement):
     mock_is_ip.return_value = None
     measurement = mock_measurement()
-    mock_perform_measurement.return_value = measurement
+    mock_perform_measurement.return_value = (measurement, ["83.25.24.10"])
     mock_jitter.return_value = 0.75
 
     headers = {"X-Forwarded-For": "83.25.24.10"}

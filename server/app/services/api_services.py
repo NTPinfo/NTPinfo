@@ -2,8 +2,7 @@ from ipaddress import IPv4Address, IPv6Address
 from typing import Any, Optional, Coroutine
 from server.app.utils.validate import ensure_utc, is_ip_address, parse_ip
 from server.app.utils.perform_measurements import perform_ntp_measurement_ip, perform_ntp_measurement_domain_name
-from server.app.utils.perform_measurements import human_date_to_ntp_precise_time, ntp_precise_time_to_human_date, \
-    calculate_jitter_from_measurements
+from server.app.utils.perform_measurements import human_date_to_ntp_precise_time, ntp_precise_time_to_human_date, calculate_jitter_from_measurements
 from datetime import datetime
 from server.app.db.connection import insert_measurement
 from server.app.db.connection import get_measurements_timestamps_ip, get_measurements_timestamps_dn
@@ -33,13 +32,14 @@ def ip_to_str(ip: Optional[IPv4Address | IPv6Address]) -> Optional[str]:
     return str(ip) if ip is not None else None
 
 
-def get_format(measurement: NtpMeasurement, jitter: float | None = None) -> dict[str, Any]:
+def get_format(measurement: NtpMeasurement, jitter: float|None=None, other_server_ips: list[str]|None=None) -> dict[str, Any]:
     """
     Format an NTP measurement object into a dictionary suitable for JSON serialization.
 
     Args:
         measurement (NtpMeasurement): An object representing the NTP measurement result.
         jitter (float|None): Optional jitter value if multiple measurements are performed.
+        other_server_ips (list[str]|None): An optional list of IP addresses if the measurement is performed on a domain name.
 
     Returns:
         dict: A dictionary containing key measurement details like this:
@@ -72,13 +72,11 @@ def get_format(measurement: NtpMeasurement, jitter: float | None = None) -> dict
         # if it has value = 3 => invalid
         "leap": measurement.extra_details.leap,
         # if the server has multiple IPs addresses we should show them to the client
-        "other_server_ips": measurement.server_info.other_server_ips,
+        "other_server_ips": other_server_ips,
         "jitter": jitter
     }
 
-
-def measure(server: str, client_ip: Optional[str] = None, jitter_flag: bool = False, measurement_no: int = 0) -> tuple[
-                                                                                                                     NtpMeasurement, float | None] | None:
+def measure(server: str, client_ip: Optional[str]=None, jitter_flag: bool=False, measurement_no: int=0) -> tuple[NtpMeasurement, float | None, list[str]|None] | None:
     """
     Performs an NTP measurement for a given server (IP or domain name) and stores the result in the database.
 
@@ -90,11 +88,11 @@ def measure(server: str, client_ip: Optional[str] = None, jitter_flag: bool = Fa
         server (str): A string representing either an IPv4/IPv6 address or a domain name.
         client_ip (Optional[str]): The client IP or None if it was not provided.
         jitter_flag (bool): Boolean representing whether the client wants to perform multiple measurements to get the jitter.
-        measurement_no (int): How many extra measurements to perform if the jitter_flag is True.
+        measurement_no (int) : How many extra measurements to perform if the jitter_flag is True.
 
     Returns:
-        tuple[NtpMeasurement, float | None] | None:
-            - A pair with a populated `NtpMeasurement` object if the measurement is successful, and the jitter if the jitter_flag is True.
+        tuple[NtpMeasurement, float | None, list[str]] | None:
+            - A pair with a populated `NtpMeasurement` object if the measurement is successful, the jitter is the jitter_flag is True, and a list of other server ip near the client ip.
             - `None` if an exception occurs during the measurement process.
 
     Notes:
@@ -108,18 +106,18 @@ def measure(server: str, client_ip: Optional[str] = None, jitter_flag: bool = Fa
             if m is not None:
                 insert_measurement(m, pool)
                 jitter = calculate_jitter_from_measurements(m, measurement_no) if jitter_flag else None
-                return m, jitter
-            # the measurement failed
+                return m, jitter, None  #we have only one server ip so "other_server_ips" is None
+            #the measurement failed
             print("The ntp server " + server + " is not responding.")
             return None
         else:
             ans = perform_ntp_measurement_domain_name(server, client_ip)
             if ans is not None:
-                m = ans
+                m, server_ips = ans
                 insert_measurement(m, pool)
 
                 jitter = calculate_jitter_from_measurements(m, measurement_no) if jitter_flag else None
-                return m, jitter
+                return m, jitter, server_ips
             print("The ntp server " + server + " is not responding.")
             return None
     except Exception as e:
@@ -168,7 +166,7 @@ def fetch_historic_data_with_timestamps(server: str, start: datetime, end: datet
     for entry in raw_data:
         vantage_point_ip = entry['vantage_point_ip']
         server_info = NtpServerInfo(entry['ntp_version'], entry['ntp_server_ip'], entry['ntp_server_name'],
-                                    entry['ntp_server_ref_parent_ip'], entry['ref_name'], None)
+                                    entry['ntp_server_ref_parent_ip'], entry['ref_name'])
         extra_details = NtpExtraDetails(PreciseTime(entry['root_delay'], entry['root_delay_prec']),
                                         PreciseTime(entry['ntp_last_sync_time'], entry['ntp_last_sync_time_prec']),
                                         0)

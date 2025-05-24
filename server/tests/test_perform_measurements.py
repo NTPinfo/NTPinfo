@@ -1,10 +1,9 @@
 from ipaddress import IPv6Address, IPv4Address, ip_address
 
 from server.app.utils.perform_measurements import *
-# import unittest
+#import unittest
 from unittest.mock import patch, MagicMock
 from server.app.models.PreciseTime import PreciseTime
-
 
 def make_mock_measurement(seconds_offset: int) -> NtpMeasurement:
     fake_measurement = MagicMock(spec=NtpMeasurement)
@@ -25,21 +24,19 @@ def make_mock_measurement(seconds_offset: int) -> NtpMeasurement:
 
 
 def test_ntp_precise_time_to_human_date():
-    t = PreciseTime(None, 12345)
-    assert ntp_precise_time_to_human_date(t) == ""
-    t2 = PreciseTime(3955513183, 623996928)
-    assert ntp_precise_time_to_human_date(t2) == "2025-05-06 09:39:43.145286 UTC"
-
+    t=PreciseTime(None,12345)
+    assert ntp_precise_time_to_human_date(t)==""
+    t2=PreciseTime(3955513183,623996928)
+    assert ntp_precise_time_to_human_date(t2)=="2025-05-06 09:39:43.145286 UTC"
 
 def test_ref_id_to_ip_or_name():
-    ip, name = ref_id_to_ip_or_name(1590075150, 2)
-    assert ip == IPv4Address('94.198.159.14')
+    ip,name=ref_id_to_ip_or_name(1590075150,2)
+    assert ip==IPv4Address('94.198.159.14')
     assert name is None
 
-    ip, name = ref_id_to_ip_or_name(1590075150, 2000)
+    ip,name=ref_id_to_ip_or_name(1590075150,2000)
     assert ip is None
     assert name is None
-
 
 @patch("server.app.utils.perform_measurements.socket.getaddrinfo")
 @patch("server.app.utils.perform_measurements.ntplib.NTPClient.request")
@@ -66,11 +63,11 @@ def test_perform_ntp_measurement_domain_name(mock_request, mock_getaddrinfo):
     mock_response.leap = 0
     mock_request.return_value = mock_response
 
-    result_tuple = perform_ntp_measurement_domain_name("mock.ntp.server", None)
+    result_tuple = perform_ntp_measurement_domain_name("mock.ntp.server",None)
 
     assert result_tuple is not None
-    result = result_tuple
-    assert result.server_info.other_server_ips == ["123.45.67.89"]
+    result,l = result_tuple
+    assert l == ["123.45.67.89"]
 
     assert result.server_info.ntp_version == 3
     assert result.server_info.ntp_server_ip == IPv4Address("123.45.67.89")
@@ -96,6 +93,7 @@ def test_perform_ntp_measurement_domain_name(mock_request, mock_getaddrinfo):
 
 @patch("server.app.utils.perform_measurements.ntplib.NTPClient.request")
 def test_perform_ntp_measurement_ip(mock_request):
+
     # Create a fake ntplib response
     mock_response = MagicMock()
     mock_response.ref_id = 1590075150
@@ -115,7 +113,7 @@ def test_perform_ntp_measurement_ip(mock_request):
     mock_response.leap = 0
     mock_request.return_value = mock_response
 
-    result = perform_ntp_measurement_ip("123.45.67.89", 3)
+    result = perform_ntp_measurement_ip("123.45.67.89",3)
 
     assert result is not None
 
@@ -140,9 +138,8 @@ def test_perform_ntp_measurement_ip(mock_request):
     assert result.extra_details.ntp_last_sync_time == PreciseTime(seconds=3948758383, fraction=858992640)
     assert result.extra_details.leap == 0
 
-    assert print_ntp_measurement(result) == True
-    assert print_ntp_measurement(23) == False
-
+    assert  print_ntp_measurement(result) == True
+    assert  print_ntp_measurement(23) == False
 
 @patch("server.app.utils.perform_measurements.perform_ntp_measurement_ip")
 def test_calculate_jitter_from_measurements(mock_perform):
@@ -158,16 +155,15 @@ def test_calculate_jitter_from_measurements(mock_perform):
     times = 4
     res = calculate_jitter_from_measurements(fake_initial_measurement, times)
 
-    offsets = [NtpCalculator.calculate_offset(fake_initial_measurement.timestamps)] + [
-        NtpCalculator.calculate_offset(m.timestamps) for m in other_measurements]
+    offsets = [NtpCalculator.calculate_offset(fake_initial_measurement.timestamps)] + [NtpCalculator.calculate_offset(m.timestamps) for m in other_measurements]
 
     expected = NtpCalculator.calculate_jitter(offsets)
 
     assert res == expected
     assert mock_perform.call_count == times
 
-
 @patch("server.app.utils.perform_measurements.perform_ntp_measurement_ip")
+
 def test_calculate_jitter_from_measurements_with_none(mock_perform):
     fake_initial_measurement = make_mock_measurement(1)
 
