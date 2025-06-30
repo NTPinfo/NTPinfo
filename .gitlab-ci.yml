@@ -1,165 +1,137 @@
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/user/application_security/secret_detection/pipeline/configure
+# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
+# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 stages:
-  - typecheck
-  - lint
-  - test
-  - docs
-
+- typecheck
+- lint
+- test
+- docs
 image: python:3.13.3
-
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   PYTHONPATH: "$CI_PROJECT_DIR"
-  #for container
   POSTGRES_DB: myapp_test
   POSTGRES_USER: test_user
   POSTGRES_PASSWORD: test_password
-
-  #for app
   DB_HOST: postgres
   DB_PORT: 5432
   DB_NAME: myapp_test
   DB_USER: test_user
   DB_PASSWORD: test_password
-
   DATABASE_URL: postgresql://test_user:test_password@postgres:5432/myapp_test
-
 cache:
   key:
     files:
-      - server/requirements.txt
-      - client/package-lock.json
+    - server/requirements.txt
+    - client/package-lock.json
   paths:
-    - .cache/pip
-    - .cache/wheels
-    - client/node_modules/
-
+  - ".cache/pip"
+  - ".cache/wheels"
+  - client/node_modules/
 before_script:
-  - python --version
-  - python -m venv venv
-  - source venv/bin/activate
-  - pip install --upgrade pip
-  - pip wheel --wheel-dir=.cache/wheels -r server/requirements.txt
-  - pip install --no-index --find-links=.cache/wheels -r server/requirements.txt
-
+- python --version
+- python -m venv venv
+- source venv/bin/activate
+- pip install --upgrade pip
+- pip wheel --wheel-dir=.cache/wheels -r server/requirements.txt
+- pip install --no-index --find-links=.cache/wheels -r server/requirements.txt
 typecheck:
   stage: typecheck
   script:
-    - source venv/bin/activate
-    - mypy
+  - source venv/bin/activate
+  - mypy
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
-# ------------------------------------- BACKEND JOBS -------------------------------
-
+  - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 server_lint:
   stage: lint
   script:
-    - source venv/bin/activate
-    - flake8 server/
+  - source venv/bin/activate
+  - flake8 server/
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
+  - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 services:
-  - name: postgres:15
-    alias: postgres
-
+- name: postgres:15
+  alias: postgres
 server_tests:
   stage: test
   script:
-    - source venv/bin/activate
-    - apt-get update && apt-get install -y postgresql-client
-    - until pg_isready -h postgres -p 5432; do echo "Waiting for postgres..."; sleep 1; done
-    - PGPASSWORD=test_password psql -h postgres -U test_user -d myapp_test -c "SELECT 1;"
-    - |
-      if [ ! -f .env ]; then
-        echo "token=$ripe_api_token" > .env
-        echo "email=$ripe_account_email" >> .env
-        echo ".env file created"
-      else
-        echo ".env file already exists, skipping creation"
-      fi
-    - pytest --cov=server --cov-report=term-missing server/tests/
-    - rm -f .env
-  coverage: '/TOTAL\s+\d+\s+\d+\s+\d+\s+(\d+%)$/'
+  - source venv/bin/activate
+  - apt-get update && apt-get install -y postgresql-client
+  - until pg_isready -h postgres -p 5432; do echo "Waiting for postgres..."; sleep
+    1; done
+  - PGPASSWORD=test_password psql -h postgres -U test_user -d myapp_test -c "SELECT
+    1;"
+  - |
+    if [ ! -f .env ]; then
+      echo "token=$ripe_api_token" > .env
+      echo "email=$ripe_account_email" >> .env
+      echo ".env file created"
+    else
+      echo ".env file already exists, skipping creation"
+    fi
+  - pytest --cov=server --cov-report=term-missing server/tests/
+  - rm -f .env
+  coverage: "/TOTAL\\s+\\d+\\s+\\d+\\s+\\d+\\s+(\\d+%)$/"
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
-# -------------------------------- FRONTEND JOBS  -------------------------------------------
-
+  - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 client_lint:
   stage: lint
   image: node:20
   before_script:
-    - cd client
-    - npm ci
+  - cd client
+  - npm ci
   script:
-    - npm run lint
+  - npm run lint
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
+  - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 client_tests:
   stage: test
   image: node:20
   before_script:
-    - cd client
-    - npm ci
-    - |
-      if [ ! -f .env ]; then
-        echo "VITE_SERVER_HOST_ADDRESS=http://127.0.0.1:8000" > .env
-        echo "VITE_STATUS_THRESHOLD=1000" >> .env
-        echo "VITE_CLIENT_HOST=127.0.0.1" >> .env 
-        echo "VITE_CLIENT_PORT=5173" >> .env
-        echo ".env file created"
-      else
-        echo ".env file already exists, skipping creation"
-      fi
+  - cd client
+  - npm ci
+  - "if [ ! -f .env ]; then\n  echo \"VITE_SERVER_HOST_ADDRESS=http://127.0.0.1:8000\"
+    > .env\n  echo \"VITE_STATUS_THRESHOLD=1000\" >> .env\n  echo \"VITE_CLIENT_HOST=127.0.0.1\"
+    >> .env \n  echo \"VITE_CLIENT_PORT=5173\" >> .env\n  echo \".env file created\"\nelse\n
+    \ echo \".env file already exists, skipping creation\"\nfi\n"
   script:
-    - npm run test
+  - npm run test
   artifacts:
     paths:
-      - client/coverage
+    - client/coverage
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-#build_docs:
-#  stage: docs
-#  script:
-#    - source venv/bin/activate
-#    - pip install sphinx sphinx-rtd-theme
-#    - cd docs
-#    - make html
-#  artifacts:
-#    paths:
-#      - docs/build/html
-#    expire_in: 1 week
-#  rules:
-#    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 build_docs:
   stage: docs
   script:
-    - source venv/bin/activate
-    - pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints sphinxcontrib-openapi
-    - cd docs
-    - make html
+  - source venv/bin/activate
+  - pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints sphinxcontrib-openapi
+  - cd docs
+  - make html
   artifacts:
     paths:
-      - docs/build/html
-  #    expire_in: 1 week
+    - docs/build/html
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
+  - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
 pages:
   stage: docs
-  needs: [ build_docs ]
+  needs:
+  - build_docs
   script:
-    - mv docs/build/html public
+  - mv docs/build/html public
   artifacts:
     paths:
-      - public
-    #    expire_in: 1 week
+    - public
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"
+include:
+- template: Security/SAST-IaC.latest.gitlab-ci.yml
