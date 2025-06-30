@@ -158,7 +158,12 @@ pages:
 
 include:
   - template: Security/SAST-IaC.latest.gitlab-ci.yml
+
 sast-iac:
+  script: $SAST_IAC_SCRIPT
+  stage: test
+  image: registry.gitlab.com/security-products/kics:latest
+  allow_failure: true
   rules:
     - exists:
         - docker-compose.yml
