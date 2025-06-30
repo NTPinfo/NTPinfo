@@ -158,6 +158,7 @@ pages:
 
 include:
   - template: Security/SAST-IaC.latest.gitlab-ci.yml
+  - template: Dependency-Scanning.gitlab-ci.yml
 
 sast-iac:
   script: $SAST_IAC_SCRIPT
@@ -169,3 +170,8 @@ sast-iac:
         - docker-compose.yml
         - k8s/*.yaml
         - .gitlab/terraform/*.tf
+
+dependency_scanning:
+  stage: test
+  variables:
+    CI_DEBUG_TRACE: "true"
