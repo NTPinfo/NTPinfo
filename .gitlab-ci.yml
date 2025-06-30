@@ -10,6 +10,8 @@ stages:
   - lint
   - test
   - docs
+  - security
+  - dependencies
 
 image: python:3.13.3
 
@@ -162,7 +164,7 @@ include:
 
 sast-iac:
   script: $SAST_IAC_SCRIPT
-  stage: test
+  stage: security
   image: registry.gitlab.com/security-products/kics:latest
   allow_failure: true
   rules:
@@ -172,6 +174,6 @@ sast-iac:
         - .gitlab/terraform/*.tf
 
 dependency_scanning:
-  stage: test
+  stage: dependencies
   variables:
     CI_DEBUG_TRACE: "true"
