@@ -13,8 +13,8 @@ function Header() {
             <nav className="navbar">
                 {/* <a href="#" aria-label="About">About</a> */}
                 <div className="img-and-text">
-                    <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository">Github</a>
-                    <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository">
+                    <a href="https://github.com/BotezatuHoria/NTPinfo" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository">Github</a>
+                    <a href="https://github.com/BotezatuHoria/NTPinfo" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository">
                         <img src={github} alt="GitHub Logo" />
                     </a>
                 </div>
