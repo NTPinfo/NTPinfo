@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Usage &mdash; NTPinfo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=82d09745" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="TypeScript Components" href="client.type.script.components.html" />
+    <link rel="prev" title="Global Types" href="client.global.types.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            NTPinfo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="modules.backend.html">Back-end component</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.frontend.html">Front-end component</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="client.getting.started.html">Client Setup and Running</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="client.html">Application modules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="client.global.types.html">Global Types</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">API Usage</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#api-hooks">API Hooks</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="client.type.script.components.html">TypeScript Components</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">NTPinfo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.frontend.html">Front-end component</a></li>
+          <li class="breadcrumb-item"><a href="client.html">Application modules</a></li>
+      <li class="breadcrumb-item active">API Usage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/client.api.usage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="api-usage">
+<h1>API Usage<a class="headerlink" href="#api-usage" title="Link to this heading"></a></h1>
+<p>There are currently <strong>5</strong> different API endpoints used by the front-end of the application.
+These can all be found in <code class="docutils literal notranslate"><span class="pre">client/src/hooks</span></code>.</p>
+<p>They all use <code class="docutils literal notranslate"><span class="pre">axios</span></code> for the requests, and each implements a different function.
+Helper functions for transforming data and the global types used can be found in <code class="docutils literal notranslate"><span class="pre">client/utils</span></code>.</p>
+<section id="api-hooks">
+<h2>API Hooks<a class="headerlink" href="#api-hooks" title="Link to this heading"></a></h2>
+<ol class="arabic">
+<li><p><strong>useFetchIPData</strong></p>
+<p>This hook provides the user’s query (IP or domain name) as a payload to the backend.</p>
+<p>It performs a <strong>POST</strong> request to the backend to measure the given NTP server.
+If the query is a domain name, the result includes all NTP servers measured from that domain name.
+If it’s an IP, only that specific NTP server is measured.</p>
+<p>It parses the JSON received using the method <code class="docutils literal notranslate"><span class="pre">transformJSONDataToNTPData</span></code>.</p>
+<p>It returns a <strong>5-tuple</strong>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Return value</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">data</span></code></p></td>
+<td><p>An array of NTP results</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">loading</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">boolean</span></code> indicating if the measurement is ongoing</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">error</span></code></p></td>
+<td><p>Error object if one occurred</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">httpStatus</span></code></p></td>
+<td><p>The HTTP status of the request</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fetchData</span></code></p></td>
+<td><p>A function to initiate the POST request</p></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p><strong>useFetchHistoricalIPData</strong></p>
+<p>This hook fetches data over a specific period for a given server.</p>
+<p>It performs a <strong>GET</strong> request to the backend. The server can be either an IP or domain name.
+Start and end times must be in ISO8601 format.</p>
+<p>It also uses <code class="docutils literal notranslate"><span class="pre">transformJSONDataToNTPData</span></code>.</p>
+<p>It returns a <strong>4-tuple</strong>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Return value</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">data</span></code></p></td>
+<td><p>An array of NTP results</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">loading</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">boolean</span></code> indicating if the fetch is ongoing</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">error</span></code></p></td>
+<td><p>Error object if one occurred</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fetchData</span></code></p></td>
+<td><p>A function to initiate the GET request</p></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p><strong>triggerRipeMeasurement</strong></p>
+<p>This hook sends a trigger to start a RIPE measurement.</p>
+<p>It performs a <strong>POST</strong> request to the backend with the server as payload.
+The backend responds with the measurement ID and the vantage point’s IP.</p>
+<p>It returns a <strong>4-tuple</strong>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Return value</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">data</span></code></p></td>
+<td><p>The response as a <code class="docutils literal notranslate"><span class="pre">RIPEResp</span></code> object</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">loading</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">boolean</span></code> indicating if the trigger is being processed</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">error</span></code></p></td>
+<td><p>Error object if one occurred</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fetchData</span></code></p></td>
+<td><p>A function to initiate the POST request</p></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p><strong>useFetchRipeData</strong></p>
+<p>This hook fetches RIPE measurement data via polling.</p>
+<p>RIPE sends results in parts, so polling is used to retrieve updates. If the RIPE measurement isn’t ready,
+the hook handles HTTP 405 and retries after a delay. The polling stops if:
+- An error occurs
+- Measurement completes
+- It times out
+- A new measurement begins</p>
+<p>It returns a <strong>3-tuple</strong>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Return value</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">result</span></code></p></td>
+<td><p>An array of RIPE results</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">status</span></code></p></td>
+<td><p>A status string: <code class="docutils literal notranslate"><span class="pre">&quot;pending&quot;</span> <span class="pre">|</span> <span class="pre">&quot;partial_results&quot;</span> <span class="pre">|</span> <span class="pre">&quot;complete&quot;</span>
+<span class="pre">|</span> <span class="pre">&quot;timeout&quot;</span> <span class="pre">|</span> <span class="pre">&quot;error&quot;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">error</span></code></p></td>
+<td><p>Error object if one occurred</p></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p><strong>useIpInfo</strong></p>
+<p>This hook fetches geolocation data for an IP without contacting the backend.</p>
+<p>It uses <code class="docutils literal notranslate"><span class="pre">ip-api</span></code> to retrieve coordinates and country code. Used for NTP servers and the vantage point.</p>
+<p>The result is stored in an <code class="docutils literal notranslate"><span class="pre">IpInfoData</span></code> object:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">coordinates</span></code>: a tuple <code class="docutils literal notranslate"><span class="pre">[number,</span> <span class="pre">number]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">country_code</span></code>: a <code class="docutils literal notranslate"><span class="pre">string</span></code></p></li>
+</ul>
+<p>Note: If the IP is private, <code class="docutils literal notranslate"><span class="pre">coordinates</span></code> will be <code class="docutils literal notranslate"><span class="pre">[undefined,</span> <span class="pre">undefined]</span></code>.</p>
+<p>It returns a <strong>5-tuple</strong>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Return value</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">data</span></code></p></td>
+<td><p>Geolocation data as <code class="docutils literal notranslate"><span class="pre">IpInfoData</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">loading</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">boolean</span></code> indicating if the fetch is ongoing</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">error</span></code></p></td>
+<td><p>Error object if one occurred</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">fetchData</span></code></p></td>
+<td><p>A function to initiate the GET request</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">clearIP</span></code></p></td>
+<td><p>A function to reset the internal state of <code class="docutils literal notranslate"><span class="pre">data</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="client.global.types.html" class="btn btn-neutral float-left" title="Global Types" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="client.type.script.components.html" class="btn btn-neutral float-right" title="TypeScript Components" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, TU Delft CSE 2000 Group 15d. Licensed under the MIT License.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

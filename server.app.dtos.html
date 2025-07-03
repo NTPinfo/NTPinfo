@@ -1,0 +1,632 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Transfer Objects &mdash; NTPinfo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=82d09745" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Database Models" href="server.app.models.html" />
+    <link rel="prev" title="Application Architecture" href="server.app.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            NTPinfo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.backend.html">Back-end component</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="server.getting.started.html">Server Setup and Running</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="server.html">Application modules</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="server.app.html">Application Architecture</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="server.app.html#package-overview">Package Overview</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="server.app.html#data-models-and-dtos">Data Models and DTOs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="server.app.html#api-routes">API Routes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="server.app.html#database-interaction">Database Interaction</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="server.infrastructure.html">Infrastructure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="server.services.utilities.html">Services and utilities</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.frontend.html">Front-end component</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">NTPinfo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.backend.html">Back-end component</a></li>
+          <li class="breadcrumb-item"><a href="server.html">Application modules</a></li>
+          <li class="breadcrumb-item"><a href="server.app.html">Application Architecture</a></li>
+      <li class="breadcrumb-item active">Data Transfer Objects</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/server.app.dtos.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="data-transfer-objects">
+<h1>Data Transfer Objects<a class="headerlink" href="#data-transfer-objects" title="Link to this heading"></a></h1>
+<section id="api-request-response-models">
+<h2>API Request/Response Models<a class="headerlink" href="#api-request-response-models" title="Link to this heading"></a></h2>
+<section id="measurementrequest">
+<h3>MeasurementRequest<a class="headerlink" href="#measurementrequest" title="Link to this heading"></a></h3>
+</section>
+<section id="ntpmeasurementresponse">
+<h3>NtpMeasurementResponse<a class="headerlink" href="#ntpmeasurementresponse" title="Link to this heading"></a></h3>
+</section>
+<section id="ripemeasurementresponse">
+<h3>RipeMeasurementResponse<a class="headerlink" href="#ripemeasurementresponse" title="Link to this heading"></a></h3>
+</section>
+<section id="ripemeasurementtriggerresponse">
+<h3>RipeMeasurementTriggerResponse<a class="headerlink" href="#ripemeasurementtriggerresponse" title="Link to this heading"></a></h3>
+</section>
+</section>
+<section id="core-data-models">
+<h2>Core Data Models<a class="headerlink" href="#core-data-models" title="Link to this heading"></a></h2>
+<section id="module-server.app.dtos.RipeMeasurement">
+<span id="ripemeasurement"></span><h3>RipeMeasurement<a class="headerlink" href="#module-server.app.dtos.RipeMeasurement" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurement.RipeMeasurement">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.RipeMeasurement.</span></span><span class="sig-name descname"><span class="pre">RipeMeasurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measurement_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntp_measurement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_to_result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/RipeMeasurement.html#RipeMeasurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.RipeMeasurement.RipeMeasurement" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents the complete set of information retrieved from a RipeMeasurement.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurement.RipeMeasurement.measurement_id">
+<span class="sig-name descname"><span class="pre">measurement_id</span></span><a class="headerlink" href="#server.app.dtos.RipeMeasurement.RipeMeasurement.measurement_id" title="Link to this definition"></a></dt>
+<dd><p>ID of the measurement from RIPE Atlas</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurement.RipeMeasurement.ntp_measurement">
+<span class="sig-name descname"><span class="pre">ntp_measurement</span></span><a class="headerlink" href="#server.app.dtos.RipeMeasurement.RipeMeasurement.ntp_measurement" title="Link to this definition"></a></dt>
+<dd><p>The NTP measurement data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#server.app.dtos.NtpMeasurement.NtpMeasurement" title="server.app.dtos.NtpMeasurement.NtpMeasurement">NtpMeasurement</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurement.RipeMeasurement.probe_data">
+<span class="sig-name descname"><span class="pre">probe_data</span></span><a class="headerlink" href="#server.app.dtos.RipeMeasurement.RipeMeasurement.probe_data" title="Link to this definition"></a></dt>
+<dd><p>Data related to the probe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#server.app.dtos.ProbeData.ProbeData" title="server.app.dtos.ProbeData.ProbeData">ProbeData</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurement.RipeMeasurement.time_to_result">
+<span class="sig-name descname"><span class="pre">time_to_result</span></span><a class="headerlink" href="#server.app.dtos.RipeMeasurement.RipeMeasurement.time_to_result" title="Link to this definition"></a></dt>
+<dd><p>The duration (seconds) it took to receive the result after the measurement was initiated</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurement.RipeMeasurement.ref_id">
+<span class="sig-name descname"><span class="pre">ref_id</span></span><a class="headerlink" href="#server.app.dtos.RipeMeasurement.RipeMeasurement.ref_id" title="Link to this definition"></a></dt>
+<dd><p>The reference ID of the server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-server.app.dtos.NtpMeasurement">
+<span id="ntpmeasurement"></span><h3>NtpMeasurement<a class="headerlink" href="#module-server.app.dtos.NtpMeasurement" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurement.NtpMeasurement">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.NtpMeasurement.</span></span><span class="sig-name descname"><span class="pre">NtpMeasurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vantage_point_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">main_details</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_details</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/NtpMeasurement.html#NtpMeasurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.NtpMeasurement.NtpMeasurement" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents the complete set of measurements for a given NTP server.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurement.NtpMeasurement.vantage_point_ip">
+<span class="sig-name descname"><span class="pre">vantage_point_ip</span></span><a class="headerlink" href="#server.app.dtos.NtpMeasurement.NtpMeasurement.vantage_point_ip" title="Link to this definition"></a></dt>
+<dd><p>IP address of the vantage point where measurement is being triggered</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>IPv4Address | IPv6Address | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurement.NtpMeasurement.server_info">
+<span class="sig-name descname"><span class="pre">server_info</span></span><a class="headerlink" href="#server.app.dtos.NtpMeasurement.NtpMeasurement.server_info" title="Link to this definition"></a></dt>
+<dd><p>Metadata about the NTP server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#server.app.dtos.NtpServerInfo.NtpServerInfo" title="server.app.dtos.NtpServerInfo.NtpServerInfo">NtpServerInfo</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurement.NtpMeasurement.timestamps">
+<span class="sig-name descname"><span class="pre">timestamps</span></span><a class="headerlink" href="#server.app.dtos.NtpMeasurement.NtpMeasurement.timestamps" title="Link to this definition"></a></dt>
+<dd><p>NTP timestamps from the exchange</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#server.app.dtos.NtpTimestamps.NtpTimestamps" title="server.app.dtos.NtpTimestamps.NtpTimestamps">NtpTimestamps</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurement.NtpMeasurement.main_details">
+<span class="sig-name descname"><span class="pre">main_details</span></span><a class="headerlink" href="#server.app.dtos.NtpMeasurement.NtpMeasurement.main_details" title="Link to this definition"></a></dt>
+<dd><p>Key metrics</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#server.app.dtos.NtpMainDetails.NtpMainDetails" title="server.app.dtos.NtpMainDetails.NtpMainDetails">NtpMainDetails</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurement.NtpMeasurement.extra_details">
+<span class="sig-name descname"><span class="pre">extra_details</span></span><a class="headerlink" href="#server.app.dtos.NtpMeasurement.NtpMeasurement.extra_details" title="Link to this definition"></a></dt>
+<dd><p>Additional fields</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#server.app.dtos.NtpExtraDetails.NtpExtraDetails" title="server.app.dtos.NtpExtraDetails.NtpExtraDetails">NtpExtraDetails</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-server.app.dtos.NtpServerInfo">
+<span id="ntpserverinfo"></span><h3>NtpServerInfo<a class="headerlink" href="#module-server.app.dtos.NtpServerInfo" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.NtpServerInfo.NtpServerInfo">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.NtpServerInfo.</span></span><span class="sig-name descname"><span class="pre">NtpServerInfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ntp_version</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntp_server_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntp_server_location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntp_server_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntp_server_ref_parent_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/NtpServerInfo.html#NtpServerInfo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.NtpServerInfo.NtpServerInfo" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents the relevant metadata of an NTP server.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpServerInfo.NtpServerInfo.ntp_version">
+<span class="sig-name descname"><span class="pre">ntp_version</span></span><a class="headerlink" href="#server.app.dtos.NtpServerInfo.NtpServerInfo.ntp_version" title="Link to this definition"></a></dt>
+<dd><p>The version of NTP the user chose to use (backwards compatible)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpServerInfo.NtpServerInfo.ntp_server_ip">
+<span class="sig-name descname"><span class="pre">ntp_server_ip</span></span><a class="headerlink" href="#server.app.dtos.NtpServerInfo.NtpServerInfo.ntp_server_ip" title="Link to this definition"></a></dt>
+<dd><p>The IP of the server, either in IPv4 or IPv6 format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>IPv4Address | IPv6Address | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpServerInfo.NtpServerInfo.ntp_server_name">
+<span class="sig-name descname"><span class="pre">ntp_server_name</span></span><a class="headerlink" href="#server.app.dtos.NtpServerInfo.NtpServerInfo.ntp_server_name" title="Link to this definition"></a></dt>
+<dd><p>The name of the server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpServerInfo.NtpServerInfo.ntp_server_ref_parent_ip">
+<span class="sig-name descname"><span class="pre">ntp_server_ref_parent_ip</span></span><a class="headerlink" href="#server.app.dtos.NtpServerInfo.NtpServerInfo.ntp_server_ref_parent_ip" title="Link to this definition"></a></dt>
+<dd><p>The IP of the parent server (it is None if it is a root server)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>IPv4Address | IPv6Address | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpServerInfo.NtpServerInfo.ref_name">
+<span class="sig-name descname"><span class="pre">ref_name</span></span><a class="headerlink" href="#server.app.dtos.NtpServerInfo.NtpServerInfo.ref_name" title="Link to this definition"></a></dt>
+<dd><p>The name of the parent (reference) server or None if we can only get the IP</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-server.app.dtos.NtpTimestamps">
+<span id="ntptimestamps"></span><h3>NtpTimestamps<a class="headerlink" href="#module-server.app.dtos.NtpTimestamps" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.NtpTimestamps.NtpTimestamps">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.NtpTimestamps.</span></span><span class="sig-name descname"><span class="pre">NtpTimestamps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_sent_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_recv_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_sent_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_recv_time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/NtpTimestamps.html#NtpTimestamps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.NtpTimestamps.NtpTimestamps" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The four key timestamps used in NTP (Network Time Protocol) exchange
+between a client and a server</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpTimestamps.NtpTimestamps.client_sent_time">
+<span class="sig-name descname"><span class="pre">client_sent_time</span></span><a class="headerlink" href="#server.app.dtos.NtpTimestamps.NtpTimestamps.client_sent_time" title="Link to this definition"></a></dt>
+<dd><p>Time when the request was sent by the client (t1)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime">PreciseTime</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpTimestamps.NtpTimestamps.server_recv_time">
+<span class="sig-name descname"><span class="pre">server_recv_time</span></span><a class="headerlink" href="#server.app.dtos.NtpTimestamps.NtpTimestamps.server_recv_time" title="Link to this definition"></a></dt>
+<dd><p>Time when the request was received by the server (t2)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime">PreciseTime</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpTimestamps.NtpTimestamps.server_sent_time">
+<span class="sig-name descname"><span class="pre">server_sent_time</span></span><a class="headerlink" href="#server.app.dtos.NtpTimestamps.NtpTimestamps.server_sent_time" title="Link to this definition"></a></dt>
+<dd><p>Time when the response was sent by the server (t3)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime">PreciseTime</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpTimestamps.NtpTimestamps.client_recv_time">
+<span class="sig-name descname"><span class="pre">client_recv_time</span></span><a class="headerlink" href="#server.app.dtos.NtpTimestamps.NtpTimestamps.client_recv_time" title="Link to this definition"></a></dt>
+<dd><p>Time when the response was received by the client (t4)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime">PreciseTime</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-server.app.dtos.NtpMainDetails">
+<span id="ntpmaindetails"></span><h3>NtpMainDetails<a class="headerlink" href="#module-server.app.dtos.NtpMainDetails" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMainDetails.NtpMainDetails">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.NtpMainDetails.</span></span><span class="sig-name descname"><span class="pre">NtpMainDetails</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stratum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reachability</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/NtpMainDetails.html#NtpMainDetails"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.NtpMainDetails.NtpMainDetails" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents the main measurements reported by an NTP server.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMainDetails.NtpMainDetails.offset">
+<span class="sig-name descname"><span class="pre">offset</span></span><a class="headerlink" href="#server.app.dtos.NtpMainDetails.NtpMainDetails.offset" title="Link to this definition"></a></dt>
+<dd><p>Clock offset between the client and server, in seconds</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMainDetails.NtpMainDetails.rtt">
+<span class="sig-name descname"><span class="pre">rtt</span></span><a class="headerlink" href="#server.app.dtos.NtpMainDetails.NtpMainDetails.rtt" title="Link to this definition"></a></dt>
+<dd><p>Round-trip delay for NTP packet exchange, in seconds</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMainDetails.NtpMainDetails.stratum">
+<span class="sig-name descname"><span class="pre">stratum</span></span><a class="headerlink" href="#server.app.dtos.NtpMainDetails.NtpMainDetails.stratum" title="Link to this definition"></a></dt>
+<dd><p>Stratum level of the serve</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMainDetails.NtpMainDetails.precision">
+<span class="sig-name descname"><span class="pre">precision</span></span><a class="headerlink" href="#server.app.dtos.NtpMainDetails.NtpMainDetails.precision" title="Link to this definition"></a></dt>
+<dd><p>Precision of the system clock of the server</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMainDetails.NtpMainDetails.reachability">
+<span class="sig-name descname"><span class="pre">reachability</span></span><a class="headerlink" href="#server.app.dtos.NtpMainDetails.NtpMainDetails.reachability" title="Link to this definition"></a></dt>
+<dd><p>Reachability register</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-server.app.dtos.NtpExtraDetails">
+<span id="ntpextradetails"></span><h3>NtpExtraDetails<a class="headerlink" href="#module-server.app.dtos.NtpExtraDetails" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.NtpExtraDetails.NtpExtraDetails">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.NtpExtraDetails.</span></span><span class="sig-name descname"><span class="pre">NtpExtraDetails</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_delay</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poll</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_dispersion</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntp_last_sync_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leap</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/NtpExtraDetails.html#NtpExtraDetails"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.NtpExtraDetails.NtpExtraDetails" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents additional measurements for a given NTP server.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpExtraDetails.NtpExtraDetails.root_delay">
+<span class="sig-name descname"><span class="pre">root_delay</span></span><a class="headerlink" href="#server.app.dtos.NtpExtraDetails.NtpExtraDetails.root_delay" title="Link to this definition"></a></dt>
+<dd><p>Total round-trip delay to the primary reference source</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime">PreciseTime</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpExtraDetails.NtpExtraDetails.poll">
+<span class="sig-name descname"><span class="pre">poll</span></span><a class="headerlink" href="#server.app.dtos.NtpExtraDetails.NtpExtraDetails.poll" title="Link to this definition"></a></dt>
+<dd><p>The poll interval (seconds) used by the probe during the measurement</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpExtraDetails.NtpExtraDetails.root_dispersion">
+<span class="sig-name descname"><span class="pre">root_dispersion</span></span><a class="headerlink" href="#server.app.dtos.NtpExtraDetails.NtpExtraDetails.root_dispersion" title="Link to this definition"></a></dt>
+<dd><p>An estimate (seconds) of the maximum error due to clock frequency stability</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime">PreciseTime</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpExtraDetails.NtpExtraDetails.ntp_last_sync_time">
+<span class="sig-name descname"><span class="pre">ntp_last_sync_time</span></span><a class="headerlink" href="#server.app.dtos.NtpExtraDetails.NtpExtraDetails.ntp_last_sync_time" title="Link to this definition"></a></dt>
+<dd><p>Last time the server was synchronized</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime">PreciseTime</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpExtraDetails.NtpExtraDetails.leap">
+<span class="sig-name descname"><span class="pre">leap</span></span><a class="headerlink" href="#server.app.dtos.NtpExtraDetails.NtpExtraDetails.leap" title="Link to this definition"></a></dt>
+<dd><p>2-bit leap indicator; A value of 3 (11 in binary) represents an unsynchronized clock</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-server.app.dtos.PreciseTime">
+<span id="precisetime"></span><h3>PreciseTime<a class="headerlink" href="#module-server.app.dtos.PreciseTime" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.PreciseTime.PreciseTime">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.PreciseTime.</span></span><span class="sig-name descname"><span class="pre">PreciseTime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seconds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/PreciseTime.html#PreciseTime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.PreciseTime.PreciseTime" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents a single NTP timestamp.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.PreciseTime.PreciseTime.seconds">
+<span class="sig-name descname"><span class="pre">seconds</span></span><a class="headerlink" href="#server.app.dtos.PreciseTime.PreciseTime.seconds" title="Link to this definition"></a></dt>
+<dd><p>The integer part of the timestamp (the first 32 bits).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.PreciseTime.PreciseTime.fraction">
+<span class="sig-name descname"><span class="pre">fraction</span></span><a class="headerlink" href="#server.app.dtos.PreciseTime.PreciseTime.fraction" title="Link to this definition"></a></dt>
+<dd><p>The fractional part of the timestamp (the last 32 bits).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-server.app.dtos.ProbeData">
+<span id="probedata"></span><h3>ProbeData<a class="headerlink" href="#module-server.app.dtos.ProbeData" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.ProbeData.ProbeData">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.ProbeData.</span></span><span class="sig-name descname"><span class="pre">ProbeData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probe_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe_addr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe_location</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/ProbeData.html#ProbeData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.ProbeData.ProbeData" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Contains identifying and location information about a RIPE Atlas probe.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.ProbeData.ProbeData.probe_id">
+<span class="sig-name descname"><span class="pre">probe_id</span></span><a class="headerlink" href="#server.app.dtos.ProbeData.ProbeData.probe_id" title="Link to this definition"></a></dt>
+<dd><p>The unique identifier of the probe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.ProbeData.ProbeData.probe_addr">
+<span class="sig-name descname"><span class="pre">probe_addr</span></span><a class="headerlink" href="#server.app.dtos.ProbeData.ProbeData.probe_addr" title="Link to this definition"></a></dt>
+<dd><p>The IPv4 and IPv6 addresses of the probe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[IPv4Address | None, IPv6Address | None]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.ProbeData.ProbeData.probe_location">
+<span class="sig-name descname"><span class="pre">probe_location</span></span><a class="headerlink" href="#server.app.dtos.ProbeData.ProbeData.probe_location" title="Link to this definition"></a></dt>
+<dd><p>Geographic location of the probe</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ProbeLocation | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.ProbeData.ServerLocation">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.ProbeData.</span></span><span class="sig-name descname"><span class="pre">ServerLocation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">country_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordinates</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/ProbeData.html#ServerLocation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.ProbeData.ServerLocation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents the geographical location of a RIPE Atlas probe.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.ProbeData.ServerLocation.country_code">
+<span class="sig-name descname"><span class="pre">country_code</span></span><a class="headerlink" href="#server.app.dtos.ProbeData.ServerLocation.country_code" title="Link to this definition"></a></dt>
+<dd><p>Two-letter ISO 3166-1 alpha-2 country code (e.g., ‘US’, ‘DE’) indicating
+the country where the probe is located</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.ProbeData.ServerLocation.coordinates">
+<span class="sig-name descname"><span class="pre">coordinates</span></span><a class="headerlink" href="#server.app.dtos.ProbeData.ServerLocation.coordinates" title="Link to this definition"></a></dt>
+<dd><p>The latitude and longitude of the probe’s physical location</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[float, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="server.app.html" class="btn btn-neutral float-left" title="Application Architecture" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="server.app.models.html" class="btn btn-neutral float-right" title="Database Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, TU Delft CSE 2000 Group 15d. Licensed under the MIT License.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,183 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Database Models &mdash; NTPinfo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=82d09745" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Root /" href="server.app.api.routing.html" />
+    <link rel="prev" title="Data Transfer Objects" href="server.app.dtos.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            NTPinfo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.backend.html">Back-end component</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="server.getting.started.html">Server Setup and Running</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="server.html">Application modules</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="server.app.html">Application Architecture</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="server.app.html#package-overview">Package Overview</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="server.app.html#data-models-and-dtos">Data Models and DTOs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="server.app.html#api-routes">API Routes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="server.app.html#database-interaction">Database Interaction</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="server.infrastructure.html">Infrastructure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="server.services.utilities.html">Services and utilities</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.frontend.html">Front-end component</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">NTPinfo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.backend.html">Back-end component</a></li>
+          <li class="breadcrumb-item"><a href="server.html">Application modules</a></li>
+          <li class="breadcrumb-item"><a href="server.app.html">Application Architecture</a></li>
+      <li class="breadcrumb-item active">Database Models</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/server.app.models.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="database-models">
+<h1>Database Models<a class="headerlink" href="#database-models" title="Link to this heading"></a></h1>
+<section id="base-model">
+<h2>Base model<a class="headerlink" href="#base-model" title="Link to this heading"></a></h2>
+</section>
+<section id="module-server.app.models.CustomError">
+<span id="all-custom-error-models-used"></span><h2>All custom error models used<a class="headerlink" href="#module-server.app.models.CustomError" title="Link to this heading"></a></h2>
+<dl class="py exception">
+<dt class="sig sig-object py" id="server.app.models.CustomError.DNSError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.models.CustomError.</span></span><span class="sig-name descname"><span class="pre">DNSError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'DNS</span> <span class="pre">error</span> <span class="pre">(domain</span> <span class="pre">name</span> <span class="pre">invalid)'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/models/CustomError.html#DNSError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.models.CustomError.DNSError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Exception raised when a DNS error occurs. For example when converting a domain name to IP addresses fails.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="server.app.models.CustomError.DatabaseInsertError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.models.CustomError.</span></span><span class="sig-name descname"><span class="pre">DatabaseInsertError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Failed</span> <span class="pre">to</span> <span class="pre">insert</span> <span class="pre">measurement</span> <span class="pre">into</span> <span class="pre">database'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/models/CustomError.html#DatabaseInsertError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.models.CustomError.DatabaseInsertError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Raised when a measurement fails to insert into the database.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="server.app.models.CustomError.InputError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.models.CustomError.</span></span><span class="sig-name descname"><span class="pre">InputError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Invalid</span> <span class="pre">input</span> <span class="pre">provided'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/models/CustomError.html#InputError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.models.CustomError.InputError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Exception raised when an input error occurs. For example when the input parameters of a method are invalid.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="server.app.models.CustomError.InvalidMeasurementDataError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.models.CustomError.</span></span><span class="sig-name descname"><span class="pre">InvalidMeasurementDataError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Invalid</span> <span class="pre">measurement</span> <span class="pre">data</span> <span class="pre">provided'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/models/CustomError.html#InvalidMeasurementDataError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.models.CustomError.InvalidMeasurementDataError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Raised when input data is invalid or incomplete for NtpMeasurement.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="server.app.models.CustomError.MeasurementQueryError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.models.CustomError.</span></span><span class="sig-name descname"><span class="pre">MeasurementQueryError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Failed</span> <span class="pre">to</span> <span class="pre">query</span> <span class="pre">measurement</span> <span class="pre">data'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/models/CustomError.html#MeasurementQueryError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.models.CustomError.MeasurementQueryError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Raised when querying the database for measurements fails.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="server.app.models.CustomError.RipeMeasurementError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.models.CustomError.</span></span><span class="sig-name descname"><span class="pre">RipeMeasurementError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Ripe</span> <span class="pre">measurement</span> <span class="pre">failed'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/models/CustomError.html#RipeMeasurementError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.models.CustomError.RipeMeasurementError" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Exception raised when a ripe measurement failed. For example when our server sends a bad request to RIPE Atlas.</p>
+</dd></dl>
+
+</section>
+<section id="measurement-model">
+<h2>Measurement model<a class="headerlink" href="#measurement-model" title="Link to this heading"></a></h2>
+</section>
+<section id="time-model">
+<h2>Time model<a class="headerlink" href="#time-model" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="server.app.dtos.html" class="btn btn-neutral float-left" title="Data Transfer Objects" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="server.app.api.routing.html" class="btn btn-neutral float-right" title="Root /" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, TU Delft CSE 2000 Group 15d. Licensed under the MIT License.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
