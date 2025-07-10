@@ -1,16 +1,19 @@
+import os
 import socket
 import struct
+import time
 
 import certifi
 from OpenSSL import SSL
 
+from app.utils.domain_name_to_ip import domain_name_to_ip_list
 
-def nts_ke_record2(type_id, critical, body=b""):
-    type_field = (1 << 15) | type_id if critical else type_id
-    # ">H" means big endian and ">HH" is also big endian, but you input 2 numbers
-    return struct.pack(">HH", type_field, len(body)) + body
 
-def perform_nts_key_exchange(server: str, timeout=5):
+# measuring an NTS server has 2 steps:
+# 1) Key Exchange -> get the cookies and basically the keys for a secure connection
+# 2) Encrypt the NTP request with the keys and measure it.
+
+def perform_nts_key_exchange(server: str):
     """
     This method tries to perform the Key Exchange (according to RFC8915) to this server.
     If it succeeds, then it means that this server is an NTS server.
@@ -22,6 +25,7 @@ def perform_nts_key_exchange(server: str, timeout=5):
     Returns:
         None if it fails
     """
+    nts_ke_timeout = 5
     context = SSL.Context(SSL.TLS_CLIENT_METHOD)
     context.set_verify(SSL.VERIFY_PEER, lambda conn, cert, errno, depth, ok: ok)
     context.load_verify_locations(cafile=certifi.where())
@@ -29,7 +33,7 @@ def perform_nts_key_exchange(server: str, timeout=5):
     context.set_alpn_protos([b"ntske/1"])
 
     # Create TCP socket and connect
-    sock = socket.create_connection((server, 4460), timeout=timeout)
+    sock = socket.create_connection((server, 4460), timeout=nts_ke_timeout)
     ssl_connection = SSL.Connection(context, sock)
     ssl_connection.set_connect_state()
     ssl_connection.set_tlsext_host_name(server.encode())
@@ -54,9 +58,9 @@ def perform_nts_key_exchange(server: str, timeout=5):
     }
     # prepare the request for Key Exchange.
     records = b"".join([
-        nts_ke_record2(1, True, struct.pack(">H", 0)),  # Protocol Negotiation, critical, NTP=0
-        nts_ke_record2(4, False, struct.pack(">H", 15)),  # AEAD algorithm list, AES-SIV-CMAC-256 (0x000f)
-        nts_ke_record2(0, True, b"")
+        build_nts_ke_record(1, True, struct.pack(">H", 0)),  # Protocol Negotiation, NTP=0
+        build_nts_ke_record(4, False, struct.pack(">H", 15)),  # AEAD algorithm list, AES-SIV-CMAC-256 (0x000f)
+        build_nts_ke_record(0, True, b"")  # End of Message
     ])
 
     ssl_connection.send(records)
@@ -88,25 +92,88 @@ def perform_nts_key_exchange(server: str, timeout=5):
         offset += body_len
         type_id = type_field & 0x7FFF  # ignore critical bit
 
-        # see table 4 from RFC8915
-        if type_id == 4 and body_len >= 2:  # AEAD
-            result["aead"] = struct.unpack(">H", body[:2])[0]
-        elif type_id == 5:  # new Cookies
-            result["cookies"].append(body)
-        elif type_id == 6:  # Alternate Server
-            result["alternative_server"] = body.decode(errors="ignore")
-        elif type_id == 7 and body_len >= 2:  # NTPv4 Port Negotiation
-            result["alternative_port"] = struct.unpack(">H", body[:2])[0]
+        # take the data from this record
+        result = handle_record(type_id, body, result)
+
     # get the client to server and server to client keys
     label = b"EXPORTER-network-time-security"
     result["c2s_key"] = ssl_connection.export_keying_material(label, 32, b'\x00')
     result["s2c_key"] = ssl_connection.export_keying_material(label, 32, b'\x01')
-    # print("c2s_key:", result["c2s_key"])
-    # print("s2c_key:", result["s2c_key"])
     ssl_connection.shutdown()
     ssl_connection.close()
     sock.close()
     return result
+
+def build_nts_ke_record(type_id: int, critical_bit_status: bool, body):
+    """
+    This method creates an NTS key exchange record with the specified type,
+    body and the critical bit status. Used in Key Exchange part.
+    """
+    type_field = (1 << 15) | type_id if critical_bit_status else type_id
+    # ">H" means big endian and ">HH" is also big endian, but you input 2 numbers
+    return struct.pack(">HH", type_field, len(body)) + body
+
+def handle_record(type_id, body, current_result):
+    """
+    Handle this record and add it to the result data. (We collect the data from this record)
+
+    Args:
+        type_id (int): The type of the record.
+        body (bytes): The body of the record.
+        current_result (dict): The current result, which we will update.
+
+    Returns:
+        dict: The updated result for Key Exchange.
+    """
+    # see table 4 from RFC8915 for more info
+    body_length = len(body)
+    if type_id == 4 and body_length >= 2:  # AEAD
+        current_result["aead"] = struct.unpack(">H", body[:2])[0]
+    elif type_id == 5:  # new Cookies
+        current_result["cookies"].append(body)
+    elif type_id == 6:  # Alternative Server
+        current_result["alternative_server"] = body.decode(errors="ignore")
+    elif type_id == 7 and body_length >= 2:  # NTPv4 Port Negotiation
+        current_result["alternative_port"] = struct.unpack(">H", body[:2])[0]
+    return current_result
+
+def pad4(data: bytes) -> bytes:
+    return data + b'\x00' * ((4 - len(data) % 4) % 4)
+
+def build_nts_measuring_request(keys):
+    # header part
+    t1 = time.time()
+    header = bytearray(48)
+    header[0] = (0<<6)|(4<<3)|3
+    # header[40:48] = to_ntp_ts(t1)
+    header = bytes(header)
+
+    # cookie and uid fields
+    cookie = keys['cookies'][0]
+    uid_field = pad4(struct.pack("!HH", 0x0104, 36) + os.urandom(32))
+    cookie_field = pad4(struct.pack("!HH", 0x0204, len(cookie) + 4) + cookie)
+    extension_fields = uid_field + cookie_field
+
+def perform_nts_measurement(server):
+    keys = perform_nts_key_exchange(server)
+    if keys['alternative_server'] is None:
+        keys['alternative_server']=server
+    if keys['alternative_port'] is None:
+        keys['alternative_port']=123
+
+    request = build_nts_measuring_request(keys)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.settimeout(5)
+    # get IP address
+    server_ip = domain_name_to_ip_list(server,None,4)[0]
+    sock.sendto(request, (server_ip, keys['alternative_port']))
+    try:
+        resp, _ = sock.recvfrom(2048)
+        return resp, time.time()
+    finally:
+        sock.close()
+
 
 # a list of known NTS servers according to https://github.com/jauderho/nts-servers
 nts_servers=[
