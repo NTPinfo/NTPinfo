@@ -1,10 +1,11 @@
 [![Docs](https://img.shields.io/badge/Docs-Live-blue)](https://ntpinfo.github.io/NTPinfo/)
 
-### **Group 15d**
-
 # Are your time servers on time?
 
 ## Active Internet Measurements to evaluate time servers.
+
+## About this project
+This project was developed by Group 15d as part of the **CSE2000 Software Project** course at the **Faculty of Electrical Engineering, Mathematics and Computer Science (EWI)**, **Delft University of Technology (TU Delft)**, as part of the **BSc Computer Science and Engineering** program.
 
 <p align="center">
   <img src="assets/NtpInfoLogo.png" alt="Project Logo" style="width:100%; max-width:100%;"/>
@@ -71,34 +72,26 @@ To set up and run the back-end server, follow these steps:
         .\venv\Scripts\activate
         ```
 
-
 2. **Install and prepare PostgreSQL database**
 
-   2.1. Go to: https://www.enterprisedb.com/downloads/postgres-postgresql-downloads and select the version of PostgreSQL
-   you want to install.
+   2.1 Install PostgreSQL according to your operating system.
 
-   2.2. Go to download file location
-   Double click the `.exe` file  
-   Follow through the installation process and keep track of:
-
-    - where you installed it
-    - the superuser (usually `postgres`)
-    - the port (usually `5432`)
-    - the password (**you should remember this one**)
-
-   2.3. `pgAdmin` should automatically be installed, so accept to install it when prompted.
-
-   2.4. Restart your computer.
-
-   2.5. `pgAdmin` should be in your system if you followed the installation correctly.  
-   Open it, click on **Server** and put in your password if necessary.
-
-   2.6. Right click on **Databases**, click **Create** and create an empty database, preferably named
-   `"measurements"`.  
-   Tables will be handled once you run the back-end server, so do not worry about them right now.
+   👉 You can download it from the official site: https://www.postgresql.org/download/
+   
+   2.2 Make sure the PostgreSQL service is running.
+   
+   2.3 Create a database (recommended name: `measurements`)
+   
+   2.4 Keep track of:
+    - **Username** (e.g., `postgres`)
+    - **Password**
+    - **Port** (default: `5432`)
+   
+   2.5 You can use tools like `psql` or GUI tools such as **pgAdmin** to manage your database.
+   > The necessary tables will be created automatically when running the server.
 
 
-3. **Create a `.env` file** in the `root` directory with your accounts credentials in the following format:
+4. **Create a `.env` file** in the `root` directory with your accounts credentials in the following format:
 
     ```dotenv
     # needed for back-end (server)
