@@ -266,7 +266,9 @@ def client_ip_fetch(request: Request, wanted_ip_type: int) -> str | None:
          HTTPException: 503: If neither the client's IP from headers/request nor the fallback server IP can be successfully resolved.
     """
     try:
-        client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client is not None else None)
+        client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else None)
+        if client_ip:
+            client_ip = client_ip.split(',')[0].strip()
         # if it is None or if it is private (a private IP is useless for us) or invalid
         if client_ip is None or is_private_ip(client_ip) or is_ip_address(client_ip) is None:
             client_ip = ip_to_str(get_server_ip(wanted_ip_type))
