@@ -2,11 +2,14 @@
 
 # Load variables from .env
 if [ -f .env ]; then
-  export $(grep -v '^#' .env | xargs)
+  set -a
+  . .env
+  set +a
 else
   echo "Missing .env file!"
   exit 1
 fi
+
 
 TARGET_DIR="./server"
 CONFIG_FILE="./server/server_config.yaml"
@@ -40,6 +43,18 @@ download_anycast_db() {
 
 download_and_extract() {
   DB_NAME=$1
+  TARGET_FILE="${TARGET_DIR}/${DB_NAME}.mmdb"
+  if [ -f "$TARGET_FILE" ]; then
+    if find "$TARGET_FILE" -mmin -1380 | grep -q .; then
+      echo "${DB_NAME}.mmdb is less than 24 hours old. Skipping download."
+      return 0
+    else
+      echo "${DB_NAME}.mmdb is older than 24 hours. Updating..."
+    fi
+  else
+    echo "${DB_NAME}.mmdb does not exist. Downloading..."
+  fi
+
   echo "Downloading ${DB_NAME}..."
   curl -O -J -L -u "$ACCOUNT_ID:$LICENSE_KEY" "https://download.maxmind.com/geoip/databases/${DB_NAME}/download?suffix=tar.gz"
 
@@ -62,6 +77,7 @@ download_and_extract() {
   rm -r "$EXTRACTED_DIR"
 
   echo "${DB_NAME}.mmdb update complete!"
+  touch "${TARGET_DIR}/${DB_NAME}.mmdb"
 }
 
 download_anycast_db "anycast-v4-prefixes.txt" "$URL_V4"
