@@ -1,0 +1,538 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>server.app.api.routing &mdash; NTPinfo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=82d09745" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            NTPinfo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.backend.html">Back-end component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.frontend.html">Front-end component</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NTPinfo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">server.app.api.routing</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for server.app.api.routing</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Depends</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTMLResponse</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONResponse</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTMLResponse</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.load_config_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_rate_limit_per_client_ip</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.RipeMeasurementResponse</span><span class="w"> </span><span class="kn">import</span> <span class="n">RipeResult</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpMeasurementResponse</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeasurementResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.RipeMeasurementTriggerResponse</span><span class="w"> </span><span class="kn">import</span> <span class="n">RipeMeasurementTriggerResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.location_resolver</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_country_for_ip</span><span class="p">,</span> <span class="n">get_coordinates_for_ip</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.ip_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">client_ip_fetch</span><span class="p">,</span> <span class="n">get_server_ip_if_possible</span><span class="p">,</span> <span class="n">get_server_ip</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.models.CustomError</span><span class="w"> </span><span class="kn">import</span> <span class="n">DNSError</span><span class="p">,</span> <span class="n">MeasurementQueryError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.ip_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">ip_to_str</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.models.CustomError</span><span class="w"> </span><span class="kn">import</span> <span class="n">InputError</span><span class="p">,</span> <span class="n">RipeMeasurementError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.db_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.services.api_services</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_ripe_data</span><span class="p">,</span> <span class="n">override_desired_ip_type_if_input_is_ip</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.services.api_services</span><span class="w"> </span><span class="kn">import</span> <span class="n">perform_ripe_measurement</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.rate_limiter</span><span class="w"> </span><span class="kn">import</span> <span class="n">limiter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.MeasurementRequest</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeasurementRequest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.services.api_services</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_format</span><span class="p">,</span> <span class="n">measure</span><span class="p">,</span> <span class="n">fetch_historic_data_with_timestamps</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="read_root">
+<a class="viewcode-back" href="../../../../server.app.api.routing.html#server.app.api.routing.read_root">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">HTMLResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_root</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Root endpoint for basic service health check.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: A simple HTML welcome message.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    &lt;html&gt;</span>
+<span class="s2">        &lt;head&gt;</span>
+<span class="s2">            &lt;title&gt;NTPInfo API&lt;/title&gt;</span>
+<span class="s2">        &lt;/head&gt;</span>
+<span class="s2">        &lt;body&gt;</span>
+<span class="s2">            &lt;h1&gt;Welcome to the NTPInfo API&lt;/h1&gt;</span>
+<span class="s2">            &lt;p&gt;This API powers the NTPInfo platform, offering real-time metrics collection related to Network Time Protocol (NTP) analysis.&lt;/p&gt;</span>
+<span class="s2">            &lt;p&gt;See the &lt;a href=&#39;/api/docs&#39;&gt;interactive docs&lt;/a&gt; or &lt;a href=&#39;/api/redoc&#39;&gt;ReDoc&lt;/a&gt; for more info.&lt;/p&gt;</span>
+<span class="s2">        &lt;/body&gt;</span>
+<span class="s2">    &lt;/html&gt;</span>
+<span class="s2">    &quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="read_data_measurement">
+<a class="viewcode-back" href="../../../../server.app.api.routing.html#server.app.api.routing.read_data_measurement">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">&quot;/measurements/&quot;</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;Perform a live NTP measurement&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Compute a live NTP synchronization measurement for a specified server.</span>
+
+<span class="s2">- Accepts an IP or domain name.</span>
+<span class="s2">- Returns data about the measurement</span>
+<span class="s2">- Limited to 5 requests per second.</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">MeasurementResponse</span><span class="p">,</span>
+    <span class="n">responses</span><span class="o">=</span><span class="p">{</span>
+        <span class="mi">200</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Measurement successfully initiated&quot;</span><span class="p">},</span>
+        <span class="mi">400</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Invalid server address&quot;</span><span class="p">},</span>
+        <span class="mi">422</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Domain resolution failed&quot;</span><span class="p">},</span>
+        <span class="mi">500</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Internal server error&quot;</span><span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">get_rate_limit_per_client_ip</span><span class="p">())</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">read_data_measurement</span><span class="p">(</span><span class="n">payload</span><span class="p">:</span> <span class="n">MeasurementRequest</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
+                                <span class="n">session</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute a live NTP measurement for a given server (IP or domain).</span>
+
+<span class="sd">    This endpoint receives a JSON payload containing the server to be measured.</span>
+<span class="sd">    It uses the `measure()` function to perform the NTP synchronization measurement,</span>
+<span class="sd">    and formats the result using `get_format()`. User can choose whether they want to measure IPv4 of IPv6,</span>
+<span class="sd">    but this will take effect only for domain names. If user inputs an IP, we will measure the type of that IP.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        payload (MeasurementRequest):</span>
+<span class="sd">            A Pydantic model containing:</span>
+<span class="sd">                - server (str): IP address (IPv4/IPv6) or domain name of the NTP server.</span>
+<span class="sd">                - ipv6_measurement (bool): True if the type of IPs that we want to measure is IPv6. False otherwise.</span>
+<span class="sd">        request (Request): The Request object that gives you the IP of the client.</span>
+<span class="sd">        session (Session): The currently active database session.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        JSONResponse: A json response containing a list of formatted measurements under &quot;measurements&quot;.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        HTTPException: 400 - If the `server` field is empty or no response.</span>
+<span class="sd">        HTTPException: 422 - If the server cannot perform the desired IP type (IPv4 or IPv6) measurements,</span>
+<span class="sd">              or if the domain name could not be resolved.</span>
+<span class="sd">        HTTPException: 503 - If we could not get client IP address or our server&#39;s IP address.</span>
+<span class="sd">        HTTPException: 500 - If an unexpected server error occurs.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - This endpoint is also limited to &lt;`see config file`&gt; to prevent abuse and reduce server load.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">server</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">server</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">server</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Either &#39;ip&#39; or &#39;dn&#39; must be provided.&quot;</span><span class="p">)</span>
+
+    <span class="n">wanted_ip_type</span> <span class="o">=</span> <span class="mi">6</span> <span class="k">if</span> <span class="n">payload</span><span class="o">.</span><span class="n">ipv6_measurement</span> <span class="k">else</span> <span class="mi">4</span>
+    <span class="c1"># Override it if we received an IP, not a domain name:</span>
+    <span class="c1"># In case the input is an IP and not a domain name, then &quot;wanted_ip_type&quot; will be ignored and the IP type of the IP will be used.</span>
+    <span class="n">wanted_ip_type</span> <span class="o">=</span> <span class="n">override_desired_ip_type_if_input_is_ip</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">)</span>
+
+    <span class="c1"># for IPv6 measurements, we need to communicate using IPv6. (we need to have the same protocol as the target)</span>
+    <span class="n">this_server_ip_strict</span> <span class="o">=</span> <span class="n">get_server_ip</span><span class="p">(</span><span class="n">wanted_ip_type</span><span class="p">)</span>  <span class="c1"># strict means we want exactly this type</span>
+    <span class="k">if</span> <span class="n">this_server_ip_strict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># which means we cannot perform this type of NTP measurements from our server</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">,</span>
+                            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Our server cannot perform IPv</span><span class="si">{</span><span class="n">wanted_ip_type</span><span class="si">}</span><span class="s2"> measurements currently. Try the other IP type.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># get the client IP (the same type as wanted_ip_type)</span>
+    <span class="n">client_ip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">client_ip_fetch</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="o">=</span><span class="n">wanted_ip_type</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">measure</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">response</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">new_format</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+                <span class="n">result</span><span class="p">,</span> <span class="n">jitter</span><span class="p">,</span> <span class="n">nr_jitter_measurements</span> <span class="o">=</span> <span class="n">r</span>
+                <span class="n">new_format</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_format</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">jitter</span><span class="p">,</span> <span class="n">nr_jitter_measurements</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                <span class="n">content</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;measurement&quot;</span><span class="p">:</span> <span class="n">new_format</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Server is not reachable.&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">HTTPException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">e</span>
+    <span class="k">except</span> <span class="n">DNSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Domain name is invalid or cannot be resolved.&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Server error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="read_historic_data_time">
+<a class="viewcode-back" href="../../../../server.app.api.routing.html#server.app.api.routing.read_historic_data_time">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">&quot;/measurements/history/&quot;</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;Retrieve historic NTP measurements&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Fetch historic NTP measurement data for a given server over a specified time range.</span>
+
+<span class="s2">- Accepts a server IP or domain name.</span>
+<span class="s2">- Filters data between `start` and `end` timestamps (UTC).</span>
+<span class="s2">- Rejects queries with invalid or future timestamps.</span>
+<span class="s2">- Limited to 5 requests per second.</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">MeasurementResponse</span><span class="p">,</span>
+    <span class="n">responses</span><span class="o">=</span><span class="p">{</span>
+        <span class="mi">200</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Successful retrieval of historic measurements&quot;</span><span class="p">},</span>
+        <span class="mi">400</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Invalid parameters or malformed datetime values&quot;</span><span class="p">},</span>
+        <span class="mi">500</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Server error or database access issue&quot;</span><span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">get_rate_limit_per_client_ip</span><span class="p">())</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">read_historic_data_time</span><span class="p">(</span><span class="n">server</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                                  <span class="n">start</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
+                                  <span class="n">session</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieve historic NTP measurements for a given server and optional time range.</span>
+
+<span class="sd">    This endpoint fetches past measurement data for the specified server using the</span>
+<span class="sd">    `fetch_historic_data_with_timestamps()` function. It can optionally filter results</span>
+<span class="sd">    based on a time range (start and end datetime).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        server (str): IP address or domain name of the NTP server.</span>
+<span class="sd">        start (datetime, optional): Start timestamp for data filtering.</span>
+<span class="sd">        end (datetime, optional): End timestamp for data filtering.</span>
+<span class="sd">        request (Request): Request object for making the limiter work.</span>
+<span class="sd">        session (Session): The currently active database session.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        JSONResponse: A json response containing a list of formatted measurements under &quot;measurements&quot;.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        HTTPException: 400 - If `server` parameter is empty, or the start and end dates are badly formatted (e.g., `start &gt;= end`, `end` in future).</span>
+<span class="sd">        HTTPException: 500 - If there&#39;s an internal server error, such as a database access issue (`MeasurementQueryError`) or any other unexpected server-side exception.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - This endpoint is also limited to &lt;`see config file`&gt; to prevent abuse and reduce server load.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">server</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Either &#39;ip&#39; or &#39;domain name&#39; must be provided&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">start</span> <span class="o">&gt;=</span> <span class="n">end</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;&#39;start&#39; must be earlier than &#39;end&#39;&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">end</span> <span class="o">&gt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;&#39;end&#39; cannot be in the future&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">fetch_historic_data_with_timestamps</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">session</span><span class="p">)</span>
+        <span class="n">formatted_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">get_format</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">nr_jitter_measurements</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">result</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+            <span class="n">content</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;measurements&quot;</span><span class="p">:</span> <span class="n">formatted_results</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">MeasurementQueryError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;There was an error with accessing the database: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Sever error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="trigger_ripe_measurement">
+<a class="viewcode-back" href="../../../../server.app.api.routing.html#server.app.api.routing.trigger_ripe_measurement">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">&quot;/measurements/ripe/trigger/&quot;</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;Trigger a RIPE Atlas NTP measurement&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Initiate a RIPE Atlas NTP measurement for the specified server.</span>
+
+<span class="s2">- Accepts an IP address or domain name via the request payload.</span>
+<span class="s2">- Returns a measurement ID and vantage point metadata.</span>
+<span class="s2">- Limited to 5 requests per second.</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">RipeMeasurementTriggerResponse</span><span class="p">,</span>
+    <span class="n">responses</span><span class="o">=</span><span class="p">{</span>
+        <span class="mi">200</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Measurement successfully initiated&quot;</span><span class="p">},</span>
+        <span class="mi">400</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Invalid input parameters&quot;</span><span class="p">},</span>
+        <span class="mi">502</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;RIPE Atlas measurement failed after initiation&quot;</span><span class="p">},</span>
+        <span class="mi">503</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Failed to retrieve client or server IP&quot;</span><span class="p">},</span>
+        <span class="mi">500</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Internal server error&quot;</span><span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">get_rate_limit_per_client_ip</span><span class="p">())</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">trigger_ripe_measurement</span><span class="p">(</span><span class="n">payload</span><span class="p">:</span> <span class="n">MeasurementRequest</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Trigger a RIPE Atlas NTP measurement for a specified server.</span>
+
+<span class="sd">    This endpoint initiates a RIPE Atlas measurement for the given NTP server</span>
+<span class="sd">    (IP address or domain name) provided in the payload. Once the measurement</span>
+<span class="sd">    is triggered, it returns a measurement ID which can later be used to fetch</span>
+<span class="sd">    the result using the `/measurements/ripe/{measurement_id}` endpoint.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        payload (MeasurementRequest):</span>
+<span class="sd">            A Pydantic model that includes:</span>
+<span class="sd">                - server (str): The IP address or domain name of the target server.</span>
+<span class="sd">                - ipv6_measurement (bool): True if the type of IPs that we want to measure is IPv6. False otherwise.</span>
+<span class="sd">        request (Request): The FastAPI request object, used to extract the client IP address.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        JSONResponse: A json response containing:</span>
+<span class="sd">            - measurement_id (str): The ID of the triggered RIPE measurement.</span>
+<span class="sd">            - status (str): Status message (&quot;started&quot;).</span>
+<span class="sd">            - message (str): Instructions on how to retrieve the result.</span>
+<span class="sd">            - ip_list (list[str]): List of ips for ntp server.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        HTTPException: 400 - If the `server` field is invalid.</span>
+<span class="sd">        HTTPException: 500 - If the RIPE measurement could not be initiated.</span>
+<span class="sd">        HTTPException: 502 - If the RIPE measurement was initiated but failed.</span>
+<span class="sd">        HTTPException: 503 - If we could not get client IP address or our server&#39;s IP address.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - This endpoint is also limited to &lt;`see config file`&gt; to prevent abuse and reduce server load.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">server</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">server</span>
+    <span class="n">wanted_ip_type</span> <span class="o">=</span> <span class="mi">6</span> <span class="k">if</span> <span class="n">payload</span><span class="o">.</span><span class="n">ipv6_measurement</span> <span class="k">else</span> <span class="mi">4</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">server</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Either &#39;ip&#39; or &#39;dn&#39; must be provided&quot;</span><span class="p">)</span>
+
+    <span class="n">client_ip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">client_ip_fetch</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="o">=</span><span class="n">wanted_ip_type</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;client IP is: &quot;</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">measurement_id</span> <span class="o">=</span> <span class="n">perform_ripe_measurement</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="n">client_ip</span><span class="o">=</span><span class="n">client_ip</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="o">=</span><span class="n">wanted_ip_type</span><span class="p">)</span>
+        <span class="n">this_server_ip</span> <span class="o">=</span> <span class="n">get_server_ip_if_possible</span><span class="p">(</span><span class="n">wanted_ip_type</span><span class="p">)</span>  <span class="c1"># this does not affect the measurement</span>
+        <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+            <span class="n">content</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;measurement_id&quot;</span><span class="p">:</span> <span class="n">measurement_id</span><span class="p">,</span>
+                <span class="s2">&quot;vantage_point_ip&quot;</span><span class="p">:</span> <span class="n">ip_to_str</span><span class="p">(</span><span class="n">this_server_ip</span><span class="p">),</span>
+                <span class="s2">&quot;vantage_point_location&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;country_code&quot;</span><span class="p">:</span> <span class="n">get_country_for_ip</span><span class="p">(</span><span class="n">ip_to_str</span><span class="p">(</span><span class="n">this_server_ip</span><span class="p">)),</span>
+                    <span class="s2">&quot;coordinates&quot;</span><span class="p">:</span> <span class="n">get_coordinates_for_ip</span><span class="p">(</span><span class="n">ip_to_str</span><span class="p">(</span><span class="n">this_server_ip</span><span class="p">))</span>
+                <span class="p">},</span>
+                <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;started&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;You can fetch the result at /measurements/ripe/</span><span class="si">{measurement_id}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">InputError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+                            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Input parameter is invalid. Failed to initiate measurement: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">RipeMeasurementError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">502</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Ripe measurement initiated, but it failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Failed to initiate measurement: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_ripe_measurement_result">
+<a class="viewcode-back" href="../../../../server.app.api.routing.html#server.app.api.routing.get_ripe_measurement_result">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">&quot;/measurements/ripe/</span><span class="si">{measurement_id}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;Fetch RIPE Atlas measurement results&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Retrieve the result of a previously triggered RIPE Atlas NTP measurement.</span>
+
+<span class="s2">- Accepts a RIPE Atlas `measurement_id` as a path parameter.</span>
+<span class="s2">- Returns full results if the measurement is complete.</span>
+<span class="s2">- Returns partial results if some probes are still pending.</span>
+<span class="s2">- Informs the client if results are not ready yet.</span>
+<span class="s2">- Limited to 5 requests per second.</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">RipeResult</span><span class="p">,</span>
+    <span class="n">responses</span><span class="o">=</span><span class="p">{</span>
+        <span class="mi">200</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Measurement complete&quot;</span><span class="p">},</span>
+        <span class="mi">202</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Measurement still being processed&quot;</span><span class="p">},</span>
+        <span class="mi">206</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Partial results available&quot;</span><span class="p">},</span>
+        <span class="mi">405</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;RIPE API error&quot;</span><span class="p">},</span>
+        <span class="mi">504</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Timeout or incomplete probe data&quot;</span><span class="p">},</span>
+        <span class="mi">500</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Internal server error&quot;</span><span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">get_rate_limit_per_client_ip</span><span class="p">())</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_ripe_measurement_result</span><span class="p">(</span><span class="n">measurement_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieve the results of a previously triggered RIPE Atlas measurement.</span>
+
+<span class="sd">    This endpoint checks the RIPE Atlas API for a given measurement ID. It determines</span>
+<span class="sd">    if the measurement is complete (all probes responded, or measurement was stopped by RIPE Atlas) and returns</span>
+<span class="sd">    the data accordingly. If the results are not yet ready, it informs the client</span>
+<span class="sd">    that the measurement is still pending, or that partial results have been returned.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        measurement_id (str): The ID of the RIPE measurement to fetch.</span>
+<span class="sd">        request (Request): The FastAPI Request object (used for rate limiting).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        JSONResponse: A JSON-formatted HTTP response containing the measurement status and results:</span>
+
+<span class="sd">            - If the measurement is complete (HTTP 200):</span>
+
+<span class="sd">              .. code-block:: json</span>
+
+<span class="sd">                 {</span>
+<span class="sd">                     &quot;status&quot;: &quot;complete&quot;,</span>
+<span class="sd">                     &quot;message&quot;: &quot;Measurement has been completed.&quot;,</span>
+<span class="sd">                     &quot;results&quot;: &quot;&lt;ripe_data&gt;&quot;</span>
+<span class="sd">                 }</span>
+
+<span class="sd">            - If the measurement is still in progress with partial data (HTTP 206):</span>
+
+<span class="sd">              .. code-block:: json</span>
+
+<span class="sd">                 {</span>
+<span class="sd">                     &quot;status&quot;: &quot;partial_results&quot;,</span>
+<span class="sd">                     &quot;message&quot;: &quot;Measurement is still in progress. These are partial results.&quot;,</span>
+<span class="sd">                     &quot;results&quot;: &quot;&lt;ripe_data&gt;&quot;</span>
+<span class="sd">                 }</span>
+
+<span class="sd">            - If the measurement has not produced results yet (HTTP 202):</span>
+
+<span class="sd">              .. code-block:: text</span>
+
+<span class="sd">                 &quot;Measurement is still being processed.&quot;</span>
+
+<span class="sd">            - If the probe responses are incomplete and likely timed out (HTTP 504):</span>
+
+<span class="sd">              .. code-block:: json</span>
+
+<span class="sd">                 {</span>
+<span class="sd">                     &quot;status&quot;: &quot;timeout&quot;,</span>
+<span class="sd">                     &quot;message&quot;: &quot;RIPE data likely completed but incomplete probe responses.&quot;</span>
+<span class="sd">                 }</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        HTTPException: 405 - If the RIPE API request fails (e.g., network or service error).</span>
+<span class="sd">        HTTPException: 500 - If an unexpected internal error occurs during processing.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - A measurement is considered &quot;complete&quot; only when all requested probes have responded.</span>
+<span class="sd">        - The endpoint is rate-limited to &lt;`see config file`&gt; to prevent abuse and manage system load.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ripe_measurement_result</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">fetch_ripe_data</span><span class="p">(</span><span class="n">measurement_id</span><span class="o">=</span><span class="n">measurement_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ripe_measurement_result</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">202</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="s2">&quot;Measurement is still being processed.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;Complete&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                <span class="n">content</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;complete&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Measurement has been completed.&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;results&quot;</span><span class="p">:</span> <span class="n">ripe_measurement_result</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;Ongoing&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="mi">206</span><span class="p">,</span>
+                <span class="n">content</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;partial_results&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Measurement is still in progress. These are partial results.&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;results&quot;</span><span class="p">:</span> <span class="n">ripe_measurement_result</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">504</span><span class="p">,</span>
+            <span class="n">content</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;timeout&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;RIPE data likely completed but incomplete probe responses.&quot;</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">RipeMeasurementError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">405</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;RIPE call failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">. Try again later!&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Sever error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, TU Delft CSE 2000 Group 15d. Licensed under the MIT License.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

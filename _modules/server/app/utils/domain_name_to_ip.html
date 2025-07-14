@@ -1,0 +1,314 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>server.app.utils.domain_name_to_ip &mdash; NTPinfo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=82d09745" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            NTPinfo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.backend.html">Back-end component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.frontend.html">Front-end component</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NTPinfo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">server.app.utils.domain_name_to_ip</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for server.app.utils.domain_name_to_ip</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">socket</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dns.message</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dns.query</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dns.edns</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dns.rdatatype</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.models.CustomError</span><span class="w"> </span><span class="kn">import</span> <span class="n">DNSError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.ip_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ip_family</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.load_config_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_edns_default_servers</span><span class="p">,</span> <span class="n">get_mask_ipv6</span><span class="p">,</span> <span class="n">get_mask_ipv4</span><span class="p">,</span> <span class="n">get_edns_timeout_s</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.validate</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_valid_domain_name</span>
+
+
+<div class="viewcode-block" id="domain_name_to_ip_list">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.domain_name_to_ip.domain_name_to_ip_list">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">domain_name_to_ip_list</span><span class="p">(</span><span class="n">ntp_server_domain_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">wanted_ip_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method handles the case when client IP is None and uses our server as the default IP.</span>
+<span class="sd">    It will return the list of IP addresses that are close to the client.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ntp_server_domain_name (str): NTP server domain name.</span>
+<span class="sd">        client_ip (Optional[str]): Client IP address.</span>
+<span class="sd">        wanted_ip_type (int): The IP type of the resulting IPs that we want. (IPv4 or IPv6).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list[str]: List of IP addresses that are close to the client or to the server if client IP is None</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        DNSError: If the domain name is invalid, or it was impossible to find some IP addresses.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">domain_ips</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">client_ip</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># if we do not have the client_ip available, use this server as a &quot;client ip&quot;</span>
+        <span class="n">domain_ips</span> <span class="o">=</span> <span class="n">domain_name_to_ip_default</span><span class="p">(</span><span class="n">ntp_server_domain_name</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">domain_ips</span> <span class="o">=</span> <span class="n">domain_name_to_ip_close_to_client</span><span class="p">(</span><span class="n">ntp_server_domain_name</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">)</span>
+
+    <span class="c1"># if the domain name is invalid or []</span>
+    <span class="k">if</span> <span class="n">domain_ips</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">domain_ips</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DNSError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find any IP address for </span><span class="si">{</span><span class="n">ntp_server_domain_name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">domain_ips</span></div>
+
+
+<div class="viewcode-block" id="domain_name_to_ip_default">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.domain_name_to_ip.domain_name_to_ip_default">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">domain_name_to_ip_default</span><span class="p">(</span><span class="n">domain_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    It uses the DNS of this server to obtain the ip addresses of the domain name.</span>
+<span class="sd">    This method is useful if you want IPs close to this server, or you do not care about the location of the IPs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        domain_name(str): The NTP server domain name.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Optional[list[str]]: A list of IPs of the domain name or None if the domain name is not valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid_domain_name</span><span class="p">(</span><span class="n">domain_name</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">getaddrinfo</span><span class="p">(</span><span class="n">domain_name</span><span class="p">,</span> <span class="mi">123</span><span class="p">,</span> <span class="n">proto</span><span class="o">=</span><span class="n">socket</span><span class="o">.</span><span class="n">IPPROTO_UDP</span><span class="p">)</span>
+        <span class="n">ips</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">4</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">results</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">ips</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in domain name to ip default: &quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="domain_name_to_ip_close_to_client">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.domain_name_to_ip.domain_name_to_ip_close_to_client">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">domain_name_to_ip_close_to_client</span><span class="p">(</span><span class="n">domain_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                                                    <span class="n">resolvers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_edns_default_servers</span><span class="p">(),</span>
+                                                    <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method tries to obtain the ip addresses of the domain name from some popular DNS servers (resolvers)</span>
+<span class="sd">    that have (or may have) the ability to get an IP close to the client. It uses EDNS queries to get the IPs</span>
+<span class="sd">    and in case the queries return a domain name, this method recursively tries to solve them. It uses &quot;depth&quot;</span>
+<span class="sd">    and &quot;max_depth&quot; to prevent infinite loops in redirecting.</span>
+
+<span class="sd">    It is important to note that multiple servers may share the same IP address. So, some countries may use the</span>
+<span class="sd">    same IP for the same domain name. You can check this using https://www.whatsmydns.net/. This also provides</span>
+<span class="sd">    insights in the cases where we receive CNAME responses.</span>
+
+
+<span class="sd">    If the name is not a domain name, it will return an empty list.</span>
+<span class="sd">    If the EDNS query does not return a CNAME, depth and max_depth would not be used.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        domain_name(str): The domain name.</span>
+<span class="sd">        client_ip(str): The client IP.</span>
+<span class="sd">        wanted_ip_type(int): The IP type of the resulting IPs that we want.</span>
+<span class="sd">        resolvers(list): A list of popular DNS resolvers that are ECS-capable.</span>
+<span class="sd">        depth(int): The depth of the EDNS query if it returns a CNAME. (It is recommended to set this to 0.)</span>
+<span class="sd">        max_depth(int): The maximum depth of the EDNS query. (It is recommended to set this to 2 or 3 to prevent long delay.)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Optional[list[str]]: A list of IPs of the domain name or None if the domain name is not valid.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        Exception: If the client IP is invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid_domain_name</span><span class="p">(</span><span class="n">domain_name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">ip_family</span> <span class="o">=</span> <span class="n">get_ip_family</span><span class="p">(</span><span class="n">client_ip</span><span class="p">)</span> <span class="c1"># may throw an exception if the client IP is invalid</span>
+    <span class="n">mask</span><span class="p">:</span> <span class="nb">int</span> <span class="c1"># The DNS MASK for client IP. (how many bits of the ip)</span>
+    <span class="k">if</span> <span class="n">ip_family</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">get_mask_ipv6</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">get_mask_ipv4</span><span class="p">()</span>
+
+    <span class="n">ips</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># create a EDNS client subnet, which will be used to tell a close DNS server to the client</span>
+        <span class="n">ecs</span> <span class="o">=</span> <span class="n">dns</span><span class="o">.</span><span class="n">edns</span><span class="o">.</span><span class="n">ECSOption</span><span class="p">(</span><span class="n">address</span><span class="o">=</span><span class="n">client_ip</span><span class="p">,</span> <span class="n">srclen</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="n">scopelen</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># we try for all resolvers because some of them may not accept some domain names</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">resolvers</span><span class="p">:</span>
+            <span class="c1"># stop if we already found some IP addresses. Remove this &quot;if&quot; if you want to get more IPs</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ips</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">perform_edns_query</span><span class="p">(</span><span class="n">domain_name</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">ecs</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="o">=</span><span class="n">wanted_ip_type</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">response</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="c1"># collect the IPs or search further if we found a CNAME</span>
+            <span class="n">ips</span> <span class="o">=</span> <span class="n">ips</span> <span class="o">+</span> <span class="n">edns_response_to_ips</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">,</span> <span class="n">resolvers</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in domain name to ip close to client: &quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1">#remove duplicates</span>
+    <span class="n">ips</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ips</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ips</span></div>
+
+
+
+<div class="viewcode-block" id="perform_edns_query">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.domain_name_to_ip.perform_edns_query">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">perform_edns_query</span><span class="p">(</span><span class="n">domain_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">resolver_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ecs</span><span class="p">:</span> <span class="n">dns</span><span class="o">.</span><span class="n">edns</span><span class="o">.</span><span class="n">ECSOption</span><span class="p">,</span>
+                       <span class="n">wanted_ip_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span><span class="o">|</span><span class="nb">int</span> <span class="o">=</span> <span class="n">get_edns_timeout_s</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">dns</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">Message</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method performs a EDNS query against the domain name using the resolver as</span>
+<span class="sd">    the DNS IP and returns the response.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">         domain_name(str): The domain name.</span>
+<span class="sd">         resolver_name(str): The resolver name.</span>
+<span class="sd">         ecs(dns.edns.ECSOption): The EDNS query option. It contains information about the client IP.</span>
+<span class="sd">         wanted_ip_type(int): The IP type of the EDNS query. (4 or 6)</span>
+<span class="sd">         timeout(float|int): The timeout for the EDNS query.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Optional[dns.message.Message]: The response from the EDNS query.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># prepare to ask the DNS</span>
+    <span class="k">if</span> <span class="n">wanted_ip_type</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">dns</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">make_query</span><span class="p">(</span><span class="n">domain_name</span><span class="p">,</span> <span class="n">dns</span><span class="o">.</span><span class="n">rdatatype</span><span class="o">.</span><span class="n">A</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">dns</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">make_query</span><span class="p">(</span><span class="n">domain_name</span><span class="p">,</span> <span class="n">dns</span><span class="o">.</span><span class="n">rdatatype</span><span class="o">.</span><span class="n">AAAA</span><span class="p">)</span>
+    <span class="n">query</span><span class="o">.</span><span class="n">use_edns</span><span class="p">(</span><span class="n">edns</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">[</span><span class="n">ecs</span><span class="p">])</span>
+    <span class="c1"># try with udp and if it fails try with tcp</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">dns</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">udp</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">resolver_name</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">dns</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">tcp</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">resolver_name</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+
+<div class="viewcode-block" id="edns_response_to_ips">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.domain_name_to_ip.edns_response_to_ips">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">edns_response_to_ips</span><span class="p">(</span><span class="n">response</span><span class="p">:</span> <span class="n">dns</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">Message</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                         <span class="n">resolvers</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method takes the IPs from the response. In case the response has a CNAME, it will</span>
+<span class="sd">    recursively try to get an IP from that CNAME. In the worst case, it will be redirected &quot;max_depth&quot; times.</span>
+<span class="sd">    This parameter is useful for preventing an infinite loop in redirecting.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        response(dns.message.Message): The response from the EDNS query.</span>
+<span class="sd">        client_ip(str): The client IP.</span>
+<span class="sd">        wanted_ip_type(int): The IP type of the resulting IPs that we want.</span>
+<span class="sd">        resolvers(list): A list of popular DNS resolvers that are ECS-capable. They are used in the CNAME case.</span>
+<span class="sd">        depth(int): The depth of the EDNS query.</span>
+<span class="sd">        max_depth(int): The maximum depth of the EDNS query.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list(str): A list of IPs taken from the response.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ips</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ans</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">answer</span><span class="p">:</span>
+        <span class="c1"># take into consideration IPv4,IPv6 and CNAME (which redirects to another domain name)</span>
+        <span class="k">if</span> <span class="n">ans</span><span class="o">.</span><span class="n">rdtype</span> <span class="ow">in</span> <span class="p">(</span><span class="n">dns</span><span class="o">.</span><span class="n">rdatatype</span><span class="o">.</span><span class="n">A</span><span class="p">,</span> <span class="n">dns</span><span class="o">.</span><span class="n">rdatatype</span><span class="o">.</span><span class="n">AAAA</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ans</span><span class="o">.</span><span class="n">items</span><span class="p">:</span>
+                <span class="n">ips</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">address</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ans</span><span class="o">.</span><span class="n">rdtype</span> <span class="o">==</span> <span class="n">dns</span><span class="o">.</span><span class="n">rdatatype</span><span class="o">.</span><span class="n">CNAME</span><span class="p">:</span>
+                <span class="c1"># there is at most 1 CNAME</span>
+                <span class="n">next_domain_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">ans</span><span class="o">.</span><span class="n">items</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;redirecting to &quot;</span><span class="p">,</span> <span class="n">next_domain_name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">depth</span> <span class="o">&lt;</span> <span class="n">max_depth</span><span class="p">:</span>
+                    <span class="n">a</span> <span class="o">=</span> <span class="n">domain_name_to_ip_close_to_client</span><span class="p">(</span><span class="n">next_domain_name</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">,</span> <span class="n">resolvers</span><span class="p">,</span>
+                                                          <span class="n">depth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">max_depth</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">ips</span> <span class="o">+=</span> <span class="n">a</span>
+    <span class="k">return</span> <span class="n">ips</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, TU Delft CSE 2000 Group 15d. Licensed under the MIT License.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

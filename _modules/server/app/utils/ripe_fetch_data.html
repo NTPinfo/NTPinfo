@@ -1,0 +1,536 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>server.app.utils.ripe_fetch_data &mdash; NTPinfo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=82d09745" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            NTPinfo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.backend.html">Back-end component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.frontend.html">Front-end component</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NTPinfo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">server.app.utils.ripe_fetch_data</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for server.app.utils.ripe_fetch_data</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipaddress</span><span class="w"> </span><span class="kn">import</span> <span class="n">ip_address</span><span class="p">,</span> <span class="n">IPv4Address</span><span class="p">,</span> <span class="n">IPv6Address</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.location_resolver</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_country_for_ip</span><span class="p">,</span> <span class="n">get_coordinates_for_ip</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.models.CustomError</span><span class="w"> </span><span class="kn">import</span> <span class="n">RipeMeasurementError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.load_config_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ripe_api_token</span><span class="p">,</span> <span class="n">get_ripe_server_timeout</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.PreciseTime</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreciseTime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpExtraDetails</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpExtraDetails</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpMainDetails</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpMainDetails</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpMeasurement</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpMeasurement</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpServerInfo</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpServerInfo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpTimestamps</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpTimestamps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.ProbeData</span><span class="w"> </span><span class="kn">import</span> <span class="n">ServerLocation</span><span class="p">,</span> <span class="n">ProbeData</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.RipeMeasurement</span><span class="w"> </span><span class="kn">import</span> <span class="n">RipeMeasurement</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.perform_measurements</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_float_to_precise_time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cast</span>
+
+
+<div class="viewcode-block" id="check_all_measurements_scheduled">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_fetch_data.check_all_measurements_scheduled">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_all_measurements_scheduled</span><span class="p">(</span><span class="n">measurement_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if all RIPE Atlas probes for a given measurement have been scheduled.</span>
+
+<span class="sd">    This function compares the number of probes requested with the number of probes successfully</span>
+<span class="sd">    scheduled. If all requested probes are scheduled, it returns True. Otherwise,</span>
+<span class="sd">    it returns False</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        measurement_id (str): The ID of the RIPE Atlas measurement to check.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: True if all requested probes have been scheduled, False otherwise.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the RIPE API returns an error or if the probe count data</span>
+<span class="sd">                    is missing or invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://atlas.ripe.net/api/v2/measurements/</span><span class="si">{</span><span class="n">measurement_id</span><span class="si">}</span><span class="s2">/&quot;</span>
+
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Key </span><span class="si">{</span><span class="n">get_ripe_api_token</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span>
+    <span class="p">}</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;error&#39;</span> <span class="ow">in</span> <span class="n">json_data</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;RIPE API error: </span><span class="si">{</span><span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">][</span><span class="s1">&#39;title&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">][</span><span class="s1">&#39;detail&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">probes_requested</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;probes_requested&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">probes_scheduled</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;probes_scheduled&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># status = json_data[&quot;status&quot;].get(&quot;name&quot;, &quot;No status&quot;)</span>
+    <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;RIPE API error: The number of scheduled probes is negative&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">probes_requested</span> <span class="o">==</span> <span class="n">probes_scheduled</span>  <span class="c1"># and status == &quot;Stopped&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="check_all_measurements_done">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_fetch_data.check_all_measurements_done">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_all_measurements_done</span><span class="p">(</span><span class="n">measurement_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">measurement_req</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check the status of a RIPE Atlas measurement.</span>
+
+<span class="sd">    This function queries the RIPE Atlas API for a given measurement ID and determines</span>
+<span class="sd">    whether the measurement is complete, ongoing, or should be considered timed out. The status is based</span>
+<span class="sd">    on the number of probes requested, the measurement status provided by RIPE, and</span>
+<span class="sd">    how much time has passed since the measurement started.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        measurement_id (str): RIPE Atlas measurement ID.</span>
+<span class="sd">        measurement_req (int): The number of probes expected for the measurement to be considered complete.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str:</span>
+<span class="sd">            - &quot;Complete&quot;: All expected probes have responded or the measurement is stopped.</span>
+<span class="sd">            - &quot;Ongoing&quot;: The measurement is still in progress and has not exceeded the timeout threshold.</span>
+<span class="sd">            - &quot;Timeout&quot;: The measurement did not complete within the allowed time window.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        RipeMeasurementError: If there are errors with the response from ripe, either not received or malformed.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - If the difference between the current time and the measurement&#39;s start time exceeds the configured time in seconds,</span>
+<span class="sd">          and the measurement is not yet complete, it is considered &quot;Timeout&quot;.</span>
+<span class="sd">        - This function assumes a successful HTTP response from the RIPE API; if not, it will raise an exception.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://atlas.ripe.net/api/v2/measurements/</span><span class="si">{</span><span class="n">measurement_id</span><span class="si">}</span><span class="s2">/&quot;</span>
+
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Key </span><span class="si">{</span><span class="n">get_ripe_api_token</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span>
+    <span class="p">}</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+        <span class="n">json_data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">RequestException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RipeMeasurementError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Network error while checking measurement status: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RipeMeasurementError</span><span class="p">(</span><span class="s2">&quot;Invalid JSON response from RIPE API.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;error&#39;</span> <span class="ow">in</span> <span class="n">json_data</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RipeMeasurementError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;RIPE API error: </span><span class="si">{</span><span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">][</span><span class="s1">&#39;title&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">][</span><span class="s1">&#39;detail&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">probes_requested</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;probes_requested&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">status_ripe</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">json_data</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;NO RESPONSE&quot;</span><span class="p">)</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;start_time&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">==</span> <span class="n">measurement_req</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;Complete&quot;</span>
+    <span class="k">elif</span> <span class="n">status_ripe</span> <span class="o">==</span> <span class="s2">&quot;Stopped&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;Complete&quot;</span>
+    <span class="k">elif</span> <span class="n">status_ripe</span> <span class="o">==</span> <span class="s2">&quot;NO RESPONSE&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;Timeout&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">current_time</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">current_time</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">get_ripe_server_timeout</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;Timeout&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;Ongoing&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="get_data_from_ripe_measurement">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_fetch_data.get_data_from_ripe_measurement">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_data_from_ripe_measurement</span><span class="p">(</span><span class="n">measurement_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fetches raw measurement results from the RIPE Atlas API.</span>
+
+<span class="sd">    This function queries the RIPE Atlas v2 API using the provided measurement ID,</span>
+<span class="sd">    authenticates with an API key stored in the RIPE_KEY environment variable, and</span>
+<span class="sd">    returns the parsed JSON response as a list of dictionaries.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        measurement_id (str): The RIPE Atlas measurement ID to fetch results for.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list[dict[str, Any]]: A list of measurement result entries as dictionaries.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        RipeMeasurementError: If the HTTP request fails or the response cannot be parsed as JSON or the answer is not a list of dicts.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - Requires the `RIPE_KEY` environment variable to be set with a valid API key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://atlas.ripe.net/api/v2/measurements/</span><span class="si">{</span><span class="n">measurement_id</span><span class="si">}</span><span class="s2">/results/&quot;</span>
+
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Key </span><span class="si">{</span><span class="n">get_ripe_api_token</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span>
+    <span class="p">}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+        <span class="n">json_data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">RequestException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RipeMeasurementError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Network error while fetching measurement data: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RipeMeasurementError</span><span class="p">(</span><span class="s2">&quot;Invalid JSON response from RIPE API.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;error&#39;</span> <span class="ow">in</span> <span class="n">json_data</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RipeMeasurementError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;RIPE API error: </span><span class="si">{</span><span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;detail&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">RipeMeasurementError</span><span class="p">(</span><span class="s2">&quot;Unexpected format: Expected list of results from RIPE API.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="get_probe_data_from_ripe_by_id">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_fetch_data.get_probe_data_from_ripe_by_id">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_probe_data_from_ripe_by_id</span><span class="p">(</span><span class="n">probe_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieves detailed information about a specific RIPE Atlas probe by its ID.</span>
+
+<span class="sd">    This function sends a GET request to the RIPE Atlas API to fetch metadata</span>
+<span class="sd">    about the specified probe. The request is authenticated using the RIPE API key</span>
+<span class="sd">    stored in the RIPE_KEY environment variable.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        probe_id (str): The ID of the RIPE Atlas probe to fetch information for.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict[str, Any]: A dictionary containing metadata about the probe</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        RipeMeasurementError: If the HTTP request fails or the response is not valid JSON.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - Requires the `RIPE_KEY` environment variable to be set with a valid API key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://atlas.ripe.net/api/v2/probes/</span><span class="si">{</span><span class="n">probe_id</span><span class="si">}</span><span class="s2">/&quot;</span>
+
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Key </span><span class="si">{</span><span class="n">get_ripe_api_token</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span>
+    <span class="p">}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+        <span class="n">json_data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">RequestException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RipeMeasurementError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Network error while fetching probe data for </span><span class="si">{</span><span class="n">probe_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">RipeMeasurementError</span><span class="p">(</span><span class="s2">&quot;Invalid JSON response from RIPE API.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">json_data</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="parse_probe_data">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_fetch_data.parse_probe_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_probe_data</span><span class="p">(</span><span class="n">probe_response</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ProbeData</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses probe metadata received from the RIPE Atlas API into a ProbeData object.</span>
+
+<span class="sd">    This function extracts relevant information such as the probe ID, IP addresses,</span>
+<span class="sd">    country code, and coordinates from the API response.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        probe_response (dict): The raw dictionary response from the RIPE Atlas probe lookup API.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ProbeData: Parsed information including the probe&#39;s ID, IP addresses, country code, and location.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - If an error is present in the response, a default `ProbeData` with dummy values is returned.</span>
+<span class="sd">        - Coordinates default to `[0.0, 0.0]` if not provided.</span>
+<span class="sd">        - Country code defaults to `&quot;NO COUNTRY CODE&quot;` if not found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">probe_response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ProbeData</span><span class="p">(</span><span class="n">probe_id</span><span class="o">=</span><span class="s2">&quot;-1&quot;</span><span class="p">,</span> <span class="n">probe_addr</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">probe_location</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="n">probe_id</span> <span class="o">=</span> <span class="n">probe_response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;-1&#39;</span><span class="p">)</span>
+    <span class="n">v4</span> <span class="o">=</span> <span class="n">probe_response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;address_v4&#39;</span><span class="p">)</span>
+    <span class="n">v6</span> <span class="o">=</span> <span class="n">probe_response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;address_v6&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ipv4</span> <span class="o">=</span> <span class="n">ip_address</span><span class="p">(</span><span class="n">v4</span><span class="p">)</span> <span class="k">if</span> <span class="n">v4</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">ipv4</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ipv4</span><span class="p">,</span> <span class="n">IPv4Address</span><span class="p">):</span>
+            <span class="n">ipv4</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">ipv4</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ipv6</span> <span class="o">=</span> <span class="n">ip_address</span><span class="p">(</span><span class="n">v6</span><span class="p">)</span> <span class="k">if</span> <span class="n">v6</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">ipv6</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ipv6</span><span class="p">,</span> <span class="n">IPv6Address</span><span class="p">):</span>
+            <span class="n">ipv6</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">ipv6</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">probe_addr</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">IPv4Address</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">IPv6Address</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ipv4</span><span class="p">,</span> <span class="n">ipv6</span><span class="p">)</span>
+
+    <span class="n">country_code</span> <span class="o">=</span> <span class="n">probe_response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;country_code&#39;</span><span class="p">,</span> <span class="s2">&quot;NO COUNTRY CODE&quot;</span><span class="p">)</span>
+
+    <span class="n">geometry</span> <span class="o">=</span> <span class="n">probe_response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;geometry&#39;</span><span class="p">)</span>
+    <span class="n">coordinates</span> <span class="o">=</span> <span class="n">geometry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;coordinates&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span> <span class="k">if</span> <span class="n">geometry</span> <span class="k">else</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+
+    <span class="n">probe_location</span> <span class="o">=</span> <span class="n">ServerLocation</span><span class="p">(</span><span class="n">country_code</span><span class="o">=</span><span class="n">country_code</span><span class="p">,</span>
+                                    <span class="n">coordinates</span><span class="o">=</span><span class="n">coordinates</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ProbeData</span><span class="p">(</span><span class="n">probe_id</span><span class="o">=</span><span class="n">probe_id</span><span class="p">,</span> <span class="n">probe_addr</span><span class="o">=</span><span class="n">probe_addr</span><span class="p">,</span> <span class="n">probe_location</span><span class="o">=</span><span class="n">probe_location</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="is_failed_measurement">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_fetch_data.is_failed_measurement">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_failed_measurement</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determines if a RIPE measurement entry has failed.</span>
+
+<span class="sd">    A measurement is considered failed if all result entries contain the key &quot;x&quot; with value &quot;*&quot;,</span>
+<span class="sd">    which typically indicates a failed probe response.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        entry (dict[str, Any]): A dictionary representing a single measurement entry from the RIPE API.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: True if all entries in the result indicate failure, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;result&quot;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;*&quot;</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">result</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="successful_measurement">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_fetch_data.successful_measurement">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">successful_measurement</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Identifies the index of the successful measurement with the lowest offset.</span>
+
+<span class="sd">    A successful measurement is one that contains the &quot;origin-ts&quot; field,</span>
+<span class="sd">    indicating a valid timestamp. Among all such entries, the one with the</span>
+<span class="sd">    lowest absolute offset value is considered the most successful.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        entry (dict[str, Any]): A dictionary representing a single measurement entry from the RIPE API.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int | None: The index of the result entry with the lowest offset, or None if no valid entries exist.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;result&quot;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">min_offset</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+    <span class="n">min_index</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;origin-ts&quot;</span> <span class="ow">in</span> <span class="n">r</span> <span class="ow">and</span> <span class="s2">&quot;offset&quot;</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">offset</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;offset&quot;</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="n">offset</span> <span class="o">&lt;</span> <span class="n">min_offset</span><span class="p">:</span>
+                    <span class="n">min_offset</span> <span class="o">=</span> <span class="n">offset</span>
+                    <span class="n">min_index</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+    <span class="k">return</span> <span class="n">min_index</span></div>
+
+
+
+<div class="viewcode-block" id="parse_data_from_ripe_measurement">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_fetch_data.parse_data_from_ripe_measurement">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_data_from_ripe_measurement</span><span class="p">(</span><span class="n">data_measurement</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">RipeMeasurement</span><span class="p">],</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses raw RIPE Atlas measurement data into a list of RipeMeasurement objects.</span>
+
+<span class="sd">    This function:</span>
+<span class="sd">      - Determines whether each measurement entry failed or succeeded.</span>
+<span class="sd">      - Extracts NTP-related server and timing information.</span>
+<span class="sd">      - Converts timestamps and metrics into structured internal representations.</span>
+<span class="sd">      - Adds probe-specific metadata fetched from the RIPE API.</span>
+<span class="sd">      - Returns a status string indicating whether all measurements have been processed.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data_measurement (list[dict]): A list of dictionaries representing raw measurement entries from the RIPE Atlas API.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple[list[RipeMeasurement], str]:</span>
+<span class="sd">            - A list of parsed and structured `RipeMeasurement` objects.</span>
+<span class="sd">            - A status string returned by `check_all_measurements_done`, indicating</span>
+<span class="sd">              whether all expected measurements are present and complete.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - Measurements that are marked as failed are still processed, but filled with default values.</span>
+<span class="sd">        - Probe metadata is fetched using the probe ID (`prb_id`) in each measurement.</span>
+<span class="sd">        - Timestamps are converted using `convert_float_to_precise_time`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msm_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">ripe_measurements</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">measurement</span> <span class="ow">in</span> <span class="n">data_measurement</span><span class="p">:</span>
+        <span class="c1"># check for result if ok</span>
+        <span class="n">failed</span> <span class="o">=</span> <span class="n">is_failed_measurement</span><span class="p">(</span><span class="n">measurement</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">successful_measurement</span><span class="p">(</span><span class="n">measurement</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">failed</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="n">from_ip</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;from&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">vantage_point_ip</span> <span class="o">=</span> <span class="n">ip_address</span><span class="p">(</span><span class="n">from_ip</span><span class="p">)</span> <span class="k">if</span> <span class="n">from_ip</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">vantage_point_ip</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;version&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">dst_addr</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dst_addr&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">dst_addr_ip</span> <span class="o">=</span> <span class="n">ip_address</span><span class="p">(</span><span class="n">dst_addr</span><span class="p">)</span> <span class="k">if</span> <span class="n">dst_addr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">dst_addr_ip</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">dst_name</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dst_name&#39;</span><span class="p">)</span>
+
+        <span class="n">server_info</span> <span class="o">=</span> <span class="n">NtpServerInfo</span><span class="p">(</span>
+            <span class="n">ntp_version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
+            <span class="n">ntp_server_ip</span><span class="o">=</span><span class="n">dst_addr_ip</span><span class="p">,</span>
+            <span class="n">ntp_server_name</span><span class="o">=</span><span class="n">dst_name</span><span class="p">,</span>
+            <span class="n">ntp_server_ref_parent_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">ref_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">ntp_server_location</span><span class="o">=</span><span class="n">ServerLocation</span><span class="p">(</span><span class="n">country_code</span><span class="o">=</span><span class="n">get_country_for_ip</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">dst_addr_ip</span><span class="p">)),</span>
+                                               <span class="n">coordinates</span><span class="o">=</span><span class="n">get_coordinates_for_ip</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">dst_addr_ip</span><span class="p">)))</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">failed</span> <span class="ow">and</span> <span class="n">idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">measurement</span><span class="p">[</span><span class="s1">&#39;result&#39;</span><span class="p">][</span><span class="n">idx</span><span class="p">]</span>
+            <span class="n">timestamps</span> <span class="o">=</span> <span class="n">NtpTimestamps</span><span class="p">(</span>
+                <span class="n">client_sent_time</span><span class="o">=</span><span class="n">convert_float_to_precise_time</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;origin-ts&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)),</span>
+                <span class="n">server_recv_time</span><span class="o">=</span><span class="n">convert_float_to_precise_time</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;receive-ts&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)),</span>
+                <span class="n">server_sent_time</span><span class="o">=</span><span class="n">convert_float_to_precise_time</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;transmit-ts&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)),</span>
+                <span class="n">client_recv_time</span><span class="o">=</span><span class="n">convert_float_to_precise_time</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;final-ts&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">))</span>
+            <span class="p">)</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">rtt</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rtt&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">timestamps</span> <span class="o">=</span> <span class="n">NtpTimestamps</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">PreciseTime</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)))</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">rtt</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="n">stratum</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;stratum&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;precision&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">main_details</span> <span class="o">=</span> <span class="n">NtpMainDetails</span><span class="p">(</span><span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span>
+                                      <span class="n">rtt</span><span class="o">=</span><span class="n">rtt</span><span class="p">,</span>
+                                      <span class="n">stratum</span><span class="o">=</span><span class="n">stratum</span><span class="p">,</span>
+                                      <span class="n">precision</span><span class="o">=</span><span class="n">precision</span><span class="p">,</span>
+                                      <span class="n">reachability</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">root_delay</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;root-delay&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+
+        <span class="n">poll</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;poll&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">root_dispersion</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;root-dispersion&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+
+        <span class="n">extra_details</span> <span class="o">=</span> <span class="n">NtpExtraDetails</span><span class="p">(</span><span class="n">root_delay</span><span class="o">=</span><span class="n">convert_float_to_precise_time</span><span class="p">(</span><span class="n">root_delay</span><span class="p">),</span>
+                                        <span class="n">poll</span><span class="o">=</span><span class="n">poll</span><span class="p">,</span> <span class="n">root_dispersion</span><span class="o">=</span><span class="n">convert_float_to_precise_time</span><span class="p">(</span><span class="n">root_dispersion</span><span class="p">),</span>
+                                        <span class="n">ntp_last_sync_time</span><span class="o">=</span><span class="n">convert_float_to_precise_time</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">),</span>
+                                        <span class="n">leap</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">ntp_measurement</span> <span class="o">=</span> <span class="n">NtpMeasurement</span><span class="p">(</span><span class="n">vantage_point_ip</span><span class="o">=</span><span class="n">vantage_point_ip</span><span class="p">,</span> <span class="n">server_info</span><span class="o">=</span><span class="n">server_info</span><span class="p">,</span>
+                                         <span class="n">timestamps</span><span class="o">=</span><span class="n">timestamps</span><span class="p">,</span> <span class="n">main_details</span><span class="o">=</span><span class="n">main_details</span><span class="p">,</span>
+                                         <span class="n">extra_details</span><span class="o">=</span><span class="n">extra_details</span><span class="p">)</span>
+
+        <span class="n">time_to_result</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ttr&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">ref_id</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ref-id&#39;</span><span class="p">,</span> <span class="s1">&#39;NO REFERENCE&#39;</span><span class="p">)</span>
+        <span class="n">measurement_id</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;msm_id&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">msm_id</span> <span class="o">=</span> <span class="n">measurement_id</span>
+
+        <span class="n">ripe_measurement</span> <span class="o">=</span> <span class="n">RipeMeasurement</span><span class="p">(</span>
+            <span class="n">measurement_id</span><span class="o">=</span><span class="n">measurement_id</span><span class="p">,</span>
+            <span class="n">ntp_measurement</span><span class="o">=</span><span class="n">ntp_measurement</span><span class="p">,</span>
+            <span class="n">probe_data</span><span class="o">=</span><span class="n">parse_probe_data</span><span class="p">(</span><span class="n">get_probe_data_from_ripe_by_id</span><span class="p">(</span><span class="n">measurement</span><span class="p">[</span><span class="s1">&#39;prb_id&#39;</span><span class="p">])),</span>
+            <span class="n">time_to_result</span><span class="o">=</span><span class="n">time_to_result</span><span class="p">,</span>
+            <span class="n">ref_id</span><span class="o">=</span><span class="n">ref_id</span>
+        <span class="p">)</span>
+        <span class="n">ripe_measurements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ripe_measurement</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ripe_measurements</span><span class="p">,</span> <span class="n">check_all_measurements_done</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">msm_id</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">ripe_measurements</span><span class="p">))</span></div>
+
+
+<span class="c1"># example how to use the methods:</span>
+<span class="c1"># print(parse_data_from_ripe_measurement(get_data_from_ripe_measurement(&quot;106323686&quot;)))</span>
+<span class="c1"># print(parse_probe_data(get_probe_data_from_ripe_by_id(&quot;7304&quot;)))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, TU Delft CSE 2000 Group 15d. Licensed under the MIT License.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

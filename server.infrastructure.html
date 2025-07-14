@@ -51,9 +51,9 @@
 <li class="toctree-l3"><a class="reference internal" href="server.app.html">Application Architecture</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Infrastructure</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#package-overview">Package Overview</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#database-configuration">Database Configuration</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#rate-limiting">Rate Limiting</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#application-entrypoint">Application Entrypoint</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-server.app.db_config">Database Configuration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-server.app.rate_limiter">Rate Limiting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-server.app.main">Application Entrypoint</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="server.services.utilities.html">Services and utilities</a></li>
@@ -96,14 +96,105 @@
 <h2>Package Overview<a class="headerlink" href="#package-overview" title="Link to this heading"></a></h2>
 <p>This package forms the core of the server-side application. It contains the foundational modules and configuration required to run and maintain the backend system.</p>
 </section>
-<section id="database-configuration">
-<h2>Database Configuration<a class="headerlink" href="#database-configuration" title="Link to this heading"></a></h2>
+<section id="module-server.app.db_config">
+<span id="database-configuration"></span><h2>Database Configuration<a class="headerlink" href="#module-server.app.db_config" title="Link to this heading"></a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="server.app.db_config.DB_CONFIG">
+<span class="sig-prename descclassname"><span class="pre">server.app.db_config.</span></span><span class="sig-name descname"><span class="pre">DB_CONFIG</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'dbname':</span> <span class="pre">'myapp_test',</span> <span class="pre">'host':</span> <span class="pre">'localhost',</span> <span class="pre">'password':</span> <span class="pre">'test_password',</span> <span class="pre">'port':</span> <span class="pre">'5432',</span> <span class="pre">'user':</span> <span class="pre">'test_user'}</span></em><a class="headerlink" href="#server.app.db_config.DB_CONFIG" title="Link to this definition"></a></dt>
+<dd><p>Dictionary holding PostgreSQL connection details.</p>
+<dl class="simple">
+<dt>Each value is loaded from environment variables to enhance security and flexibility:</dt><dd><ul class="simple">
+<li><p>DB_NAME: Name of the PostgreSQL database.</p></li>
+<li><p>DB_USER: Username for authentication.</p></li>
+<li><p>DB_PASSWORD: Password for authentication.</p></li>
+<li><p>DB_HOST: Hostname or IP address of the database server.</p></li>
+<li><p>DB_PORT: Port number on which the database server is listening.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="server.app.db_config.dsn">
+<span class="sig-prename descclassname"><span class="pre">server.app.db_config.</span></span><span class="sig-name descname"><span class="pre">dsn</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'postgresql://test_user:test_password&#64;localhost:5432/myapp_test'</span></em><a class="headerlink" href="#server.app.db_config.dsn" title="Link to this definition"></a></dt>
+<dd><p>Constructs a PostgreSQL connection string (DSN) from the <cite>DB_CONFIG</cite> dictionary.</p>
+<dl class="simple">
+<dt>This string follows the format:</dt><dd><p>postgresql://&lt;user&gt;:&lt;password&gt;&#64;&lt;host&gt;:&lt;port&gt;/&lt;dbname&gt;</p>
+</dd>
+</dl>
+<p>It is required by most PostgreSQL drivers, including <cite>psycopg</cite>, to initiate connections.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.db_config.get_db">
+<span class="sig-prename descclassname"><span class="pre">server.app.db_config.</span></span><span class="sig-name descname"><span class="pre">get_db</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/db_config.html#get_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.db_config.get_db" title="Link to this definition"></a></dt>
+<dd><p>Returns the current database session.
+:Yields: <em>Session</em> – The current database session.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.db_config.init_engine">
+<span class="sig-prename descclassname"><span class="pre">server.app.db_config.</span></span><span class="sig-name descname"><span class="pre">init_engine</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/db_config.html#init_engine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.db_config.init_engine" title="Link to this definition"></a></dt>
+<dd><p>Creates the engine necessary for the SQLAlchemy connection, as well as the session maker.
+:returns: The engine for the SQLAlchemy connection (necessary for creating the tables later).
+:rtype: Engine</p>
+</dd></dl>
+
 </section>
-<section id="rate-limiting">
-<h2>Rate Limiting<a class="headerlink" href="#rate-limiting" title="Link to this heading"></a></h2>
+<section id="module-server.app.rate_limiter">
+<span id="rate-limiting"></span><h2>Rate Limiting<a class="headerlink" href="#module-server.app.rate_limiter" title="Link to this heading"></a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="server.app.rate_limiter.limiter">
+<span class="sig-prename descclassname"><span class="pre">server.app.rate_limiter.</span></span><span class="sig-name descname"><span class="pre">limiter</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;slowapi.extension.Limiter</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#server.app.rate_limiter.limiter" title="Link to this definition"></a></dt>
+<dd><p>Create a rate limiter instance using the client’s IP address as the unique identifier.</p>
+<p>This Limiter is used with FastAPI to enforce rate limiting on specific endpoints.
+It uses <cite>get_remote_address</cite> to extract the client’s IP from the request, ensuring
+that limits are applied by ip address.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-prename descclassname"><span class="pre">server.app.rate_limiter.</span></span><span class="sig-name descname"><span class="pre">limiter</span></span><a class="headerlink" href="#id0" title="Link to this definition"></a></dt>
+<dd><p>The configured SlowAPI rate limiter instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Limiter</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="application-entrypoint">
-<h2>Application Entrypoint<a class="headerlink" href="#application-entrypoint" title="Link to this heading"></a></h2>
+<section id="module-server.app.main">
+<span id="application-entrypoint"></span><h2>Application Entrypoint<a class="headerlink" href="#module-server.app.main" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.main.create_app">
+<span class="sig-prename descclassname"><span class="pre">server.app.main.</span></span><span class="sig-name descname"><span class="pre">create_app</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/main.html#create_app"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.main.create_app" title="Link to this definition"></a></dt>
+<dd><p>Create and configure a FastAPI application instance.</p>
+<p>This function sets up the FastAPI app with necessary middleware, routes,
+and lifecycle event handlers. It optionally initializes the database engine
+and verifies configuration during development mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dev</strong> (<em>bool</em>) – Flag indicating whether the app runs in development mode.
+If True, config verification and database initialization are performed.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Configured FastAPI application instance.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>FastAPI</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – If configuration verification fails in development mode.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 

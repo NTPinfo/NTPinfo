@@ -1,0 +1,481 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>server.app.utils.perform_measurements &mdash; NTPinfo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=82d09745" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            NTPinfo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.backend.html">Back-end component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.frontend.html">Front-end component</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NTPinfo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">server.app.utils.perform_measurements</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for server.app.utils.perform_measurements</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ntplib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipaddress</span><span class="w"> </span><span class="kn">import</span> <span class="n">ip_address</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.ProbeData</span><span class="w"> </span><span class="kn">import</span> <span class="n">ServerLocation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.location_resolver</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_country_for_ip</span><span class="p">,</span> <span class="n">get_coordinates_for_ip</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.models.CustomError</span><span class="w"> </span><span class="kn">import</span> <span class="n">InputError</span><span class="p">,</span> <span class="n">RipeMeasurementError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.calculations</span><span class="w"> </span><span class="kn">import</span> <span class="n">ntp_precise_time_to_human_date</span><span class="p">,</span> <span class="n">convert_float_to_precise_time</span><span class="p">,</span> \
+    <span class="n">get_non_responding_ntp_measurement</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.ip_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ip_family</span><span class="p">,</span> <span class="n">ref_id_to_ip_or_name</span><span class="p">,</span> <span class="n">get_server_ip</span><span class="p">,</span> <span class="n">ip_to_str</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.load_config_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ripe_account_email</span><span class="p">,</span> <span class="n">get_ripe_api_token</span><span class="p">,</span> <span class="n">get_ntp_version</span><span class="p">,</span> \
+    <span class="n">get_timeout_measurement_s</span><span class="p">,</span> <span class="n">get_ripe_number_of_probes_per_measurement</span><span class="p">,</span> \
+    <span class="n">get_ripe_timeout_per_probe_ms</span><span class="p">,</span> <span class="n">get_ripe_packets_per_probe</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.ripe_probes</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_probes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.domain_name_to_ip</span><span class="w"> </span><span class="kn">import</span> <span class="n">domain_name_to_ip_list</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpExtraDetails</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpExtraDetails</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpMainDetails</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpMainDetails</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpMeasurement</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpMeasurement</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpServerInfo</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpServerInfo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpTimestamps</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpTimestamps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.PreciseTime</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreciseTime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.validate</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_ip_address</span>
+
+
+
+<div class="viewcode-block" id="perform_ntp_measurement_domain_name_list">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.perform_measurements.perform_ntp_measurement_domain_name_list">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">perform_ntp_measurement_domain_name_list</span><span class="p">(</span><span class="n">server_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+                                             <span class="n">ntp_version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_ntp_version</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">NtpMeasurement</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method performs a NTP measurement on a NTP server from all the IPs got back from its domain name.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        server_name (str): The name of the ntp server.</span>
+<span class="sd">        client_ip (Optional[str]): The IP address of the client (if given).</span>
+<span class="sd">        wanted_ip_type (int): The IP type that we want to measure.</span>
+<span class="sd">        ntp_version (int): The version of the ntp that you want to use.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Optional[list[NtpMeasurement]]: It returns a list of NTP measurement objects or None if there is a timeout.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        DNSError: If the domain name is invalid or cannot be converted to an IP list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">domain_ips</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">domain_name_to_ip_list</span><span class="p">(</span><span class="n">server_name</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">)</span>
+    <span class="c1"># domain_ips contains a list of ips that are good to use.</span>
+    <span class="n">resulted_measurements</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ok</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">ip_str</span> <span class="ow">in</span> <span class="n">domain_ips</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">client</span> <span class="o">=</span> <span class="n">ntplib</span><span class="o">.</span><span class="n">NTPClient</span><span class="p">()</span>
+            <span class="n">response_from_ntplib</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">ip_str</span><span class="p">,</span> <span class="n">ntp_version</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">get_timeout_measurement_s</span><span class="p">())</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">convert_ntp_response_to_measurement</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">response_from_ntplib</span><span class="p">,</span>
+                                                    <span class="n">server_ip_str</span><span class="o">=</span><span class="n">ip_str</span><span class="p">,</span>
+                                                    <span class="n">server_name</span><span class="o">=</span><span class="n">server_name</span><span class="p">,</span>
+                                                    <span class="n">ntp_version</span><span class="o">=</span><span class="n">ntp_version</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">resulted_measurements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+                <span class="n">ok</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error in measure from name on ip </span><span class="si">{</span><span class="n">ip_str</span><span class="si">}</span><span class="s2"> (this IP failed, maybe others succeeded):&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="n">empty_measurement</span> <span class="o">=</span> <span class="n">get_non_responding_ntp_measurement</span><span class="p">(</span><span class="n">ip_str</span><span class="p">,</span> <span class="n">server_name</span><span class="p">,</span> <span class="n">ntp_version</span><span class="p">)</span>
+            <span class="n">resulted_measurements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">empty_measurement</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+    <span class="k">return</span> <span class="n">resulted_measurements</span> <span class="k">if</span> <span class="n">ok</span> <span class="ow">is</span> <span class="kc">True</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="perform_ntp_measurement_ip">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.perform_measurements.perform_ntp_measurement_ip">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">perform_ntp_measurement_ip</span><span class="p">(</span><span class="n">server_ip_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ntp_version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_ntp_version</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NtpMeasurement</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method performs an NTP measurement on an NTP server using its IP address.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        server_ip_str (str): The IP address of the ntp server in string format.</span>
+<span class="sd">        ntp_version (int): The version of the ntp that you want to use.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Optional[NtpMeasurement]: It returns the NTP measurement object or None if something wrong happened. (usually timeouts)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">is_ip_address</span><span class="p">(</span><span class="n">server_ip_str</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="c1"># server_name is not available here. We can only use the ip which is initially a string</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="n">ntplib</span><span class="o">.</span><span class="n">NTPClient</span><span class="p">()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">server_ip_str</span><span class="p">,</span> <span class="n">ntp_version</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">get_timeout_measurement_s</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">convert_ntp_response_to_measurement</span><span class="p">(</span><span class="n">response</span><span class="o">=</span><span class="n">response</span><span class="p">,</span>
+                                                   <span class="n">server_ip_str</span><span class="o">=</span><span class="n">server_ip_str</span><span class="p">,</span>
+                                                   <span class="n">server_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                                   <span class="n">ntp_version</span><span class="o">=</span><span class="n">ntp_version</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in measure from ip:&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="convert_ntp_response_to_measurement">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.perform_measurements.convert_ntp_response_to_measurement">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_ntp_response_to_measurement</span><span class="p">(</span><span class="n">response</span><span class="p">:</span> <span class="n">ntplib</span><span class="o">.</span><span class="n">NTPStats</span><span class="p">,</span> <span class="n">server_ip_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">server_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+                                        <span class="n">ntp_version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_ntp_version</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NtpMeasurement</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method converts an NTP response to an NTP measurement object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        response (ntplib.NTPStats): The NTP response to convert.</span>
+<span class="sd">        server_ip_str (str): The IP address of the ntp server in string format.</span>
+<span class="sd">        server_name (Optional[str]): The name of the ntp server.</span>
+<span class="sd">        ntp_version (int): The version of the ntp that you want to use.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Optional[NtpMeasurement]: It returns an NTP measurement object if the conversion was successful.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">vantage_point_ip</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">ip_type</span> <span class="o">=</span> <span class="n">get_ip_family</span><span class="p">(</span><span class="n">server_ip_str</span><span class="p">)</span>
+        <span class="c1"># get the same type (We guaranteed before calling this method that it exists)</span>
+        <span class="n">vantage_point_ip_temp</span> <span class="o">=</span> <span class="n">get_server_ip</span><span class="p">(</span><span class="n">ip_type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">vantage_point_ip_temp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vantage_point_ip</span> <span class="o">=</span> <span class="n">vantage_point_ip_temp</span>
+        <span class="n">ref_ip</span><span class="p">,</span> <span class="n">ref_name</span> <span class="o">=</span> <span class="n">ref_id_to_ip_or_name</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">ref_id</span><span class="p">,</span>
+                                                <span class="n">response</span><span class="o">.</span><span class="n">stratum</span><span class="p">)</span>
+        <span class="n">server_ip</span> <span class="o">=</span> <span class="n">ip_address</span><span class="p">(</span><span class="n">server_ip_str</span><span class="p">)</span>
+        <span class="n">server_info</span><span class="p">:</span> <span class="n">NtpServerInfo</span> <span class="o">=</span> <span class="n">NtpServerInfo</span><span class="p">(</span>
+            <span class="n">ntp_version</span><span class="o">=</span><span class="n">ntp_version</span><span class="p">,</span>
+            <span class="n">ntp_server_ip</span><span class="o">=</span><span class="n">server_ip</span><span class="p">,</span>
+            <span class="n">ntp_server_name</span><span class="o">=</span><span class="n">server_name</span><span class="p">,</span>
+            <span class="n">ntp_server_ref_parent_ip</span><span class="o">=</span><span class="n">ref_ip</span><span class="p">,</span>
+            <span class="n">ref_name</span><span class="o">=</span><span class="n">ref_name</span><span class="p">,</span>
+            <span class="n">ntp_server_location</span><span class="o">=</span><span class="n">ServerLocation</span><span class="p">(</span><span class="n">country_code</span><span class="o">=</span><span class="n">get_country_for_ip</span><span class="p">(</span><span class="n">ip_to_str</span><span class="p">(</span><span class="n">server_ip</span><span class="p">)),</span>
+                                               <span class="n">coordinates</span><span class="o">=</span><span class="n">get_coordinates_for_ip</span><span class="p">(</span><span class="n">ip_to_str</span><span class="p">(</span><span class="n">server_ip</span><span class="p">)))</span>
+        <span class="p">)</span>
+
+        <span class="n">timestamps</span><span class="p">:</span> <span class="n">NtpTimestamps</span> <span class="o">=</span> <span class="n">NtpTimestamps</span><span class="p">(</span>
+            <span class="n">client_sent_time</span><span class="o">=</span><span class="n">PreciseTime</span><span class="p">(</span><span class="n">ntplib</span><span class="o">.</span><span class="n">_to_int</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">orig_timestamp</span><span class="p">),</span>
+                                         <span class="n">ntplib</span><span class="o">.</span><span class="n">_to_frac</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">orig_timestamp</span><span class="p">)),</span>
+            <span class="n">server_recv_time</span><span class="o">=</span><span class="n">PreciseTime</span><span class="p">(</span><span class="n">ntplib</span><span class="o">.</span><span class="n">_to_int</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">recv_timestamp</span><span class="p">),</span>
+                                         <span class="n">ntplib</span><span class="o">.</span><span class="n">_to_frac</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">recv_timestamp</span><span class="p">)),</span>
+            <span class="n">server_sent_time</span><span class="o">=</span><span class="n">PreciseTime</span><span class="p">(</span><span class="n">ntplib</span><span class="o">.</span><span class="n">_to_int</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">tx_timestamp</span><span class="p">),</span>
+                                         <span class="n">ntplib</span><span class="o">.</span><span class="n">_to_frac</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">tx_timestamp</span><span class="p">)),</span>
+            <span class="n">client_recv_time</span><span class="o">=</span><span class="n">PreciseTime</span><span class="p">(</span><span class="n">ntplib</span><span class="o">.</span><span class="n">_to_int</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">dest_timestamp</span><span class="p">),</span>
+                                         <span class="n">ntplib</span><span class="o">.</span><span class="n">_to_frac</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">dest_timestamp</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="n">main_details</span><span class="p">:</span> <span class="n">NtpMainDetails</span> <span class="o">=</span> <span class="n">NtpMainDetails</span><span class="p">(</span>
+            <span class="n">offset</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span>
+            <span class="n">rtt</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">delay</span><span class="p">,</span>
+            <span class="n">stratum</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">stratum</span><span class="p">,</span>
+            <span class="n">precision</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span>
+            <span class="n">reachability</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">extra_details</span><span class="p">:</span> <span class="n">NtpExtraDetails</span> <span class="o">=</span> <span class="n">NtpExtraDetails</span><span class="p">(</span>
+            <span class="n">root_delay</span><span class="o">=</span><span class="n">convert_float_to_precise_time</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">root_delay</span><span class="p">),</span>
+            <span class="n">ntp_last_sync_time</span><span class="o">=</span><span class="n">convert_float_to_precise_time</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">ref_timestamp</span><span class="p">),</span>
+            <span class="n">leap</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">leap</span><span class="p">,</span>
+            <span class="n">poll</span><span class="o">=</span><span class="n">response</span><span class="o">.</span><span class="n">poll</span><span class="p">,</span>
+            <span class="n">root_dispersion</span><span class="o">=</span><span class="n">convert_float_to_precise_time</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">root_dispersion</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">NtpMeasurement</span><span class="p">(</span><span class="n">vantage_point_ip</span><span class="p">,</span> <span class="n">server_info</span><span class="p">,</span> <span class="n">timestamps</span><span class="p">,</span> <span class="n">main_details</span><span class="p">,</span> <span class="n">extra_details</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in convert response to measurement:&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="print_ntp_measurement">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.perform_measurements.print_ntp_measurement">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">print_ntp_measurement</span><span class="p">(</span><span class="n">measurement</span><span class="p">:</span> <span class="n">NtpMeasurement</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        It prints the ntp measurement in a human-readable format and returns True if the printing was successful.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            measurement (NtpMeasurement): The NtpMeasurement object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=== NTP Measurement ===&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Vantage Point IP:      </span><span class="si">{</span><span class="n">measurement</span><span class="o">.</span><span class="n">vantage_point_ip</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># Server Info</span>
+        <span class="n">server</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">server_info</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Server Name:           </span><span class="si">{</span><span class="n">server</span><span class="o">.</span><span class="n">ntp_server_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Server IP:             </span><span class="si">{</span><span class="n">server</span><span class="o">.</span><span class="n">ntp_server_ip</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;NTP Version:           </span><span class="si">{</span><span class="n">server</span><span class="o">.</span><span class="n">ntp_version</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reference Parent IP:   </span><span class="si">{</span><span class="n">server</span><span class="o">.</span><span class="n">ntp_server_ref_parent_ip</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reference Name (Raw):  </span><span class="si">{</span><span class="n">server</span><span class="o">.</span><span class="n">ref_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Timestamps</span>
+        <span class="n">timestamps</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">timestamps</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Client sent time:      </span><span class="si">{</span><span class="n">ntp_precise_time_to_human_date</span><span class="p">(</span><span class="n">timestamps</span><span class="o">.</span><span class="n">client_sent_time</span><span class="p">)</span><span class="si">}</span><span class="s2"> : s: </span><span class="si">{</span><span class="n">timestamps</span><span class="o">.</span><span class="n">client_sent_time</span><span class="o">.</span><span class="n">seconds</span><span class="si">}</span><span class="s2"> f: </span><span class="si">{</span><span class="n">timestamps</span><span class="o">.</span><span class="n">client_sent_time</span><span class="o">.</span><span class="n">fraction</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Server recv time:      </span><span class="si">{</span><span class="n">ntp_precise_time_to_human_date</span><span class="p">(</span><span class="n">timestamps</span><span class="o">.</span><span class="n">server_recv_time</span><span class="p">)</span><span class="si">}</span><span class="s2"> : s: </span><span class="si">{</span><span class="n">timestamps</span><span class="o">.</span><span class="n">server_recv_time</span><span class="o">.</span><span class="n">seconds</span><span class="si">}</span><span class="s2"> f: </span><span class="si">{</span><span class="n">timestamps</span><span class="o">.</span><span class="n">server_recv_time</span><span class="o">.</span><span class="n">fraction</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Server sent time:      </span><span class="si">{</span><span class="n">ntp_precise_time_to_human_date</span><span class="p">(</span><span class="n">timestamps</span><span class="o">.</span><span class="n">server_sent_time</span><span class="p">)</span><span class="si">}</span><span class="s2"> : s: </span><span class="si">{</span><span class="n">timestamps</span><span class="o">.</span><span class="n">server_sent_time</span><span class="o">.</span><span class="n">seconds</span><span class="si">}</span><span class="s2"> f: </span><span class="si">{</span><span class="n">timestamps</span><span class="o">.</span><span class="n">server_sent_time</span><span class="o">.</span><span class="n">fraction</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Client recv time:      </span><span class="si">{</span><span class="n">ntp_precise_time_to_human_date</span><span class="p">(</span><span class="n">timestamps</span><span class="o">.</span><span class="n">client_recv_time</span><span class="p">)</span><span class="si">}</span><span class="s2"> : s: </span><span class="si">{</span><span class="n">timestamps</span><span class="o">.</span><span class="n">client_recv_time</span><span class="o">.</span><span class="n">seconds</span><span class="si">}</span><span class="s2"> f: </span><span class="si">{</span><span class="n">timestamps</span><span class="o">.</span><span class="n">client_recv_time</span><span class="o">.</span><span class="n">fraction</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Main Details</span>
+        <span class="n">main</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">main_details</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Offset (s):            </span><span class="si">{</span><span class="n">main</span><span class="o">.</span><span class="n">offset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Delay (s):             </span><span class="si">{</span><span class="n">main</span><span class="o">.</span><span class="n">rtt</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stratum:               </span><span class="si">{</span><span class="n">main</span><span class="o">.</span><span class="n">stratum</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Precision:             </span><span class="si">{</span><span class="n">main</span><span class="o">.</span><span class="n">precision</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reachability:          </span><span class="si">{</span><span class="n">main</span><span class="o">.</span><span class="n">reachability</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Extra Details</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">extra_details</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Root Delay:            </span><span class="si">{</span><span class="n">ntplib</span><span class="o">.</span><span class="n">_to_time</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">root_delay</span><span class="o">.</span><span class="n">seconds</span><span class="p">,</span><span class="w"> </span><span class="n">extra</span><span class="o">.</span><span class="n">root_delay</span><span class="o">.</span><span class="n">fraction</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Last Sync Time:        </span><span class="si">{</span><span class="n">ntp_precise_time_to_human_date</span><span class="p">(</span><span class="n">extra</span><span class="o">.</span><span class="n">ntp_last_sync_time</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Poll:                  </span><span class="si">{</span><span class="n">extra</span><span class="o">.</span><span class="n">poll</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Leap:                  </span><span class="si">{</span><span class="n">extra</span><span class="o">.</span><span class="n">leap</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=========================&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error:&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="perform_ripe_measurement_domain_name">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.perform_measurements.perform_ripe_measurement_domain_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">perform_ripe_measurement_domain_name</span><span class="p">(</span><span class="n">server_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                                         <span class="n">probes_requested</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span>
+                                         <span class="n">get_ripe_number_of_probes_per_measurement</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method performs a RIPE measurement on a domain name. It lets the RIPE atlas probe to</span>
+<span class="sd">    decide which IP of that domain name to use. (You can see this IP from the details of the</span>
+<span class="sd">    measurement by looking at the measurement ID)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        server_name (str): The domain name of the NTP server.</span>
+<span class="sd">        client_ip (str): The IP address of the NTP server.</span>
+<span class="sd">        wanted_ip_type (int): The IP type that we want to measure.</span>
+<span class="sd">        probes_requested (int): The number of probes requested.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int: It returns the ID of the measurement and the list of IPs of the domain name.</span>
+<span class="sd">                               You can find in the measurement what IP it used.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        InputError: If the conversion could not be performed.</span>
+<span class="sd">        RipeMeasurementError: If the ripe measurement could not be performed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Probes requested must be greater than 0.&quot;</span><span class="p">)</span>
+
+    <span class="n">get_ip_family</span><span class="p">(</span><span class="n">client_ip</span><span class="p">)</span> <span class="c1"># throws an error if it is invalid</span>
+    <span class="c1"># we will make an NTP measurement from probes to the domain name.</span>
+
+    <span class="c1"># measurement settings</span>
+    <span class="c1"># we use wanted_ip_type to force to search this type</span>
+    <span class="n">headers</span><span class="p">,</span> <span class="n">request_content</span> <span class="o">=</span> <span class="n">get_request_settings</span><span class="p">(</span><span class="n">ip_family_of_ntp_server</span><span class="o">=</span><span class="n">wanted_ip_type</span><span class="p">,</span> <span class="n">ntp_server</span><span class="o">=</span><span class="n">server_name</span><span class="p">,</span>
+                                                    <span class="n">client_ip</span><span class="o">=</span><span class="n">client_ip</span><span class="p">,</span> <span class="n">probes_requested</span><span class="o">=</span><span class="n">probes_requested</span><span class="p">)</span>
+    <span class="c1"># perform the measurement</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+        <span class="s2">&quot;https://atlas.ripe.net/api/v2/measurements/&quot;</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request_content</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="c1"># the answer has a list of measurements, but we only did one measurement so we send one.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ans</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;measurements&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RipeMeasurementError</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RipeMeasurementError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ripe measurement failed:</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ans</span></div>
+
+
+
+<div class="viewcode-block" id="perform_ripe_measurement_ip">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.perform_measurements.perform_ripe_measurement_ip">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">perform_ripe_measurement_ip</span><span class="p">(</span><span class="n">ntp_server_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                                <span class="n">probes_requested</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_ripe_number_of_probes_per_measurement</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method performs a RIPE measurement and returns the ID of the measurement.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ntp_server_ip (str): The NTP server IP.</span>
+<span class="sd">        client_ip (str): The IP of the client.</span>
+<span class="sd">        probes_requested (int): The number of probes requested.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int: The ID of the measurement.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        InputError: If the NTP server IP is not valid, probe requested is negative.</span>
+<span class="sd">        RipeMeasurementError: If the ripe measurement could not be performed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Probes requested must be greater than 0.&quot;</span><span class="p">)</span>
+    <span class="n">get_ip_family</span><span class="p">(</span><span class="n">client_ip</span><span class="p">)</span>  <span class="c1"># this will throw an exception if the client_ip is not an IP address</span>
+
+    <span class="n">ip_family</span> <span class="o">=</span> <span class="n">get_ip_family</span><span class="p">(</span><span class="n">ntp_server_ip</span><span class="p">)</span>  <span class="c1"># this will throw an exception if the ntp_server_ip is not an IP address</span>
+
+    <span class="c1"># measurement settings</span>
+    <span class="n">headers</span><span class="p">,</span> <span class="n">request_content</span> <span class="o">=</span> <span class="n">get_request_settings</span><span class="p">(</span><span class="n">ip_family_of_ntp_server</span><span class="o">=</span><span class="n">ip_family</span><span class="p">,</span> <span class="n">ntp_server</span><span class="o">=</span><span class="n">ntp_server_ip</span><span class="p">,</span>
+                                                    <span class="n">client_ip</span><span class="o">=</span><span class="n">client_ip</span><span class="p">,</span> <span class="n">probes_requested</span><span class="o">=</span><span class="n">probes_requested</span><span class="p">)</span>
+    <span class="c1"># perform the measurement</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+        <span class="s2">&quot;https://atlas.ripe.net/api/v2/measurements/&quot;</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">request_content</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="c1"># the answer has a list of measurements, but we only did one measurement so we send one.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ans</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;measurements&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RipeMeasurementError</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RipeMeasurementError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ripe measurement failed:</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ans</span></div>
+
+
+
+<div class="viewcode-block" id="get_request_settings">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.perform_measurements.get_request_settings">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_request_settings</span><span class="p">(</span><span class="n">ip_family_of_ntp_server</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ntp_server</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                         <span class="n">probes_requested</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_ripe_number_of_probes_per_measurement</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method gets the RIPE measurement settings for the performing a RIPE measurement.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        ip_family_of_ntp_server (int): The IP family of the NTP server. (4 or 6)</span>
+<span class="sd">        ntp_server (str): The NTP server IP address or domain name.</span>
+<span class="sd">        client_ip (str): The IP address of the client.</span>
+<span class="sd">        probes_requested (int): The number of probes requested.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple[dict, dict]: Returns the RIPE measurement settings for the performing a RIPE measurement.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        InputError: If the input is invalid.</span>
+<span class="sd">        RipeMeasurementError: If the ripe measurement could not be performed.</span>
+<span class="sd">        ValueError: If some variable in env is not correctly set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Key </span><span class="si">{</span><span class="n">get_ripe_api_token</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span>
+    <span class="p">}</span>
+    <span class="n">request_content</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;definitions&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ntp&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;af&quot;</span><span class="p">:</span> <span class="n">ip_family_of_ntp_server</span><span class="p">,</span>
+            <span class="s2">&quot;resolve_on_probe&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;NTP measurement to </span><span class="si">{</span><span class="n">ntp_server</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;packets&quot;</span><span class="p">:</span> <span class="n">get_ripe_packets_per_probe</span><span class="p">(),</span>
+            <span class="s2">&quot;timeout&quot;</span><span class="p">:</span> <span class="n">get_ripe_timeout_per_probe_ms</span><span class="p">(),</span>
+            <span class="s2">&quot;skip_dns_check&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">ntp_server</span>
+        <span class="p">}</span>
+    <span class="p">],</span>
+        <span class="s2">&quot;is_oneoff&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;bill_to&quot;</span><span class="p">:</span> <span class="n">get_ripe_account_email</span><span class="p">(),</span>
+        <span class="s2">&quot;probes&quot;</span><span class="p">:</span> <span class="n">get_probes</span><span class="p">(</span><span class="n">client_ip</span><span class="p">,</span> <span class="n">ip_family_of_ntp_server</span><span class="p">,</span> <span class="n">probes_requested</span><span class="p">)</span>  <span class="c1"># we want probes close to the client</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">headers</span><span class="p">,</span> <span class="n">request_content</span></div>
+
+
+<span class="c1"># example to see how you use them</span>
+<span class="c1"># print_ntp_measurement(perform_ntp_measurement_domain_name_list(&quot;time.apple.com&quot;, &quot;5a01:c741:a16:4000::1f2&quot;, 6, 4)[0])</span>
+<span class="c1"># print_ntp_measurement(perform_ntp_measurement_domain_name_list(&quot;time.apple.com&quot;, &quot;17.253.6.45&quot;, 4,4)[0])</span>
+<span class="c1"># print_ntp_measurement(perform_ntp_measurement_domain_name_list(&quot;time.apple.com&quot;, &quot;17.253.6.45&quot;, 6,4)[0])</span>
+
+<span class="c1"># print(perform_ripe_measurement_ip(&quot;2a01:b740:a16:4000::1f2&quot;,&quot;2a01:c741:a16:4000::1f2&quot;, 12))</span>
+<span class="c1"># print(perform_ripe_measurement_domain_name(&quot;time.apple.com&quot;,&quot;83.25.24.10&quot;, 6, 15))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, TU Delft CSE 2000 Group 15d. Licensed under the MIT License.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

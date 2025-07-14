@@ -95,30 +95,248 @@
 <h1>Root /<a class="headerlink" href="#root" title="Link to this heading"></a></h1>
 <section id="root-endpoint-for-basic-service-health-check">
 <h2>Root endpoint for basic service health check<a class="headerlink" href="#root-endpoint-for-basic-service-health-check" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.api.routing.read_root">
+<span class="sig-prename descclassname"><span class="pre">server.app.api.routing.</span></span><span class="sig-name descname"><span class="pre">read_root</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/api/routing.html#read_root"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.api.routing.read_root" title="Link to this definition"></a></dt>
+<dd><p>Root endpoint for basic service health check.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A simple HTML welcome message.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 <section id="measurements">
 <h1>/measurements<a class="headerlink" href="#measurements" title="Link to this heading"></a></h1>
 <section id="compute-a-live-ntp-measurement-for-a-given-server-ip-or-domain">
 <h2>Compute a live NTP measurement for a given server (IP or domain)<a class="headerlink" href="#compute-a-live-ntp-measurement-for-a-given-server-ip-or-domain" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.api.routing.read_data_measurement">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.api.routing.</span></span><span class="sig-name descname"><span class="pre">read_data_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Depends(get_db)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/api/routing.html#read_data_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.api.routing.read_data_measurement" title="Link to this definition"></a></dt>
+<dd><p>Compute a live NTP measurement for a given server (IP or domain).</p>
+<p>This endpoint receives a JSON payload containing the server to be measured.
+It uses the <cite>measure()</cite> function to perform the NTP synchronization measurement,
+and formats the result using <cite>get_format()</cite>. User can choose whether they want to measure IPv4 of IPv6,
+but this will take effect only for domain names. If user inputs an IP, we will measure the type of that IP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>payload</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.MeasurementRequest.MeasurementRequest" title="server.app.dtos.MeasurementRequest.MeasurementRequest"><em>MeasurementRequest</em></a>) – <dl class="simple">
+<dt>A Pydantic model containing:</dt><dd><ul>
+<li><p>server (str): IP address (IPv4/IPv6) or domain name of the NTP server.</p></li>
+<li><p>ipv6_measurement (bool): True if the type of IPs that we want to measure is IPv6. False otherwise.</p></li>
+</ul>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>request</strong> (<em>Request</em>) – The Request object that gives you the IP of the client.</p></li>
+<li><p><strong>session</strong> (<em>Session</em>) – The currently active database session.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A json response containing a list of formatted measurements under “measurements”.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>JSONResponse</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>HTTPException</strong> – 400 - If the <cite>server</cite> field is empty or no response.</p></li>
+<li><p><strong>HTTPException</strong> – 422 - If the server cannot perform the desired IP type (IPv4 or IPv6) measurements,
+    or if the domain name could not be resolved.</p></li>
+<li><p><strong>HTTPException</strong> – 503 - If we could not get client IP address or our server’s IP address.</p></li>
+<li><p><strong>HTTPException</strong> – 500 - If an unexpected server error occurs.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This endpoint is also limited to &lt;<cite>see config file</cite>&gt; to prevent abuse and reduce server load.</p></li>
+</ul>
+</dd></dl>
+
 </section>
 </section>
 <section id="measurements-history">
 <h1>/measurements/history<a class="headerlink" href="#measurements-history" title="Link to this heading"></a></h1>
 <section id="fetch-historic-ntp-measurement-data-for-a-given-server-over-a-specified-time-range">
 <h2>Fetch historic NTP measurement data for a given server over a specified time range<a class="headerlink" href="#fetch-historic-ntp-measurement-data-for-a-given-server-over-a-specified-time-range" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.api.routing.read_historic_data_time">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.api.routing.</span></span><span class="sig-name descname"><span class="pre">read_historic_data_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Depends(get_db)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/api/routing.html#read_historic_data_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.api.routing.read_historic_data_time" title="Link to this definition"></a></dt>
+<dd><p>Retrieve historic NTP measurements for a given server and optional time range.</p>
+<p>This endpoint fetches past measurement data for the specified server using the
+<cite>fetch_historic_data_with_timestamps()</cite> function. It can optionally filter results
+based on a time range (start and end datetime).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>server</strong> (<em>str</em>) – IP address or domain name of the NTP server.</p></li>
+<li><p><strong>start</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Start timestamp for data filtering.</p></li>
+<li><p><strong>end</strong> (<em>datetime</em><em>, </em><em>optional</em>) – End timestamp for data filtering.</p></li>
+<li><p><strong>request</strong> (<em>Request</em>) – Request object for making the limiter work.</p></li>
+<li><p><strong>session</strong> (<em>Session</em>) – The currently active database session.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A json response containing a list of formatted measurements under “measurements”.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>JSONResponse</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>HTTPException</strong> – 400 - If <cite>server</cite> parameter is empty, or the start and end dates are badly formatted (e.g., <cite>start &gt;= end</cite>, <cite>end</cite> in future).</p></li>
+<li><p><strong>HTTPException</strong> – 500 - If there’s an internal server error, such as a database access issue (<cite>MeasurementQueryError</cite>) or any other unexpected server-side exception.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This endpoint is also limited to &lt;<cite>see config file</cite>&gt; to prevent abuse and reduce server load.</p></li>
+</ul>
+</dd></dl>
+
 </section>
 </section>
 <section id="measurements-ripe-trigger">
 <h1>/measurements/ripe/trigger<a class="headerlink" href="#measurements-ripe-trigger" title="Link to this heading"></a></h1>
 <section id="initiate-a-ripe-atlas-ntp-measurement-for-the-specified-server">
 <h2>Initiate a RIPE Atlas NTP measurement for the specified server<a class="headerlink" href="#initiate-a-ripe-atlas-ntp-measurement-for-the-specified-server" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.api.routing.trigger_ripe_measurement">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.api.routing.</span></span><span class="sig-name descname"><span class="pre">trigger_ripe_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/api/routing.html#trigger_ripe_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.api.routing.trigger_ripe_measurement" title="Link to this definition"></a></dt>
+<dd><p>Trigger a RIPE Atlas NTP measurement for a specified server.</p>
+<p>This endpoint initiates a RIPE Atlas measurement for the given NTP server
+(IP address or domain name) provided in the payload. Once the measurement
+is triggered, it returns a measurement ID which can later be used to fetch
+the result using the <cite>/measurements/ripe/{measurement_id}</cite> endpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>payload</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.MeasurementRequest.MeasurementRequest" title="server.app.dtos.MeasurementRequest.MeasurementRequest"><em>MeasurementRequest</em></a>) – <dl class="simple">
+<dt>A Pydantic model that includes:</dt><dd><ul>
+<li><p>server (str): The IP address or domain name of the target server.</p></li>
+<li><p>ipv6_measurement (bool): True if the type of IPs that we want to measure is IPv6. False otherwise.</p></li>
+</ul>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>request</strong> (<em>Request</em>) – The FastAPI request object, used to extract the client IP address.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A json response containing:</dt><dd><ul class="simple">
+<li><p>measurement_id (str): The ID of the triggered RIPE measurement.</p></li>
+<li><p>status (str): Status message (“started”).</p></li>
+<li><p>message (str): Instructions on how to retrieve the result.</p></li>
+<li><p>ip_list (list[str]): List of ips for ntp server.</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>JSONResponse</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>HTTPException</strong> – 400 - If the <cite>server</cite> field is invalid.</p></li>
+<li><p><strong>HTTPException</strong> – 500 - If the RIPE measurement could not be initiated.</p></li>
+<li><p><strong>HTTPException</strong> – 502 - If the RIPE measurement was initiated but failed.</p></li>
+<li><p><strong>HTTPException</strong> – 503 - If we could not get client IP address or our server’s IP address.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>This endpoint is also limited to &lt;<cite>see config file</cite>&gt; to prevent abuse and reduce server load.</p></li>
+</ul>
+</dd></dl>
+
 </section>
 </section>
 <section id="measurements-ripe-measurement-id">
 <h1>/measurements/ripe/{measurement_id}<a class="headerlink" href="#measurements-ripe-measurement-id" title="Link to this heading"></a></h1>
 <section id="retrieve-the-results-of-a-previously-triggered-ripe-atlas-measurement">
 <h2>Retrieve the results of a previously triggered RIPE Atlas measurement<a class="headerlink" href="#retrieve-the-results-of-a-previously-triggered-ripe-atlas-measurement" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.api.routing.get_ripe_measurement_result">
+<em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.api.routing.</span></span><span class="sig-name descname"><span class="pre">get_ripe_measurement_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measurement_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/api/routing.html#get_ripe_measurement_result"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.api.routing.get_ripe_measurement_result" title="Link to this definition"></a></dt>
+<dd><p>Retrieve the results of a previously triggered RIPE Atlas measurement.</p>
+<p>This endpoint checks the RIPE Atlas API for a given measurement ID. It determines
+if the measurement is complete (all probes responded, or measurement was stopped by RIPE Atlas) and returns
+the data accordingly. If the results are not yet ready, it informs the client
+that the measurement is still pending, or that partial results have been returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>measurement_id</strong> (<em>str</em>) – The ID of the RIPE measurement to fetch.</p></li>
+<li><p><strong>request</strong> (<em>Request</em>) – The FastAPI Request object (used for rate limiting).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>A JSON-formatted HTTP response containing the measurement status and results:</p>
+<blockquote>
+<div><ul>
+<li><p>If the measurement is complete (HTTP 200):</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;complete&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Measurement has been completed.&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;results&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;ripe_data&gt;&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
+<li><p>If the measurement is still in progress with partial data (HTTP 206):</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;partial_results&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Measurement is still in progress. These are partial results.&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;results&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;ripe_data&gt;&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
+<li><p>If the measurement has not produced results yet (HTTP 202):</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&quot;Measurement is still being processed.&quot;
+</pre></div>
+</div>
+</li>
+<li><p>If the probe responses are incomplete and likely timed out (HTTP 504):</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;timeout&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;message&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;RIPE data likely completed but incomplete probe responses.&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>JSONResponse</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>HTTPException</strong> – 405 - If the RIPE API request fails (e.g., network or service error).</p></li>
+<li><p><strong>HTTPException</strong> – 500 - If an unexpected internal error occurs during processing.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>A measurement is considered “complete” only when all requested probes have responded.</p></li>
+<li><p>The endpoint is rate-limited to &lt;<cite>see config file</cite>&gt; to prevent abuse and manage system load.</p></li>
+</ul>
+</dd></dl>
+
 </section>
 </section>
 

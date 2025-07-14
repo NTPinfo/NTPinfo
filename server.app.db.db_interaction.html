@@ -93,20 +93,229 @@
              
   <section id="conversion-from-data-tables-to-ntpmeasurement-class">
 <h1>Conversion from data tables to NtpMeasurement class<a class="headerlink" href="#conversion-from-data-tables-to-ntpmeasurement-class" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.db.db_interaction.row_to_dict">
+<span class="sig-prename descclassname"><span class="pre">server.app.db.db_interaction.</span></span><span class="sig-name descname"><span class="pre">row_to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/db/db_interaction.html#row_to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.db.db_interaction.row_to_dict" title="Link to this definition"></a></dt>
+<dd><p>Converts a Measurement and Time SQLAlchemy row into a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>m</strong> (<a class="reference internal" href="server.app.models.html#server.app.models.Measurement.Measurement" title="server.app.models.Measurement.Measurement"><em>Measurement</em></a>) – The measurement row containing NTP measurement data.</p></li>
+<li><p><strong>t</strong> (<a class="reference internal" href="server.app.models.html#server.app.models.Time.Time" title="server.app.models.Time.Time"><em>Time</em></a>) – The time row containing timestamp data for the measurement.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary representation of the combined measurement and timestamp data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.db.db_interaction.rows_to_dicts">
+<span class="sig-prename descclassname"><span class="pre">server.app.db.db_interaction.</span></span><span class="sig-name descname"><span class="pre">rows_to_dicts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/db/db_interaction.html#rows_to_dicts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.db.db_interaction.rows_to_dicts" title="Link to this definition"></a></dt>
+<dd><p>Converts a list of Measurement-Time row tuples into a list of dictionaries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>rows</strong> (<em>list</em><em>[</em><em>Row</em><em>[</em><em>tuple</em><em>[</em><a class="reference internal" href="server.app.models.html#server.app.models.Measurement.Measurement" title="server.app.models.Measurement.Measurement"><em>Measurement</em></a><em>, </em><a class="reference internal" href="server.app.models.html#server.app.models.Time.Time" title="server.app.models.Time.Time"><em>Time</em></a><em>]</em><em>]</em><em>]</em>) – List of database rows containing Measurement and Time.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of dictionaries where each dictionary contains combined data from Measurement and Time.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[dict[str, Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.db.db_interaction.dict_to_measurement">
+<span class="sig-prename descclassname"><span class="pre">server.app.db.db_interaction.</span></span><span class="sig-name descname"><span class="pre">dict_to_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/db/db_interaction.html#dict_to_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.db.db_interaction.dict_to_measurement" title="Link to this definition"></a></dt>
+<dd><p>Converts a dictionary representation of a measurement into an NtpMeasurement object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>entry</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – A dictionary containing the keys needed to construct an NtpMeasurement object.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A fully constructed NtpMeasurement using the provided data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpMeasurement.NtpMeasurement" title="server.app.dtos.NtpMeasurement.NtpMeasurement">NtpMeasurement</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InvalidMeasurementDataError" title="server.app.models.CustomError.InvalidMeasurementDataError"><strong>InvalidMeasurementDataError</strong></a> – If required keys are missing or construction fails due to invalid types/values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.db.db_interaction.rows_to_measurements">
+<span class="sig-prename descclassname"><span class="pre">server.app.db.db_interaction.</span></span><span class="sig-name descname"><span class="pre">rows_to_measurements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/db/db_interaction.html#rows_to_measurements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.db.db_interaction.rows_to_measurements" title="Link to this definition"></a></dt>
+<dd><p>Converts a list of Measurement-Time row tuples into NtpMeasurement objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>rows</strong> (<em>list</em><em>[</em><em>Row</em><em>[</em><em>tuple</em><em>[</em><a class="reference internal" href="server.app.models.html#server.app.models.Measurement.Measurement" title="server.app.models.Measurement.Measurement"><em>Measurement</em></a><em>, </em><a class="reference internal" href="server.app.models.html#server.app.models.Time.Time" title="server.app.models.Time.Time"><em>Time</em></a><em>]</em><em>]</em><em>]</em>) – List of database rows containing Measurement and Time data.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of NtpMeasurement objects created from the row data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpMeasurement.NtpMeasurement" title="server.app.dtos.NtpMeasurement.NtpMeasurement">NtpMeasurement</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="methods-used-for-interaction-with-the-database">
 <h1>Methods used for interaction with the database<a class="headerlink" href="#methods-used-for-interaction-with-the-database" title="Link to this heading"></a></h1>
 <section id="insertion">
 <h2>Insertion<a class="headerlink" href="#insertion" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.db.db_interaction.insert_measurement">
+<span class="sig-prename descclassname"><span class="pre">server.app.db.db_interaction.</span></span><span class="sig-name descname"><span class="pre">insert_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measurement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/db/db_interaction.html#insert_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.db.db_interaction.insert_measurement" title="Link to this definition"></a></dt>
+<dd><p>Inserts a new NTP measurement into the database. Before inserting, it sanitizes the string fields,
+because some fields may have a null character at the end which should be removed.</p>
+<p>This function stores both the raw timestamps (in the <cite>times</cite> table) and the
+processed measurement data (in the <cite>measurements</cite> table).
+It wraps operations in a single transaction to ensure consistency and atomicity.
+If any insert fails, the transaction is rolled back.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>measurement</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpMeasurement.NtpMeasurement" title="server.app.dtos.NtpMeasurement.NtpMeasurement"><em>NtpMeasurement</em></a>) – The measurement data to store.</p></li>
+<li><p><strong>session</strong> (<em>Session</em>) – The currently active database session.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.DatabaseInsertError" title="server.app.models.CustomError.DatabaseInsertError"><strong>DatabaseInsertError</strong></a> – If inserting the measurement or timestamps fails.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Timestamps are stored with both second and fractional parts.</p></li>
+<li><p>A foreign key (<cite>time_id</cite>) is used to link <cite>measurements</cite> to the <cite>times</cite> table.</p></li>
+<li><p>Any failure within the transaction block results in automatic rollback.</p></li>
+</ul>
+</dd></dl>
+
 </section>
 <section id="fetching-data-based-on-ip">
 <h2>Fetching data based on IP<a class="headerlink" href="#fetching-data-based-on-ip" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.db.db_interaction.get_measurements_timestamps_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.db.db_interaction.</span></span><span class="sig-name descname"><span class="pre">get_measurements_timestamps_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/db/db_interaction.html#get_measurements_timestamps_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.db.db_interaction.get_measurements_timestamps_ip" title="Link to this definition"></a></dt>
+<dd><p>Fetch measurements for a specific IP address within a precise time range.</p>
+<p>This function queries the <cite>measurements</cite> table, joined with the <cite>times</cite> table,
+and filters the results by:
+- The NTP server IP (<cite>ntp_server_ip</cite>)
+- The timestamp range (<cite>client_sent</cite> field) between <cite>start</cite> and <cite>end</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>session</strong> (<em>Session</em>) – The currently active database session.</p></li>
+<li><p><strong>ip</strong> (<em>IPv4Address</em><em> | </em><em>IPv6Address</em><em> | </em><em>None</em>) – The IP address of the NTP server.</p></li>
+<li><p><strong>start</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><em>PreciseTime</em></a>) – The start of the time range to filter on.</p></li>
+<li><p><strong>end</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><em>PreciseTime</em></a>) – The end of the time range to filter on.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A list of measurement records. Each record includes:</dt><dd><ul class="simple">
+<li><p>IP, version, stratum</p></li>
+<li><p>client/server send/receive timestamps with fractional parts</p></li>
+<li><p>other measurement metadata</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[dict]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.MeasurementQueryError" title="server.app.models.CustomError.MeasurementQueryError"><strong>MeasurementQueryError</strong></a> – If the database query fails.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="fetching-data-based-on-domain-name">
 <h2>Fetching data based on domain name<a class="headerlink" href="#fetching-data-based-on-domain-name" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.db.db_interaction.get_measurements_timestamps_dn">
+<span class="sig-prename descclassname"><span class="pre">server.app.db.db_interaction.</span></span><span class="sig-name descname"><span class="pre">get_measurements_timestamps_dn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/db/db_interaction.html#get_measurements_timestamps_dn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.db.db_interaction.get_measurements_timestamps_dn" title="Link to this definition"></a></dt>
+<dd><p>Fetches measurements for a specific domain name within a precise time range.</p>
+<p>Similar to <cite>get_measurements_timestamps_ip</cite>, but filters by <cite>ntp_server_name</cite>.
+instead of <cite>ntp_server_ip</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>session</strong> (<em>Session</em>) – The currently active database session.</p></li>
+<li><p><strong>dn</strong> (<em>str</em>) – The domain name of the NTP server.</p></li>
+<li><p><strong>start</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><em>PreciseTime</em></a>) – The start of the time range to filter on.</p></li>
+<li><p><strong>end</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><em>PreciseTime</em></a>) – The end of the time range to filter on.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A list of measurement records (as dictionaries), each including:</dt><dd><ul class="simple">
+<li><p>Measurement metadata (domain name, version, etc.)</p></li>
+<li><p>Timing data (client/server send/receive with precision)</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[dict]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.MeasurementQueryError" title="server.app.models.CustomError.MeasurementQueryError"><strong>MeasurementQueryError</strong></a> – If the database query fails.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="fetching-measurements-for-jitter-calculation">
 <h2>Fetching measurements for jitter calculation<a class="headerlink" href="#fetching-measurements-for-jitter-calculation" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.db.db_interaction.get_measurements_for_jitter_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.db.db_interaction.</span></span><span class="sig-name descname"><span class="pre">get_measurements_for_jitter_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/db/db_interaction.html#get_measurements_for_jitter_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.db.db_interaction.get_measurements_for_jitter_ip" title="Link to this definition"></a></dt>
+<dd><p>Fetches the last specified number (default 7) of measurements for specific IP address for calculating the jitter.</p>
+<p>This function queries the <cite>measurements</cite> table, joined with the <cite>times</cite> table,
+and filters the results by: The NTP server IP (<cite>ntp_server_ip</cite>) and limits the result to the number specified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>session</strong> (<em>Session</em>) – The currently active database session.</p></li>
+<li><p><strong>ip</strong> (<em>IPv4Address</em><em> | </em><em>IPv6Address</em>) – The IP address of the NTP server.</p></li>
+<li><p><strong>number</strong> (<em>int</em>) – The number of measurements to get.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A list of measurement records (as dictionaries), each including</dt><dd><ul class="simple">
+<li><p>Measurement metadata (IP, version, stratum, etc.)</p></li>
+<li><p>Timing data (client/server send/receive with fractions)</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[dict]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.MeasurementQueryError" title="server.app.models.CustomError.MeasurementQueryError"><strong>MeasurementQueryError</strong></a> – If the database query fails.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 

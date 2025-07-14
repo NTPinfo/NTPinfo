@@ -95,17 +95,422 @@
 <h1>Data Transfer Objects<a class="headerlink" href="#data-transfer-objects" title="Link to this heading"></a></h1>
 <section id="api-request-response-models">
 <h2>API Request/Response Models<a class="headerlink" href="#api-request-response-models" title="Link to this heading"></a></h2>
-<section id="measurementrequest">
-<h3>MeasurementRequest<a class="headerlink" href="#measurementrequest" title="Link to this heading"></a></h3>
+<section id="module-server.app.dtos.MeasurementRequest">
+<span id="measurementrequest"></span><h3>MeasurementRequest<a class="headerlink" href="#module-server.app.dtos.MeasurementRequest" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.MeasurementRequest.MeasurementRequest">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.MeasurementRequest.</span></span><span class="sig-name descname"><span class="pre">MeasurementRequest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/MeasurementRequest.html#MeasurementRequest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.MeasurementRequest.MeasurementRequest" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Data model for an NTP measurement request.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.MeasurementRequest.MeasurementRequest.server">
+<span class="sig-name descname"><span class="pre">server</span></span><a class="headerlink" href="#server.app.dtos.MeasurementRequest.MeasurementRequest.server" title="Link to this definition"></a></dt>
+<dd><p>The IP address or domain name of the NTP server to be measured.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.MeasurementRequest.MeasurementRequest.ipv6_measurement">
+<span class="sig-name descname"><span class="pre">ipv6_measurement</span></span><a class="headerlink" href="#server.app.dtos.MeasurementRequest.MeasurementRequest.ipv6_measurement" title="Link to this definition"></a></dt>
+<dd><p>True if the type of IPs that we want to measure is IPv6. False otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.app.dtos.MeasurementRequest.MeasurementRequest.validate_after">
+<span class="sig-name descname"><span class="pre">validate_after</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/MeasurementRequest.html#MeasurementRequest.validate_after"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.MeasurementRequest.MeasurementRequest.validate_after" title="Link to this definition"></a></dt>
+<dd><p>Checks that the server is a string.
+:type self: 
+:param self: Instance of the class.
+:type self: Self</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the MeasurementRequest instance.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Self</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>TypeError</strong> – if the server is not a string.</p></li>
+<li><p><strong>TypeError</strong> – if the flag for ipv6 measurement is not a bool.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="ntpmeasurementresponse">
-<h3>NtpMeasurementResponse<a class="headerlink" href="#ntpmeasurementresponse" title="Link to this heading"></a></h3>
+<section id="module-server.app.dtos.NtpMeasurementResponse">
+<span id="ntpmeasurementresponse"></span><h3>NtpMeasurementResponse<a class="headerlink" href="#module-server.app.dtos.NtpMeasurementResponse" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResponse">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.NtpMeasurementResponse.</span></span><span class="sig-name descname"><span class="pre">MeasurementResponse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/NtpMeasurementResponse.html#MeasurementResponse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResponse" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResponse.measurements">
+<span class="sig-name descname"><span class="pre">measurements</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code><span class="pre">[</span><a class="reference internal" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult" title="server.app.dtos.NtpMeasurementResponse.MeasurementResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">MeasurementResult</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResponse.measurements" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.NtpMeasurementResponse.</span></span><span class="sig-name descname"><span class="pre">MeasurementResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/NtpMeasurementResponse.html#MeasurementResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.client_recv_time">
+<span class="sig-name descname"><span class="pre">client_recv_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreciseTime</span></code></a></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.client_recv_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.client_sent_time">
+<span class="sig-name descname"><span class="pre">client_sent_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreciseTime</span></code></a></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.client_sent_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.jitter">
+<span class="sig-name descname"><span class="pre">jitter</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.jitter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.leap">
+<span class="sig-name descname"><span class="pre">leap</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.leap" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.nr_measurements_jitter">
+<span class="sig-name descname"><span class="pre">nr_measurements_jitter</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.nr_measurements_jitter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.ntp_last_sync_time">
+<span class="sig-name descname"><span class="pre">ntp_last_sync_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreciseTime</span></code></a></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.ntp_last_sync_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.ntp_server_ip">
+<span class="sig-name descname"><span class="pre">ntp_server_ip</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">IPv4Address</span></code><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">IPv6Address</span></code><span class="pre">,</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.ntp_server_ip" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.ntp_server_location">
+<span class="sig-name descname"><span class="pre">ntp_server_location</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.ProbeData.ServerLocation" title="server.app.dtos.ProbeData.ServerLocation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ServerLocation</span></code></a></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.ntp_server_location" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.ntp_server_name">
+<span class="sig-name descname"><span class="pre">ntp_server_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.ntp_server_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.ntp_server_ref_parent_ip">
+<span class="sig-name descname"><span class="pre">ntp_server_ref_parent_ip</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">IPv4Address</span></code><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">IPv6Address</span></code><span class="pre">,</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.ntp_server_ref_parent_ip" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.ntp_version">
+<span class="sig-name descname"><span class="pre">ntp_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.ntp_version" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.offset">
+<span class="sig-name descname"><span class="pre">offset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.offset" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.poll">
+<span class="sig-name descname"><span class="pre">poll</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.poll" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.precision">
+<span class="sig-name descname"><span class="pre">precision</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.precision" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.reachability">
+<span class="sig-name descname"><span class="pre">reachability</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.reachability" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.ref_name">
+<span class="sig-name descname"><span class="pre">ref_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.ref_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.root_delay">
+<span class="sig-name descname"><span class="pre">root_delay</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreciseTime</span></code></a></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.root_delay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.root_dispersion">
+<span class="sig-name descname"><span class="pre">root_dispersion</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreciseTime</span></code></a></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.root_dispersion" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.rtt">
+<span class="sig-name descname"><span class="pre">rtt</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.rtt" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.server_recv_time">
+<span class="sig-name descname"><span class="pre">server_recv_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreciseTime</span></code></a></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.server_recv_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.server_sent_time">
+<span class="sig-name descname"><span class="pre">server_sent_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreciseTime</span></code></a></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.server_sent_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.stratum">
+<span class="sig-name descname"><span class="pre">stratum</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.stratum" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.NtpMeasurementResponse.MeasurementResult.vantage_point_ip">
+<span class="sig-name descname"><span class="pre">vantage_point_ip</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">IPv4Address</span></code><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">IPv6Address</span></code><span class="pre">,</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.NtpMeasurementResponse.MeasurementResult.vantage_point_ip" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="ripemeasurementresponse">
-<h3>RipeMeasurementResponse<a class="headerlink" href="#ripemeasurementresponse" title="Link to this heading"></a></h3>
+<section id="module-server.app.dtos.RipeMeasurementResponse">
+<span id="ripemeasurementresponse"></span><h3>RipeMeasurementResponse<a class="headerlink" href="#module-server.app.dtos.RipeMeasurementResponse" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.ProbeAddr">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.RipeMeasurementResponse.</span></span><span class="sig-name descname"><span class="pre">ProbeAddr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/RipeMeasurementResponse.html#ProbeAddr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.ProbeAddr" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.ProbeAddr.ipv4">
+<span class="sig-name descname"><span class="pre">ipv4</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">IPv4Address</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.ProbeAddr.ipv4" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.ProbeAddr.ipv6">
+<span class="sig-name descname"><span class="pre">ipv6</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">IPv6Address</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.ProbeAddr.ipv6" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.ProbeCountPerType">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.RipeMeasurementResponse.</span></span><span class="sig-name descname"><span class="pre">ProbeCountPerType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/RipeMeasurementResponse.html#ProbeCountPerType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.ProbeCountPerType" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.ProbeCountPerType.area">
+<span class="sig-name descname"><span class="pre">area</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.ProbeCountPerType.area" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.ProbeCountPerType.asn">
+<span class="sig-name descname"><span class="pre">asn</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.ProbeCountPerType.asn" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.ProbeCountPerType.country">
+<span class="sig-name descname"><span class="pre">country</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.ProbeCountPerType.country" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.ProbeCountPerType.prefix">
+<span class="sig-name descname"><span class="pre">prefix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.ProbeCountPerType.prefix" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.ProbeCountPerType.random">
+<span class="sig-name descname"><span class="pre">random</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.ProbeCountPerType.random" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeMeasurementResponse">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.RipeMeasurementResponse.</span></span><span class="sig-name descname"><span class="pre">RipeMeasurementResponse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/RipeMeasurementResponse.html#RipeMeasurementResponse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeMeasurementResponse" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeMeasurementResponse.measurements">
+<span class="sig-name descname"><span class="pre">measurements</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code><span class="pre">[</span><a class="reference internal" href="#server.app.dtos.RipeMeasurementResponse.RipeResult" title="server.app.dtos.RipeMeasurementResponse.RipeResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">RipeResult</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeMeasurementResponse.measurements" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.RipeMeasurementResponse.</span></span><span class="sig-name descname"><span class="pre">RipeMeasurementResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/RipeMeasurementResponse.html#RipeMeasurementResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult.client_recv_time">
+<span class="sig-name descname"><span class="pre">client_recv_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreciseTime</span></code></a></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult.client_recv_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult.client_sent_time">
+<span class="sig-name descname"><span class="pre">client_sent_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreciseTime</span></code></a></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult.client_sent_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult.offset">
+<span class="sig-name descname"><span class="pre">offset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult.offset" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult.rtt">
+<span class="sig-name descname"><span class="pre">rtt</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult.rtt" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult.server_recv_time">
+<span class="sig-name descname"><span class="pre">server_recv_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreciseTime</span></code></a></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult.server_recv_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult.server_sent_time">
+<span class="sig-name descname"><span class="pre">server_sent_time</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">PreciseTime</span></code></a></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult.server_sent_time" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.RipeMeasurementResponse.</span></span><span class="sig-name descname"><span class="pre">RipeResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/RipeMeasurementResponse.html#RipeResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.ntp_server_ip">
+<span class="sig-name descname"><span class="pre">ntp_server_ip</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">IPv4Address</span></code><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">IPv6Address</span></code><span class="pre">,</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.ntp_server_ip" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.ntp_server_location">
+<span class="sig-name descname"><span class="pre">ntp_server_location</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.ProbeData.ServerLocation" title="server.app.dtos.ProbeData.ServerLocation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ServerLocation</span></code></a></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.ntp_server_location" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.ntp_server_name">
+<span class="sig-name descname"><span class="pre">ntp_server_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.ntp_server_name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.ntp_version">
+<span class="sig-name descname"><span class="pre">ntp_version</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.ntp_version" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.poll">
+<span class="sig-name descname"><span class="pre">poll</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.poll" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.precision">
+<span class="sig-name descname"><span class="pre">precision</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.precision" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.probe_addr">
+<span class="sig-name descname"><span class="pre">probe_addr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.RipeMeasurementResponse.ProbeAddr" title="server.app.dtos.RipeMeasurementResponse.ProbeAddr"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProbeAddr</span></code></a></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.probe_addr" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.probe_count_per_type">
+<span class="sig-name descname"><span class="pre">probe_count_per_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.RipeMeasurementResponse.ProbeCountPerType" title="server.app.dtos.RipeMeasurementResponse.ProbeCountPerType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProbeCountPerType</span></code></a></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.probe_count_per_type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.probe_id">
+<span class="sig-name descname"><span class="pre">probe_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.probe_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.probe_location">
+<span class="sig-name descname"><span class="pre">probe_location</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.ProbeData.ServerLocation" title="server.app.dtos.ProbeData.ServerLocation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ServerLocation</span></code></a></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.probe_location" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.ref_id">
+<span class="sig-name descname"><span class="pre">ref_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.ref_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.result">
+<span class="sig-name descname"><span class="pre">result</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code><span class="pre">[</span><a class="reference internal" href="#server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult" title="server.app.dtos.RipeMeasurementResponse.RipeMeasurementResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">RipeMeasurementResult</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.result" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.ripe_measurement_id">
+<span class="sig-name descname"><span class="pre">ripe_measurement_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.ripe_measurement_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.root_delay">
+<span class="sig-name descname"><span class="pre">root_delay</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.root_delay" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.root_dispersion">
+<span class="sig-name descname"><span class="pre">root_dispersion</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.root_dispersion" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.stratum">
+<span class="sig-name descname"><span class="pre">stratum</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.stratum" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.time_to_result">
+<span class="sig-name descname"><span class="pre">time_to_result</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.time_to_result" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementResponse.RipeResult.vantage_point_ip">
+<span class="sig-name descname"><span class="pre">vantage_point_ip</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">IPv4Address</span></code><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">IPv6Address</span></code><span class="pre">,</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code><span class="pre">]</span></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementResponse.RipeResult.vantage_point_ip" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
-<section id="ripemeasurementtriggerresponse">
-<h3>RipeMeasurementTriggerResponse<a class="headerlink" href="#ripemeasurementtriggerresponse" title="Link to this heading"></a></h3>
+<section id="module-server.app.dtos.RipeMeasurementTriggerResponse">
+<span id="ripemeasurementtriggerresponse"></span><h3>RipeMeasurementTriggerResponse<a class="headerlink" href="#module-server.app.dtos.RipeMeasurementTriggerResponse" title="Link to this heading"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementTriggerResponse.RipeMeasurementTriggerResponse">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.dtos.RipeMeasurementTriggerResponse.</span></span><span class="sig-name descname"><span class="pre">RipeMeasurementTriggerResponse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/RipeMeasurementTriggerResponse.html#RipeMeasurementTriggerResponse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.RipeMeasurementTriggerResponse.RipeMeasurementTriggerResponse" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementTriggerResponse.RipeMeasurementTriggerResponse.measurement_id">
+<span class="sig-name descname"><span class="pre">measurement_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementTriggerResponse.RipeMeasurementTriggerResponse.measurement_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementTriggerResponse.RipeMeasurementTriggerResponse.message">
+<span class="sig-name descname"><span class="pre">message</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementTriggerResponse.RipeMeasurementTriggerResponse.message" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementTriggerResponse.RipeMeasurementTriggerResponse.status">
+<span class="sig-name descname"><span class="pre">status</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementTriggerResponse.RipeMeasurementTriggerResponse.status" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementTriggerResponse.RipeMeasurementTriggerResponse.vantage_point_ip">
+<span class="sig-name descname"><span class="pre">vantage_point_ip</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementTriggerResponse.RipeMeasurementTriggerResponse.vantage_point_ip" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.RipeMeasurementTriggerResponse.RipeMeasurementTriggerResponse.vantage_point_location">
+<span class="sig-name descname"><span class="pre">vantage_point_location</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#server.app.dtos.ProbeData.ServerLocation" title="server.app.dtos.ProbeData.ServerLocation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ServerLocation</span></code></a></em><a class="headerlink" href="#server.app.dtos.RipeMeasurementTriggerResponse.RipeMeasurementTriggerResponse.vantage_point_location" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
 </section>
 <section id="core-data-models">

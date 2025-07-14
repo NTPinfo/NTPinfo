@@ -91,11 +91,304 @@
              
   <section id="services">
 <h1>Services<a class="headerlink" href="#services" title="Link to this heading"></a></h1>
-<section id="business-logic-for-the-api">
-<h2>Business logic for the API<a class="headerlink" href="#business-logic-for-the-api" title="Link to this heading"></a></h2>
+<section id="module-server.app.services.api_services">
+<span id="business-logic-for-the-api"></span><h2>Business logic for the API<a class="headerlink" href="#module-server.app.services.api_services" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.check_ripe_measurement_scheduled">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">check_ripe_measurement_scheduled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measurement_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#check_ripe_measurement_scheduled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.check_ripe_measurement_scheduled" title="Link to this definition"></a></dt>
+<dd><p>Check if a RIPE Atlas measurement has been fully scheduled.</p>
+<p>This function delegates to <cite>check_all_measurements_scheduled()</cite> to verify that
+all requested probes have been scheduled for the given RIPE measurement ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>measurement_id</strong> (<em>str</em>) – The ID of the RIPE measurement to check.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if all requested probes are scheduled, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the RIPE API returns an error or unexpected data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.fetch_historic_data_with_timestamps">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">fetch_historic_data_with_timestamps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#fetch_historic_data_with_timestamps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.fetch_historic_data_with_timestamps" title="Link to this definition"></a></dt>
+<dd><p>Fetches and reconstructs NTP measurements from the database within a specific time range.</p>
+<p>Converts the provided human-readable datetime range into NTP-compatible timestamps,
+queries the database based on whether the server is an IP address or domain name,
+and reconstructs each result as an <cite>NtpMeasurement</cite> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>server</strong> (<em>str</em>) – An IPv4/IPv6 address or domain name string for which measurements should be fetched.</p></li>
+<li><p><strong>start</strong> (<em>datetime</em>) – The start of the time range (in local or UTC timezone).</p></li>
+<li><p><strong>end</strong> (<em>datetime</em>) – The end of the time range (in local or UTC timezone).</p></li>
+<li><p><strong>session</strong> (<em>Session</em>) – The currently active database session.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of <cite>NtpMeasurement</cite> objects representing the historical data
+for the given server within the time window.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpMeasurement.NtpMeasurement" title="server.app.dtos.NtpMeasurement.NtpMeasurement">NtpMeasurement</a>]</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>The input datetimes are converted to UTC before processing.</p></li>
+<li><p>IP addresses are validated using the <cite>is_ip_address()</cite> utility function.</p></li>
+<li><p>Data is fetched using <cite>get_measurements_timestamps_ip</cite> or <cite>get_measurements_timestamps_dn</cite>
+depending on the server type.</p></li>
+<li><p>The <cite>PreciseTime</cite> wrapper is used to reconstruct accurate timestamps from database fields.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.fetch_ripe_data">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">fetch_ripe_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measurement_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#fetch_ripe_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.fetch_ripe_data" title="Link to this definition"></a></dt>
+<dd><p>Fetches and formats NTP measurement data from RIPE Atlas.</p>
+<p>This function retrieves raw measurement data from the RIPE Atlas API using the given
+measurement ID, parses it into internal data structures, and formats it into a
+standardized dictionary format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>measurement_id</strong> (<em>str</em>) – The unique ID of the RIPE Atlas measurement to fetch.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of dictionaries, each representing a formatted NTP measurement.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[dict]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.get_format">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">get_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measurement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nr_jitter_measurements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#get_format"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.get_format" title="Link to this definition"></a></dt>
+<dd><p>Format an NTP measurement object into a dictionary suitable for JSON serialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>measurement</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpMeasurement.NtpMeasurement" title="server.app.dtos.NtpMeasurement.NtpMeasurement"><em>NtpMeasurement</em></a>) – An object representing the NTP measurement result</p></li>
+<li><p><strong>jitter</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Optional jitter value if multiple measurements are performed</p></li>
+<li><p><strong>nr_jitter_measurements</strong> (<em>int</em>) – The number of measurements used in the jitter calculation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A dictionary containing key measurement details like this:</dt><dd><ul class="simple">
+<li><p>Server info (ntp version, IP, name, reference IP, reference)</p></li>
+<li><p>Timestamps (client sent time, server receive time, server sent time, client receive time)</p></li>
+<li><p>Measurement metrics (offset, delay, stratum, precision, reachability)</p></li>
+<li><p>Extra details (root delay, last sync time, leap indicator)</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.get_ripe_format">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">get_ripe_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measurement</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#get_ripe_format"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.get_ripe_format" title="Link to this definition"></a></dt>
+<dd><p>Converts a RipeMeasurement object into a standardized dictionary format.</p>
+<p>This function extracts relevant information from the provided RipeMeasurement
+instance—including NTP server info, probe data, timing details, and measurement
+results—and formats it as a plain dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>measurement</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.RipeMeasurement.RipeMeasurement" title="server.app.dtos.RipeMeasurement.RipeMeasurement"><em>RipeMeasurement</em></a>) – The parsed measurement object containing NTP and probe data</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing structured measurement data. Keys include:
+- NTP Server info (ntp version, ripe measurement id, IP, name, ref id)
+- Probe data (probe address, probe id in RIPE Atlas, probe location, time to result)
+- Measurement metrics (stratum, poll, precision, root delay, root dispersion, reachability)
+- NTP measurement data (rtt, offset, timestamps)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.measure">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_ip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measurement_no</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#measure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.measure" title="Link to this definition"></a></dt>
+<dd><p>Performs an NTP measurement for a given server (IP or domain name) and stores the result in the database.</p>
+<p>This function determines whether the input is an IP address or a domain name,
+then performs an NTP measurement using the appropriate method. The result is inserted
+into the database and returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>server</strong> (<em>str</em>) – A string representing either an IPv4/IPv6 address or a domain name.</p></li>
+<li><p><strong>wanted_ip_type</strong> (<em>int</em>) – The IP type that we want to measure. Used for domain names.</p></li>
+<li><p><strong>session</strong> (<em>Session</em>) – The currently active database session.</p></li>
+<li><p><strong>client_ip</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The client IP or None if it was not provided.</p></li>
+<li><p><strong>measurement_no</strong> (<em>int</em>) – How many extra measurements to perform if the jitter_flag is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>A list of pairs with a populated <cite>NtpMeasurement</cite> object if the measurement is successful, and the jitter.</p></li>
+<li><p><cite>None</cite> if an exception occurs during the measurement process.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[tuple[<a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpMeasurement.NtpMeasurement" title="server.app.dtos.NtpMeasurement.NtpMeasurement">NtpMeasurement</a>, float, int]] | None</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.DNSError" title="server.app.models.CustomError.DNSError"><strong>DNSError</strong></a> – If the domain name is invalid, or it could not be resolved.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>If the server string is empty or improperly formatted, this may raise exceptions internally,
+which are caught and logged to stdout.</p></li>
+<li><p>This function modifies persistent state by inserting a measurement into the database.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.override_desired_ip_type_if_input_is_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">override_desired_ip_type_if_input_is_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#override_desired_ip_type_if_input_is_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.override_desired_ip_type_if_input_is_ip" title="Link to this definition"></a></dt>
+<dd><p>If the target server input is IP, then we want to perform its IP type measurements.
+Only for domain names, “wanted_ip_type” is considered. Otherwise, it is ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_server</strong> (<em>str</em>) – The server we want to measure (domain name or IP address)</p></li>
+<li><p><strong>wanted_ip_type</strong> (<em>int</em>) – The IP type the user said they wanted to measure.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The IP type of the server in case the server input is IP, otherwise the wanted_ip_type unmodified.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.perform_ripe_measurement">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">perform_ripe_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ntp_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#perform_ripe_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.perform_ripe_measurement" title="Link to this definition"></a></dt>
+<dd><p>Initiate a RIPE Atlas measurement for a given server (IP address or domain name).</p>
+<p>This function determines whether the provided server is an IP address or a domain name,
+and triggers the appropriate RIPE measurement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ntp_server</strong> (<em>str</em>) – The IP address or domain name of the target NTP server.</p></li>
+<li><p><strong>client_ip</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The IP address of the client requesting the measurement.</p></li>
+<li><p><strong>wanted_ip_type</strong> (<em>int</em>) – The IP type that we want to measure. (4 or 6)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The RIPE measurement ID. (as a string)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the server string is invalid or the measurement failed.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="methods-used-for-calculating-data-from-the-timestamps">
-<h2>Methods used for calculating data from the timestamps<a class="headerlink" href="#methods-used-for-calculating-data-from-the-timestamps" title="Link to this heading"></a></h2>
+<section id="module-server.app.services.NtpCalculator">
+<span id="methods-used-for-calculating-data-from-the-timestamps"></span><h2>Methods used for calculating data from the timestamps<a class="headerlink" href="#module-server.app.services.NtpCalculator" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.app.services.NtpCalculator.NtpCalculator">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.services.NtpCalculator.</span></span><span class="sig-name descname"><span class="pre">NtpCalculator</span></span><a class="reference internal" href="_modules/server/app/services/NtpCalculator.html#NtpCalculator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.NtpCalculator.NtpCalculator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="server.app.services.NtpCalculator.NtpCalculator.calculate_delay">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_delay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/NtpCalculator.html#NtpCalculator.calculate_delay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.NtpCalculator.NtpCalculator.calculate_delay" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Calculates round-trip delay between client and server using NTP timestamps.
+It uses the formula (t4 - t1) - (t3 - t2)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timestamps</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpTimestamps.NtpTimestamps" title="server.app.dtos.NtpTimestamps.NtpTimestamps"><em>NtpTimestamps</em></a>) – A single NTP timestamps object, containing data about the 4 key timestamps</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Delay in seconds</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.app.services.NtpCalculator.NtpCalculator.calculate_float_time">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_float_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/NtpCalculator.html#NtpCalculator.calculate_float_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.NtpCalculator.NtpCalculator.calculate_float_time" title="Link to this definition"></a></dt>
+<dd><p>Converts a PreciseTime object to a float in seconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>time</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><em>PreciseTime</em></a>) – A single PreciseTime object, representing a single timestamp</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Time in seconds.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.app.services.NtpCalculator.NtpCalculator.calculate_jitter">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_jitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offsets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/NtpCalculator.html#NtpCalculator.calculate_jitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.NtpCalculator.NtpCalculator.calculate_jitter" title="Link to this definition"></a></dt>
+<dd><p>Calculates the jitter of multiple NTP measurements based on their offsets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>offsets</strong> (<em>list</em><em>[</em><em>float</em><em>]</em>) – A list of floats representing the offsets to calculate jitter.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Jitter in seconds.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.app.services.NtpCalculator.NtpCalculator.calculate_offset">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_offset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/NtpCalculator.html#NtpCalculator.calculate_offset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.NtpCalculator.NtpCalculator.calculate_offset" title="Link to this definition"></a></dt>
+<dd><p>Calculates the clock offset between client and server using NTP timestamps.
+Uses the formula  ((t2 - t1) + (t3 - t4)) / 2</p>
+<p>Args:
+timestamps (NtpTimestamps): A single NTP timestamps object, containing data about the 4 key timestamps</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Clock offset in seconds</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="module-server.app.services.NtpValidation">
 <span id="methods-used-for-validating-an-ntp-measurement"></span><h2>Methods used for validating an NTP measurement<a class="headerlink" href="#module-server.app.services.NtpValidation" title="Link to this heading"></a></h2>

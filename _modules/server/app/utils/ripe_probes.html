@@ -1,0 +1,743 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>server.app.utils.ripe_probes &mdash; NTPinfo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=82d09745" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            NTPinfo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.backend.html">Back-end component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.frontend.html">Front-end component</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NTPinfo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">server.app.utils.ripe_probes</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for server.app.utils.ripe_probes</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypeVar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.location_resolver</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_coordinates_for_ip</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.calculations</span><span class="w"> </span><span class="kn">import</span> <span class="n">calculate_haversine_distance</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.models.CustomError</span><span class="w"> </span><span class="kn">import</span> <span class="n">InputError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.load_config_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ripe_number_of_probes_per_measurement</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.ip_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ip_network_details</span><span class="p">,</span> <span class="n">get_prefix_from_ip</span><span class="p">,</span> <span class="n">get_ip_family</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ripe.atlas.cousteau</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProbeRequest</span>
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>  <span class="c1"># float or int</span>
+
+
+<div class="viewcode-block" id="get_probes">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_probes.get_probes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_probes</span><span class="p">(</span><span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ip_family_of_ntp_server</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+               <span class="n">probes_requested</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_ripe_number_of_probes_per_measurement</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method handles all cases regarding what probes we should send.</span>
+<span class="sd">    This method assumes all inputs are either valid or None. (If there is a typo in the input, the measurement</span>
+<span class="sd">    may be affected)</span>
+<span class="sd">    It will try to return the best probes near the client.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        client_ip (str): The IP address of the client.</span>
+<span class="sd">        ip_family_of_ntp_server (int): The IP family of the NTP server. (4 or 6)</span>
+<span class="sd">        probes_requested (int): The total number of probes that we will request.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list[dict]: The list of probes that we will use for the measurement.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        InputError: If the client IP address is invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># get the details about the client IP.</span>
+    <span class="n">ip_family</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_ip_family</span><span class="p">(</span><span class="n">client_ip</span><span class="p">)</span>
+    <span class="n">ip_asn</span><span class="p">,</span> <span class="n">ip_country</span><span class="p">,</span> <span class="n">ip_area</span> <span class="o">=</span> <span class="n">get_ip_network_details</span><span class="p">(</span><span class="n">client_ip</span><span class="p">)</span>
+    <span class="n">ip_prefix</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># the prefix is relevant if and only if the client has the same IP type as the NTP server.</span>
+    <span class="c1"># Otherwise, we won&#39;t &quot;find probes with the same prefix as the client that can perform NTP measurements for that server&quot;</span>
+
+    <span class="c1"># If we do not have this check, &quot;get available&quot; methods that involves prefix will fail</span>
+    <span class="k">if</span> <span class="n">ip_family</span> <span class="o">==</span> <span class="n">ip_family_of_ntp_server</span><span class="p">:</span>
+        <span class="n">ip_prefix</span> <span class="o">=</span> <span class="n">get_prefix_from_ip</span><span class="p">(</span><span class="n">client_ip</span><span class="p">)</span>
+
+    <span class="c1"># settings:</span>
+    <span class="n">probes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">current_probes_set</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="c1"># Try to see if we have probes with the same ASN and prefix OR same ASN and same country. They have the highest priority.</span>
+    <span class="n">probes_requested</span><span class="p">,</span> <span class="n">current_probes_set</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">get_best_probes_with_multiple_attributes</span><span class="p">(</span><span class="n">client_ip</span><span class="o">=</span><span class="n">client_ip</span><span class="p">,</span> <span class="n">current_probes_set</span><span class="o">=</span><span class="n">current_probes_set</span><span class="p">,</span>
+                                                 <span class="n">ip_asn</span><span class="o">=</span><span class="n">ip_asn</span><span class="p">,</span> <span class="n">ip_prefix</span><span class="o">=</span><span class="n">ip_prefix</span><span class="p">,</span>
+                                                 <span class="n">ip_country</span><span class="o">=</span><span class="n">ip_country</span><span class="p">,</span> <span class="n">ip_family</span><span class="o">=</span><span class="n">ip_family_of_ntp_server</span><span class="p">,</span>
+                                                 <span class="n">probes_requested</span><span class="o">=</span><span class="n">probes_requested</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># add the current IDs of the probes</span>
+        <span class="n">probes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_probes_by_ids</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">current_probes_set</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">probes</span>
+
+    <span class="c1"># if we still need more probes or if the method above failed, continue trying with filters by a single attributes.</span>
+    <span class="n">probes_requested</span><span class="p">,</span> <span class="n">current_probes_set</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">get_best_probes_matched_by_single_attribute</span><span class="p">(</span><span class="n">client_ip</span><span class="o">=</span><span class="n">client_ip</span><span class="p">,</span> <span class="n">current_probes_set</span><span class="o">=</span><span class="n">current_probes_set</span><span class="p">,</span>
+                                                    <span class="n">ip_asn</span><span class="o">=</span><span class="n">ip_asn</span><span class="p">,</span> <span class="n">ip_prefix</span><span class="o">=</span><span class="n">ip_prefix</span><span class="p">,</span>
+                                                    <span class="n">ip_country</span><span class="o">=</span><span class="n">ip_country</span><span class="p">,</span> <span class="n">ip_family</span><span class="o">=</span><span class="n">ip_family_of_ntp_server</span><span class="p">,</span>
+                                                    <span class="n">probes_requested</span><span class="o">=</span><span class="n">probes_requested</span><span class="p">))</span>
+    <span class="c1"># add the IDs of the probes</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">current_probes_set</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">probes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_probes_by_ids</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">current_probes_set</span><span class="p">)))</span>
+    <span class="c1"># if we still need to add probes</span>
+    <span class="c1"># the last resort is to use probes from the same area or random if it is not available</span>
+    <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ip_area</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">probes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_area_probes</span><span class="p">(</span><span class="n">ip_area</span><span class="p">,</span> <span class="n">probes_requested</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">probes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_random_probes</span><span class="p">(</span><span class="n">probes_requested</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">probes</span></div>
+
+
+
+<div class="viewcode-block" id="get_best_probes_with_multiple_attributes">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_probes.get_best_probes_with_multiple_attributes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_best_probes_with_multiple_attributes</span><span class="p">(</span><span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">current_probes_set</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">ip_asn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+                                             <span class="n">ip_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ip_country</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ip_family</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                                             <span class="n">probes_requested</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_ripe_number_of_probes_per_measurement</span><span class="p">())</span> \
+        <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method tries to get probes that has the same ASN and prefix OR the same ASN and country and subtract them</span>
+<span class="sd">    from the probes_requested. These probes have the highest priority as they have multiple attributes as the client IP</span>
+<span class="sd">    (same ASN and same prefix OR same ASN or same country)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        client_ip (str): The IP address of the client.</span>
+<span class="sd">        current_probes_set (set[int]): The set of probes that we will use for the measurement. (to be sure that we do not include duplicates)</span>
+<span class="sd">        ip_asn (Optional[str]): The ASN of the NTP server IP address.</span>
+<span class="sd">        ip_prefix (Optional[str]): The prefix of the NTP server IP address.</span>
+<span class="sd">        ip_country (Optional[str]): The country of the NTP server IP address.</span>
+<span class="sd">        ip_family (int): The family of the NTP server IP address. (4 or 6)</span>
+<span class="sd">        probes_requested (int): The number of probes that we still need to request.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple[int, set[int]]: The updated number of probes that we still need to find after this method call.</span>
+<span class="sd">                               a list of the IDs of the probes that we found until now.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        InputError: If the input is invalid or probes_requested is negative.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Probe requested cannot be negative&quot;</span><span class="p">)</span>
+
+    <span class="n">ip_type</span> <span class="o">=</span> <span class="s2">&quot;ipv&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ip_family</span><span class="p">)</span>
+    <span class="c1"># see if we can get enough probes from probes with the same ASN and same prefix:</span>
+    <span class="k">if</span> <span class="n">ip_asn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ip_prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="n">get_available_probes_asn_and_prefix</span><span class="p">(</span><span class="n">client_ip</span><span class="p">,</span> <span class="n">ip_asn</span><span class="p">,</span> <span class="n">ip_prefix</span><span class="p">,</span> <span class="n">ip_type</span><span class="p">)</span>
+        <span class="n">probes_requested</span><span class="p">,</span> <span class="n">current_probes_set</span> <span class="o">=</span> <span class="n">consume_probes</span><span class="p">(</span><span class="n">probes_requested</span><span class="p">,</span> <span class="n">current_probes_set</span><span class="p">,</span> <span class="n">ids</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">set</span><span class="p">(</span><span class="n">current_probes_set</span><span class="p">)</span>
+
+    <span class="c1"># try with the probes from the same ASN and country</span>
+    <span class="k">if</span> <span class="n">ip_asn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ip_country</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="n">get_available_probes_asn_and_country</span><span class="p">(</span><span class="n">client_ip</span><span class="p">,</span> <span class="n">ip_asn</span><span class="p">,</span> <span class="n">ip_country</span><span class="p">,</span> <span class="n">ip_type</span><span class="p">)</span>
+        <span class="n">probes_requested</span><span class="p">,</span> <span class="n">current_probes_set</span> <span class="o">=</span> <span class="n">consume_probes</span><span class="p">(</span><span class="n">probes_requested</span><span class="p">,</span> <span class="n">current_probes_set</span><span class="p">,</span> <span class="n">ids</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">probes_requested</span><span class="p">,</span> <span class="nb">set</span><span class="p">(</span><span class="n">current_probes_set</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_best_probes_matched_by_single_attribute">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_probes.get_best_probes_matched_by_single_attribute">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_best_probes_matched_by_single_attribute</span><span class="p">(</span><span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">current_probes_set</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">ip_asn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+                                                <span class="n">ip_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ip_country</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ip_family</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                                                <span class="n">probes_requested</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_ripe_number_of_probes_per_measurement</span><span class="p">())</span> \
+        <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method is responsible for getting the best probes that has a match by a single attribute in this order: ASN, prefix, country.</span>
+<span class="sd">    As soon as we have enough probes we return.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        client_ip (str): The IP address of the client.</span>
+<span class="sd">        current_probes_set (set[int]): The set of probes that we will use for the measurement. (to be sure that we do not include duplicates)</span>
+<span class="sd">        ip_asn (Optional[str]): The ASN of the NTP server IP address.</span>
+<span class="sd">        ip_prefix (Optional[str]): The prefix of the NTP server IP address.</span>
+<span class="sd">        ip_country (Optional[str]): The country of the NTP server IP address.</span>
+<span class="sd">        ip_family (int): The family of the NTP server IP address. (4 or 6)</span>
+<span class="sd">        probes_requested (int): The number of probes that we still need to request.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple[int, set[int]]: - The updated number of probes that we still need to find after this method call.</span>
+<span class="sd">                              - The set of probe types and the respective number of probes.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        InputError: If the NTP server IP is invalid or if the probes_requested is negative.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Probe requested cannot be negative&quot;</span><span class="p">)</span>
+    <span class="n">ip_type</span> <span class="o">=</span> <span class="s2">&quot;ipv&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ip_family</span><span class="p">)</span>
+    <span class="n">ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+    <span class="c1"># try ASN</span>
+    <span class="k">if</span> <span class="n">ip_asn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="n">get_available_probes_asn</span><span class="p">(</span><span class="n">client_ip</span><span class="p">,</span> <span class="n">ip_asn</span><span class="p">,</span> <span class="n">ip_type</span><span class="p">)</span>
+        <span class="n">probes_requested</span><span class="p">,</span> <span class="n">current_probes_set</span> <span class="o">=</span> <span class="n">consume_probes</span><span class="p">(</span><span class="n">probes_requested</span><span class="p">,</span> <span class="n">current_probes_set</span><span class="p">,</span> <span class="n">ids</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="n">current_probes_set</span>
+
+    <span class="c1"># try prefix</span>
+    <span class="k">if</span> <span class="n">ip_prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="n">get_available_probes_prefix</span><span class="p">(</span><span class="n">client_ip</span><span class="p">,</span> <span class="n">ip_prefix</span><span class="p">,</span> <span class="n">ip_type</span><span class="p">)</span>
+        <span class="n">probes_requested</span><span class="p">,</span> <span class="n">current_probes_set</span> <span class="o">=</span> <span class="n">consume_probes</span><span class="p">(</span><span class="n">probes_requested</span><span class="p">,</span> <span class="n">current_probes_set</span><span class="p">,</span> <span class="n">ids</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="n">current_probes_set</span>
+
+    <span class="c1"># try country</span>
+    <span class="k">if</span> <span class="n">ip_country</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="n">get_available_probes_country</span><span class="p">(</span><span class="n">client_ip</span><span class="p">,</span> <span class="n">ip_country</span><span class="p">,</span> <span class="n">ip_type</span><span class="p">)</span>
+        <span class="n">probes_requested</span><span class="p">,</span> <span class="n">probes_to_use</span> <span class="o">=</span> <span class="n">consume_probes</span><span class="p">(</span><span class="n">probes_requested</span><span class="p">,</span> <span class="n">current_probes_set</span><span class="p">,</span> <span class="n">ids</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="n">current_probes_set</span>
+
+    <span class="c1"># if we still need to find probes</span>
+    <span class="k">return</span> <span class="n">probes_requested</span><span class="p">,</span> <span class="n">current_probes_set</span></div>
+
+
+
+<div class="viewcode-block" id="get_probes_by_ids">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_probes.get_probes_by_ids">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_probes_by_ids</span><span class="p">(</span><span class="n">probe_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This method selects probes by their IDs.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            probe_ids (list[int]): The IDs of the probes.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: The selected probes.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            InputError: If the input is invalid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">probe_ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;probe_ids cannot be empty&quot;</span><span class="p">)</span>
+    <span class="n">list_str</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">probe_ids</span><span class="p">]</span>
+    <span class="n">formatted_list</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">list_str</span><span class="p">)</span>
+    <span class="c1"># print(formatted_list)</span>
+    <span class="n">probes</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;probes&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">formatted_list</span><span class="p">,</span>
+        <span class="s2">&quot;requested&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">probe_ids</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">probes</span></div>
+
+
+
+<div class="viewcode-block" id="get_asn_probes">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_probes.get_asn_probes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_asn_probes</span><span class="p">(</span><span class="n">ip_asn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">],</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method selects n probes that belong to the same ASN network.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ip_asn (Optional[str | int]): The ASN network.</span>
+<span class="sd">        n (int): The number of probes to select.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: The selected probes.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        InputError: If the ASN network is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ip_asn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;ip_asn cannot be None&quot;</span><span class="p">)</span>
+    <span class="n">probes</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;asn&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">ip_asn</span><span class="p">,</span>
+        <span class="s2">&quot;requested&quot;</span><span class="p">:</span> <span class="n">n</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">probes</span></div>
+
+
+
+<div class="viewcode-block" id="get_prefix_probes">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_probes.get_prefix_probes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_prefix_probes</span><span class="p">(</span><span class="n">ip_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method selects n probes that has this prefix.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ip_prefix (Optional[str]): The IP prefix family.</span>
+<span class="sd">        n (int): The number of probes to select.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: The selected probes.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        InputError: If the IP prefix is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ip_prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;ip_prefix cannot be None&quot;</span><span class="p">)</span>
+    <span class="n">probes</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;prefix&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">ip_prefix</span><span class="p">,</span>
+        <span class="s2">&quot;requested&quot;</span><span class="p">:</span> <span class="n">n</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">probes</span></div>
+
+
+
+<div class="viewcode-block" id="get_country_probes">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_probes.get_country_probes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_country_probes</span><span class="p">(</span><span class="n">ip_country_code</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method selects n probes that belong to the same country.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ip_country_code (Optional[str]): The country code.</span>
+<span class="sd">        n (int): The number of probes to select.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: The selected probes.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        InputError: If the country code is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ip_country_code</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;ip_country_code cannot be None&quot;</span><span class="p">)</span>
+    <span class="n">probes</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;country&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">ip_country_code</span><span class="p">,</span>
+        <span class="s2">&quot;requested&quot;</span><span class="p">:</span> <span class="n">n</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">probes</span></div>
+
+
+
+<div class="viewcode-block" id="get_area_probes">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_probes.get_area_probes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_area_probes</span><span class="p">(</span><span class="n">area</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method selects n probes from this area.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        area (Optional[str]): The area of the probes.</span>
+<span class="sd">        n (int): The number of probes to select.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: The selected probes.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        InputError: If area is not valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">area</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;area cannot be None&quot;</span><span class="p">)</span>
+    <span class="n">probes</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;area&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">area</span><span class="p">,</span>
+        <span class="s2">&quot;requested&quot;</span><span class="p">:</span> <span class="n">n</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">probes</span></div>
+
+
+
+<div class="viewcode-block" id="get_random_probes">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_probes.get_random_probes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_random_probes</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method selects n random probes from all over the world.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        n (int): The number of probes to select.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: The selected probes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">get_area_probes</span><span class="p">(</span><span class="s2">&quot;WW&quot;</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_available_probes_asn_and_prefix">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_probes.get_available_probes_asn_and_prefix">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_available_probes_asn_and_prefix</span><span class="p">(</span><span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ip_asn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ip_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ip_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method gets the probes available on RIPE Atlas that has the same ASN and prefix as the client IP.</span>
+<span class="sd">    These probes should also support ipv4 or ipv6, it depends on the type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        client_ip (str): The IP address of the client.</span>
+<span class="sd">        ip_asn (str): The ASN of the searched network.</span>
+<span class="sd">        ip_prefix(str): The prefix of the respective IP.</span>
+<span class="sd">        ip_type (str): The IP type (ipv4 or ipv6). (not case-sensitive)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list[int]: A list with the ids of the available probes.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        Exception: If the input is invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ip_asn_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ip_asn</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;AS&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;as&quot;</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ip_asn</span><span class="si">}</span><span class="s2"> is not a valid ASN&quot;</span><span class="p">)</span>
+    <span class="n">prefix_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;prefix_v4&quot;</span> <span class="k">if</span> <span class="n">ip_type</span> <span class="o">==</span> <span class="s2">&quot;ipv4&quot;</span> <span class="k">else</span> <span class="s2">&quot;prefix_v6&quot;</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;asn&quot;</span><span class="p">:</span> <span class="n">ip_asn_number</span><span class="p">,</span>
+        <span class="n">prefix_type</span><span class="p">:</span> <span class="n">ip_prefix</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># Connected probes</span>
+        <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;system-</span><span class="si">{</span><span class="n">ip_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">-works&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;is_public&quot;</span><span class="p">:</span> <span class="kc">True</span>
+    <span class="p">}</span>
+    <span class="n">probes</span> <span class="o">=</span> <span class="n">ProbeRequest</span><span class="p">(</span>
+        <span class="n">return_objects</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">],</span>
+        <span class="n">page_size</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">filters</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">lat_client</span><span class="p">,</span> <span class="n">lon_client</span> <span class="o">=</span> <span class="n">get_coordinates_for_ip</span><span class="p">(</span><span class="n">client_ip</span><span class="p">)</span>
+    <span class="n">probe_ids_dist</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># each id is mapped to its distance</span>
+
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">probes</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">probe_ids_dist</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">coordinates</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coordinates&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">coordinates</span><span class="p">:</span>
+                <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">coordinates</span>
+                <span class="n">dist</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">calculate_haversine_distance</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat_client</span><span class="p">,</span> <span class="n">lon_client</span><span class="p">)</span>
+                <span class="n">probe_ids_dist</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">probe_ids_dist</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1000000</span>  <span class="c1"># some large value to put this probe at the end of the list</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;error (safe): </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">probe_ids_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">probe_ids_dist</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">probe_ids_dist</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">probe_ids_list</span></div>
+
+
+
+<div class="viewcode-block" id="get_available_probes_asn_and_country">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_probes.get_available_probes_asn_and_country">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_available_probes_asn_and_country</span><span class="p">(</span><span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ip_asn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ip_country_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ip_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method gets the probes available on RIPE Atlas that has the same ASN and country as the client IP.</span>
+<span class="sd">    These probes should also support ipv4 or ipv6, it depends on the type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        client_ip (str): The IP address of the client.</span>
+<span class="sd">        ip_asn (str): The ASN of the searched network.</span>
+<span class="sd">        ip_country_code(str): The country code of the respective IP.</span>
+<span class="sd">        ip_type (str): The IP type (ipv4 or ipv6). (not case-sensitive)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list[int]: A list with the ids of the available probes.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        Exception: If the input is invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ip_asn_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ip_asn</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;AS&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;as&quot;</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ip_asn</span><span class="si">}</span><span class="s2"> is not a valid ASN&quot;</span><span class="p">)</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;asn&quot;</span><span class="p">:</span> <span class="n">ip_asn_number</span><span class="p">,</span>
+        <span class="s2">&quot;country_code&quot;</span><span class="p">:</span> <span class="n">ip_country_code</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># Connected probes</span>
+        <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;system-</span><span class="si">{</span><span class="n">ip_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">-works&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;is_public&quot;</span><span class="p">:</span> <span class="kc">True</span>
+    <span class="p">}</span>
+    <span class="n">probes</span> <span class="o">=</span> <span class="n">ProbeRequest</span><span class="p">(</span>
+        <span class="n">return_objects</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">],</span>
+        <span class="n">page_size</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">filters</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">lat_client</span><span class="p">,</span> <span class="n">lon_client</span> <span class="o">=</span> <span class="n">get_coordinates_for_ip</span><span class="p">(</span><span class="n">client_ip</span><span class="p">)</span>
+    <span class="n">probe_ids_dist</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># each id is mapped to its distance</span>
+
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">probes</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">probe_ids_dist</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">coordinates</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coordinates&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">coordinates</span><span class="p">:</span>
+                <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">coordinates</span>
+                <span class="n">dist</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">calculate_haversine_distance</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat_client</span><span class="p">,</span> <span class="n">lon_client</span><span class="p">)</span>
+                <span class="n">probe_ids_dist</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">probe_ids_dist</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="mf">100000.0</span>  <span class="c1"># some large value to put this probe at the end of the list</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;error (safe): </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">probe_ids_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">probe_ids_dist</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">probe_ids_dist</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">probe_ids_list</span></div>
+
+
+
+<div class="viewcode-block" id="get_available_probes_asn">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_probes.get_available_probes_asn">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_available_probes_asn</span><span class="p">(</span><span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ip_asn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ip_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method gets the probes available on RIPE Atlas that has the same ASN as the client IP.</span>
+<span class="sd">    These probes should also support ipv4 or ipv6, it depends on the type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        client_ip (str): The IP address of the client.</span>
+<span class="sd">        ip_asn (str): The ASN of the searched network.</span>
+<span class="sd">        ip_type (str): The IP type (ipv4 or ipv6). (not case-sensitive)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list[int]: A list with the ids of the available probes.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        Exception: If the input is invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ip_asn_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ip_asn</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;AS&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;as&quot;</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ip_asn</span><span class="si">}</span><span class="s2"> is not a valid ASN&quot;</span><span class="p">)</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;asn&quot;</span><span class="p">:</span> <span class="n">ip_asn_number</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># Connected probes</span>
+        <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;system-</span><span class="si">{</span><span class="n">ip_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">-works&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;is_public&quot;</span><span class="p">:</span> <span class="kc">True</span>
+    <span class="p">}</span>
+    <span class="n">probes</span> <span class="o">=</span> <span class="n">ProbeRequest</span><span class="p">(</span>
+        <span class="n">return_objects</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">],</span>
+        <span class="n">page_size</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span> <span class="c1"># we do not have a lot of probes there usually, 250 should be ok</span>
+        <span class="o">**</span><span class="n">filters</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">lat_client</span><span class="p">,</span> <span class="n">lon_client</span> <span class="o">=</span> <span class="n">get_coordinates_for_ip</span><span class="p">(</span><span class="n">client_ip</span><span class="p">)</span>
+    <span class="n">probe_ids_dist</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># each id is mapped to its distance</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">probes</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">probe_ids_dist</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">coordinates</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coordinates&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">coordinates</span><span class="p">:</span>
+                <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">coordinates</span>
+                <span class="n">dist</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">calculate_haversine_distance</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat_client</span><span class="p">,</span> <span class="n">lon_client</span><span class="p">)</span>
+                <span class="n">probe_ids_dist</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">probe_ids_dist</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2000000</span>  <span class="c1"># some large value to put this probe at the end of the list</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;error (safe): </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">probe_ids_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">probe_ids_dist</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">probe_ids_dist</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">probe_ids_list</span></div>
+
+
+
+<div class="viewcode-block" id="get_available_probes_prefix">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_probes.get_available_probes_prefix">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_available_probes_prefix</span><span class="p">(</span><span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ip_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ip_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method gets the probes available on RIPE Atlas that has the same prefix as the client IP.</span>
+<span class="sd">    These probes should also support ipv4 or ipv6, it depends on the type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        client_ip (str): The IP address of the client.</span>
+<span class="sd">        ip_prefix (str): The ip_prefix of the searched network.</span>
+<span class="sd">        ip_type (str): The IP type (ipv4 or ipv6). It should be lowercase.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list[int]: A list with the ids of the available probes.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        Exception: If the input is invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">prefix_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;prefix_v4&quot;</span> <span class="k">if</span> <span class="n">ip_type</span> <span class="o">==</span> <span class="s2">&quot;ipv4&quot;</span> <span class="k">else</span> <span class="s2">&quot;prefix_v6&quot;</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">prefix_type</span><span class="p">:</span> <span class="n">ip_prefix</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># Connected probes</span>
+        <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;system-</span><span class="si">{</span><span class="n">ip_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">-works&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;is_public&quot;</span><span class="p">:</span> <span class="kc">True</span>
+    <span class="p">}</span>
+    <span class="n">probes</span> <span class="o">=</span> <span class="n">ProbeRequest</span><span class="p">(</span>
+        <span class="n">return_objects</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">],</span>
+        <span class="n">page_size</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">filters</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">lat_client</span><span class="p">,</span> <span class="n">lon_client</span> <span class="o">=</span> <span class="n">get_coordinates_for_ip</span><span class="p">(</span><span class="n">client_ip</span><span class="p">)</span>
+
+    <span class="n">probe_ids_dist</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># each id is mapped to its distance</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">probes</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># we want to ignore duplicates</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">probe_ids_dist</span><span class="p">:</span>
+                <span class="n">coordinates_prefix</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coordinates&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">coordinates_prefix</span><span class="p">:</span>
+                    <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">coordinates_prefix</span>
+                    <span class="n">dist</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">calculate_haversine_distance</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat_client</span><span class="p">,</span> <span class="n">lon_client</span><span class="p">)</span>
+                    <span class="n">probe_ids_dist</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">probe_ids_dist</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1000000</span>  <span class="c1"># some large value to put this probe at the end of the list</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;error (safe): </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">probe_ids_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">probe_ids_dist</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">probe_ids_dist</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">probe_ids_list</span></div>
+
+
+
+<div class="viewcode-block" id="get_available_probes_country">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_probes.get_available_probes_country">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_available_probes_country</span><span class="p">(</span><span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">country_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ip_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method gets the probes available on RIPE Atlas that has the same country as the client IP.</span>
+<span class="sd">    These probes should also support ipv4 or ipv6, it depends on the type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        client_ip (str): The IP address of the client.</span>
+<span class="sd">        country_code (str): The country code.</span>
+<span class="sd">        ip_type (str): The IP type (ipv4 or ipv6). It should be lowercase.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list[int]: A list with the ids of the available probes.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        Exception: If the input is invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># in wsl, this command would be for example:</span>
+    <span class="c1"># ripe-atlas probe-search --country NL --status 1 --tag system-ipv4-works</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;country_code&quot;</span><span class="p">:</span> <span class="n">country_code</span><span class="p">,</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>  <span class="c1"># Connected probes</span>
+        <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;system-</span><span class="si">{</span><span class="n">ip_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">-works&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;is_public&quot;</span><span class="p">:</span> <span class="kc">True</span>
+    <span class="p">}</span>
+    <span class="n">probes</span> <span class="o">=</span> <span class="n">ProbeRequest</span><span class="p">(</span>
+        <span class="n">return_objects</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">fields</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">],</span>
+        <span class="n">page_size</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="c1"># we need a large value here as we have multiple probes. (it is like a buffer size)</span>
+        <span class="o">**</span><span class="n">filters</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">lat_client</span><span class="p">,</span> <span class="n">lon_client</span> <span class="o">=</span> <span class="n">get_coordinates_for_ip</span><span class="p">(</span><span class="n">client_ip</span><span class="p">)</span>
+    <span class="n">probe_ids_dist</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span> <span class="c1"># each id is mapped to its distance</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">probes</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">probe_ids_dist</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">coordinates</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s2">&quot;geometry&quot;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coordinates&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">coordinates</span><span class="p">:</span>
+                <span class="n">lon</span><span class="p">,</span> <span class="n">lat</span> <span class="o">=</span> <span class="n">coordinates</span>
+                <span class="n">dist</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">calculate_haversine_distance</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">lat_client</span><span class="p">,</span> <span class="n">lon_client</span><span class="p">)</span>
+                <span class="n">probe_ids_dist</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">dist</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">probe_ids_dist</span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1000000.0</span>  <span class="c1"># some large value to put this probe at the end of the list</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;error (safe): </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">probe_ids_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">probe_ids_dist</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">probe_ids_dist</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">probe_ids_list</span></div>
+
+
+<div class="viewcode-block" id="consume_probes">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ripe_probes.consume_probes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">consume_probes</span><span class="p">(</span><span class="n">probes_requested</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">current_probes_set</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">probes_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method takes how many probes we need from probes_ids and put them in current_probes_set. If we found enough probes,</span>
+<span class="sd">    we ignore the remaining probes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        probes_requested (int): The number of probes that we still need to request before calling this method.</span>
+<span class="sd">        current_probes_set (set[int]): The set of probes we are currently requesting.</span>
+<span class="sd">        probes_ids (list[int]): A list with the ids of the probes that we found available, and we want to add them.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple[int, set[int]]: - The remained number of probes still to find.</span>
+<span class="sd">        - The updated set of probes that we will use in the measurement.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Probes_requested cannot be negative&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">probes_ids</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pb</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">current_probes_set</span><span class="p">:</span>
+            <span class="n">current_probes_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pb</span><span class="p">)</span>
+            <span class="n">probes_requested</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="n">current_probes_set</span>
+    <span class="k">return</span> <span class="n">probes_requested</span><span class="p">,</span> <span class="n">current_probes_set</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, TU Delft CSE 2000 Group 15d. Licensed under the MIT License.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

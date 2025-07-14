@@ -1,0 +1,224 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>server.app.utils.validate &mdash; NTPinfo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=82d09745" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            NTPinfo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.backend.html">Back-end component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.frontend.html">Front-end component</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NTPinfo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">server.app.utils.validate</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for server.app.utils.validate</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ipaddress</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ipaddress</span><span class="w"> </span><span class="kn">import</span> <span class="n">IPv4Address</span><span class="p">,</span> <span class="n">IPv6Address</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">dns.name</span>
+
+<div class="viewcode-block" id="is_valid_domain_name">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.validate.is_valid_domain_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_valid_domain_name</span><span class="p">(</span><span class="n">domain_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method verifies if the given string could be a valid domain name. It verifies the syntax.</span>
+<span class="sd">    It offers only a basic validation of the syntax. It is just enough for a dns to consider it.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        domain_name (str): The string to check.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: True if the string could be a valid domain name, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">dns</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">from_text</span><span class="p">(</span><span class="n">domain_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="is_ip_address">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.validate.is_ip_address">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_ip_address</span><span class="p">(</span><span class="n">ip_str</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    It verifies if the given string is a valid IPv4 or IPv6 address. If not, it returns None.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ip_str (Optional[str]): ip address</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        str | None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ip_str</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ip</span> <span class="o">=</span> <span class="n">ipaddress</span><span class="o">.</span><span class="n">ip_address</span><span class="p">(</span><span class="n">ip_str</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ip</span><span class="p">,</span> <span class="n">ipaddress</span><span class="o">.</span><span class="n">IPv4Address</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;ipv4&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ip</span><span class="p">,</span> <span class="n">ipaddress</span><span class="o">.</span><span class="n">IPv6Address</span><span class="p">):</span>
+                <span class="k">return</span> <span class="s2">&quot;ipv6&quot;</span>
+        <span class="c1"># this part is unreachable (Well, at least until another ip version would be created)</span>
+        <span class="c1"># return None</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="ensure_utc">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.validate.ensure_utc">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ensure_utc</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ensures that a given `datetime` object is timezone-aware and in UTC.</span>
+
+<span class="sd">    This function checks if the provided datetime is naive (i.e., has no timezone info).</span>
+<span class="sd">    If so, it assigns UTC as the timezone. If it already has a timezone, it converts it to UTC.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dt (datetime): A Python `datetime` object, either naive or timezone-aware.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        datetime: A timezone-aware `datetime` object in UTC.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dt</span><span class="o">.</span><span class="n">tzinfo</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="parse_ip">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.validate.parse_ip">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_ip</span><span class="p">(</span><span class="n">ip_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IPv4Address</span> <span class="o">|</span> <span class="n">IPv6Address</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses and validates a string as an IPv4 or IPv6 address.</span>
+
+<span class="sd">    Attempts to interpret the provided string as a valid IP address using `ipaddress.ip_address()`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ip_str (str): The IP address in string format (e.g., &quot;192.168.0.1&quot; or &quot;::1&quot;).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ipaddress.IPv4Address | ipaddress.IPv6Address | None:</span>
+<span class="sd">            - A valid `IPv4Address` or `IPv6Address` object if parsing succeeds.</span>
+<span class="sd">            - `None` if the string is not a valid IP address.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ip</span> <span class="o">=</span> <span class="n">ipaddress</span><span class="o">.</span><span class="n">ip_address</span><span class="p">(</span><span class="n">ip_str</span><span class="p">)</span>
+        <span class="c1"># print(f&quot;Valid IP: {ip} (Version {ip.version})&quot;)</span>
+        <span class="k">return</span> <span class="n">ip</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="c1"># print(&quot;Invalid IP address&quot;)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="sanitize_string">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.validate.sanitize_string">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sanitize_string</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method sanitize a string. It removes null characters (\x00) or control characters (\x01-\x1F)</span>
+<span class="sd">    or the DEL character (\x7F) from a string. It removes them. We do this because our database does not</span>
+<span class="sd">    allow these characters (security concerns). It prints a warning if the string contains such characters.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        s (Optional[str]): The string to sanitize.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Optional[str]: The sanitized string, or None if the string is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">good_string</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[\x00-\x1F\x7F]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">good_string</span> <span class="o">!=</span> <span class="n">s</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Warning, strange characters detected in </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">. Changed the word to </span><span class="si">{</span><span class="n">good_string</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">good_string</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, TU Delft CSE 2000 Group 15d. Licensed under the MIT License.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

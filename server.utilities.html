@@ -91,32 +91,1848 @@
              
   <section id="utilities">
 <h1>Utilities<a class="headerlink" href="#utilities" title="Link to this heading"></a></h1>
-<section id="methods-used-to-perform-calculations">
-<h2>Methods used to perform calculations<a class="headerlink" href="#methods-used-to-perform-calculations" title="Link to this heading"></a></h2>
+<section id="module-server.app.utils.calculations">
+<span id="methods-used-to-perform-calculations"></span><h2>Methods used to perform calculations<a class="headerlink" href="#module-server.app.utils.calculations" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.calculations.calculate_haversine_distance">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.calculations.</span></span><span class="sig-name descname"><span class="pre">calculate_haversine_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lat1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lon2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/calculations.html#calculate_haversine_distance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.calculations.calculate_haversine_distance" title="Link to this definition"></a></dt>
+<dd><p>It calculates the haversine distance between two points using this formula:
+d = 2 * R * asin(sqrt(a)) where R is Earth’s radius in kilometers
+and ‘a’ is a value calculated using the latitude and longitude difference of the two points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lat1</strong> (<em>float</em>) – The latitude of the first point.</p></li>
+<li><p><strong>lon1</strong> (<em>float</em>) – The longitude of the first point.</p></li>
+<li><p><strong>lat2</strong> (<em>float</em>) – The latitude of the second point.</p></li>
+<li><p><strong>lon2</strong> (<em>float</em>) – The longitude of the second point.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The haversine distance between the two points. (in kilometers)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.calculations.calculate_jitter_from_measurements">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.calculations.</span></span><span class="sig-name descname"><span class="pre">calculate_jitter_from_measurements</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_measurement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_measurements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/calculations.html#calculate_jitter_from_measurements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.calculations.calculate_jitter_from_measurements" title="Link to this definition"></a></dt>
+<dd><p>Calculates the NTP jitter based on a set of previous measurements and one initial reference measurement.</p>
+<p>This function computes the jitter by calculating the standard deviation of the offsets
+from a given initial measurement and a number of most recent measurements from the same NTP server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>session</strong> (<em>Session</em>) – The active SQLAlchemy database session.</p></li>
+<li><p><strong>initial_measurement</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpMeasurement.NtpMeasurement" title="server.app.dtos.NtpMeasurement.NtpMeasurement"><em>NtpMeasurement</em></a>) – The reference measurement not already stored in the database,
+used as the baseline for offset comparison.</p></li>
+<li><p><strong>no_measurements</strong> (<em>int</em>) – The number of recent historical measurements to fetch from the database
+for jitter calculation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>float: The calculated jitter in seconds.</p></li>
+<li><p>int: The actual number of historical measurements used for the calculation.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[float, int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.calculations.convert_float_to_precise_time">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.calculations.</span></span><span class="sig-name descname"><span class="pre">convert_float_to_precise_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/calculations.html#convert_float_to_precise_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.calculations.convert_float_to_precise_time" title="Link to this definition"></a></dt>
+<dd><p>Converts a float value to a PreciseTime object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>float</em>) – The float value to convert.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A PreciseTime object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="server.app.dtos.html#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime">PreciseTime</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.calculations.get_non_responding_ntp_measurement">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.calculations.</span></span><span class="sig-name descname"><span class="pre">get_non_responding_ntp_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server_ip_str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntp_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/calculations.html#get_non_responding_ntp_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.calculations.get_non_responding_ntp_measurement" title="Link to this definition"></a></dt>
+<dd><p>Construct a default NTP measurement result representing a non-responding NTP server.
+This function is used when an NTP server fails to respond. It returns a synthetic <cite>NtpMeasurement</cite> object
+with placeholder values (e.g., -1) to indicate that no real measurement was completed. This is used to mark the server
+as non-responding on the map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>server_ip_str</strong> (<em>str</em>) – The IP address of the NTP server that failed to respond.</p></li>
+<li><p><strong>server_name</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The hostname of the NTP server, if available.</p></li>
+<li><p><strong>ntp_version</strong> (<em>int</em>) – The version of the NTP protocol to report. (default is based on system config)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An <cite>NtpMeasurement</cite> object filled with placeholder values indicating failure.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpMeasurement.NtpMeasurement" title="server.app.dtos.NtpMeasurement.NtpMeasurement">NtpMeasurement</a></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>The <cite>offset</cite>, <cite>rtt</cite>, <cite>stratum</cite>, and other time-related fields are set to -1 or equivalent.</p></li>
+<li><p>The <cite>vantage_point_ip</cite> is determined from the local server. If not resolvable, it defaults to 0.0.0.0.</p></li>
+<li><p>The location and reference information is generated using available utility functions based on IP.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.calculations.human_date_to_ntp_precise_time">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.calculations.</span></span><span class="sig-name descname"><span class="pre">human_date_to_ntp_precise_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/calculations.html#human_date_to_ntp_precise_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.calculations.human_date_to_ntp_precise_time" title="Link to this definition"></a></dt>
+<dd><p>Converts a UTC datetime object to a PreciseTime object in NTP time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dt</strong> (<em>datetime</em>) – A timezone-aware datetime object in UTC.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The corresponding NTP time.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="server.app.dtos.html#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime">PreciseTime</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.calculations.ntp_precise_time_to_human_date">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.calculations.</span></span><span class="sig-name descname"><span class="pre">ntp_precise_time_to_human_date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/calculations.html#ntp_precise_time_to_human_date"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.calculations.ntp_precise_time_to_human_date" title="Link to this definition"></a></dt>
+<dd><p>Converts a PreciseTime object to a human-readable time string in UTC. (ex:’2025-05-05 14:30:15.123456 UTC’)
+We need to shift from ntp time to unix time so we need to subtract all the seconds from 1900 to 1970.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>t</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.PreciseTime.PreciseTime" title="server.app.dtos.PreciseTime.PreciseTime"><em>PreciseTime</em></a>) – The PreciseTime object.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The date in UTC format or empty, depending on whether the PreciseTime object could be converted to UTC.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="methods-used-for-converting-a-domain-name-to-an-ip">
-<h2>Methods used for converting a domain name to an ip<a class="headerlink" href="#methods-used-for-converting-a-domain-name-to-an-ip" title="Link to this heading"></a></h2>
+<section id="module-server.app.utils.domain_name_to_ip">
+<span id="methods-used-for-converting-a-domain-name-to-an-ip"></span><h2>Methods used for converting a domain name to an ip<a class="headerlink" href="#module-server.app.utils.domain_name_to_ip" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.domain_name_to_ip.domain_name_to_ip_close_to_client">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.domain_name_to_ip.</span></span><span class="sig-name descname"><span class="pre">domain_name_to_ip_close_to_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">domain_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolvers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['8.8.8.8',</span> <span class="pre">'1.1.1.1',</span> <span class="pre">'2001:4860:4860::8888']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/domain_name_to_ip.html#domain_name_to_ip_close_to_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.domain_name_to_ip.domain_name_to_ip_close_to_client" title="Link to this definition"></a></dt>
+<dd><p>This method tries to obtain the ip addresses of the domain name from some popular DNS servers (resolvers)
+that have (or may have) the ability to get an IP close to the client. It uses EDNS queries to get the IPs
+and in case the queries return a domain name, this method recursively tries to solve them. It uses “depth”
+and “max_depth” to prevent infinite loops in redirecting.</p>
+<p>It is important to note that multiple servers may share the same IP address. So, some countries may use the
+same IP for the same domain name. You can check this using <a class="reference external" href="https://www.whatsmydns.net/">https://www.whatsmydns.net/</a>. This also provides
+insights in the cases where we receive CNAME responses.</p>
+<p>If the name is not a domain name, it will return an empty list.
+If the EDNS query does not return a CNAME, depth and max_depth would not be used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>domain_name</strong> (<em>str</em>) – The domain name.</p></li>
+<li><p><strong>client_ip</strong> (<em>str</em>) – The client IP.</p></li>
+<li><p><strong>wanted_ip_type</strong> (<em>int</em>) – The IP type of the resulting IPs that we want.</p></li>
+<li><p><strong>resolvers</strong> (<em>list</em>) – A list of popular DNS resolvers that are ECS-capable.</p></li>
+<li><p><strong>depth</strong> (<em>int</em>) – The depth of the EDNS query if it returns a CNAME. (It is recommended to set this to 0.)</p></li>
+<li><p><strong>max_depth</strong> (<em>int</em>) – The maximum depth of the EDNS query. (It is recommended to set this to 2 or 3 to prevent long delay.)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of IPs of the domain name or None if the domain name is not valid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[list[str]]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the client IP is invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.domain_name_to_ip.domain_name_to_ip_default">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.domain_name_to_ip.</span></span><span class="sig-name descname"><span class="pre">domain_name_to_ip_default</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">domain_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/domain_name_to_ip.html#domain_name_to_ip_default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.domain_name_to_ip.domain_name_to_ip_default" title="Link to this definition"></a></dt>
+<dd><p>It uses the DNS of this server to obtain the ip addresses of the domain name.
+This method is useful if you want IPs close to this server, or you do not care about the location of the IPs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>domain_name</strong> (<em>str</em>) – The NTP server domain name.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of IPs of the domain name or None if the domain name is not valid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[list[str]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.domain_name_to_ip.domain_name_to_ip_list">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.domain_name_to_ip.</span></span><span class="sig-name descname"><span class="pre">domain_name_to_ip_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ntp_server_domain_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/domain_name_to_ip.html#domain_name_to_ip_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.domain_name_to_ip.domain_name_to_ip_list" title="Link to this definition"></a></dt>
+<dd><p>This method handles the case when client IP is None and uses our server as the default IP.
+It will return the list of IP addresses that are close to the client.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ntp_server_domain_name</strong> (<em>str</em>) – NTP server domain name.</p></li>
+<li><p><strong>client_ip</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – Client IP address.</p></li>
+<li><p><strong>wanted_ip_type</strong> (<em>int</em>) – The IP type of the resulting IPs that we want. (IPv4 or IPv6).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of IP addresses that are close to the client or to the server if client IP is None</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.DNSError" title="server.app.models.CustomError.DNSError"><strong>DNSError</strong></a> – If the domain name is invalid, or it was impossible to find some IP addresses.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.domain_name_to_ip.edns_response_to_ips">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.domain_name_to_ip.</span></span><span class="sig-name descname"><span class="pre">edns_response_to_ips</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolvers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/domain_name_to_ip.html#edns_response_to_ips"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.domain_name_to_ip.edns_response_to_ips" title="Link to this definition"></a></dt>
+<dd><p>This method takes the IPs from the response. In case the response has a CNAME, it will
+recursively try to get an IP from that CNAME. In the worst case, it will be redirected “max_depth” times.
+This parameter is useful for preventing an infinite loop in redirecting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>response</strong> (<em>dns.message.Message</em>) – The response from the EDNS query.</p></li>
+<li><p><strong>client_ip</strong> (<em>str</em>) – The client IP.</p></li>
+<li><p><strong>wanted_ip_type</strong> (<em>int</em>) – The IP type of the resulting IPs that we want.</p></li>
+<li><p><strong>resolvers</strong> (<em>list</em>) – A list of popular DNS resolvers that are ECS-capable. They are used in the CNAME case.</p></li>
+<li><p><strong>depth</strong> (<em>int</em>) – The depth of the EDNS query.</p></li>
+<li><p><strong>max_depth</strong> (<em>int</em>) – The maximum depth of the EDNS query.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of IPs taken from the response.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list(str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.domain_name_to_ip.perform_edns_query">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.domain_name_to_ip.</span></span><span class="sig-name descname"><span class="pre">perform_edns_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">domain_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolver_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ecs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/domain_name_to_ip.html#perform_edns_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.domain_name_to_ip.perform_edns_query" title="Link to this definition"></a></dt>
+<dd><p>This method performs a EDNS query against the domain name using the resolver as
+the DNS IP and returns the response.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>domain_name</strong> (<em>str</em>) – The domain name.</p></li>
+<li><p><strong>resolver_name</strong> (<em>str</em>) – The resolver name.</p></li>
+<li><p><strong>ecs</strong> (<em>dns.edns.ECSOption</em>) – The EDNS query option. It contains information about the client IP.</p></li>
+<li><p><strong>wanted_ip_type</strong> (<em>int</em>) – The IP type of the EDNS query. (4 or 6)</p></li>
+<li><p><strong>timeout</strong> (<em>float</em><em>|</em><em>int</em>) – The timeout for the EDNS query.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The response from the EDNS query.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[dns.message.Message]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="ip-utility-methods">
-<h2>IP utility methods<a class="headerlink" href="#ip-utility-methods" title="Link to this heading"></a></h2>
+<section id="module-server.app.utils.ip_utils">
+<span id="ip-utility-methods"></span><h2>IP utility methods<a class="headerlink" href="#module-server.app.utils.ip_utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.client_ip_fetch">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">client_ip_fetch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#client_ip_fetch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.client_ip_fetch" title="Link to this definition"></a></dt>
+<dd><p>Attempts to determine the client’s IP address from the request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> (<em>Request</em>) – The FastAPI Request object, containing information
+about the incoming client request.</p></li>
+<li><p><strong>wanted_ip_type</strong> (<em>int</em>) – The type of IP address that you want to get (4 or 6).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The determined IP address of the client (or a fallback server IP).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>HTTPException</strong> – 503: If neither the client’s IP from headers/request nor the fallback server IP can be successfully resolved.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.get_area_of_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">get_area_of_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip_country</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_continent</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#get_area_of_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.get_area_of_ip" title="Link to this definition"></a></dt>
+<dd><p>This method tries to get the area of an IP address based on its country and continent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ip_country</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The country code of the IP address.</p></li>
+<li><p><strong>ip_continent</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The continent code of the IP address.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The area of an IP address.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.get_ip_family">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">get_ip_family</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#get_ip_family"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.get_ip_family" title="Link to this definition"></a></dt>
+<dd><p>This method returns the IP family of the given IP address. It returns 4 if we have an IPv4, and
+it returns 6 if we have an IPv6 address. Otherwise, it raises an exception.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ip_str</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The IP address</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The ip family or an exception if we do not get an IP address</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InputError" title="server.app.models.CustomError.InputError"><strong>InputError</strong></a> – If the IP provided is not an IPv4 or IPv6 address.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.get_ip_network_details">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">get_ip_network_details</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#get_ip_network_details"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.get_ip_network_details" title="Link to this definition"></a></dt>
+<dd><p>This method gets the ASN, the country code and the continent code of an IP address.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ip_str</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The ip address</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the ASN, the country code and the continent
+of an IP address if they can be taken.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[Optional[str], Optional[str], Optional[str]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.get_prefix_from_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">get_prefix_from_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#get_prefix_from_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.get_prefix_from_ip" title="Link to this definition"></a></dt>
+<dd><p>This method returns the prefix of an IP address. It randomizes it before sending it to stat.ripe.net</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ip_str</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The ip address.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the prefix of an IP address.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.get_server_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">get_server_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#get_server_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.get_server_ip" title="Link to this definition"></a></dt>
+<dd><p>It determines the public IP address of this server by opening a dummy UDP socket
+connection to DNS (taken from the config). It has fallbacks to ipify.org. If you want IPv4,
+it will open an IPv4 connection, otherwise it will open an IPv6 connection.
+It is <strong>strict</strong>, and it will return None if it could not return the type you wanted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>wanted_ip_type</strong> (<em>int</em>) – The type of IP address we are looking for.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The server’s external IP address.
+as an IPv4Address or IPv6Address object, or None if detection fails.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[IPv4Address | IPv6Address]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.get_server_ip_from_ipify">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">get_server_ip_from_ipify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#get_server_ip_from_ipify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.get_server_ip_from_ipify" title="Link to this definition"></a></dt>
+<dd><p>This method is a fallback to try to get the public IP address of our server from ipify.org</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>wanted_ip_type</strong> (<em>int</em>) – The type of IP address that you want to get. (4 or 6)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The public IP address of our server.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[IPv4Address | IPv6Address]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.get_server_ip_if_possible">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">get_server_ip_if_possible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#get_server_ip_if_possible"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.get_server_ip_if_possible" title="Link to this definition"></a></dt>
+<dd><p>This method returns the IP address of this server. If it has both IPv6 and IPv4, it will return whatever
+type you wanted. If not, it returns the type it has. (It has at least one IP address which is either IPv4 or IPv6)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>wanted_ip_type</strong> (<em>int</em>) – The type of IP address that you want to get. (4 or 6)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The IP address of this server with the desired IP type if possible.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[IPv4Address | IPv6Address]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.ip_to_str">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">ip_to_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#ip_to_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.ip_to_str" title="Link to this definition"></a></dt>
+<dd><p>Converts an IP address (either IPv4 or IPv6) to its string representation.
+This function takes an <cite>IPv4Address</cite> or <cite>IPv6Address</cite> object and converts it to
+a string. If the input IP is <cite>None</cite>, it returns <cite>None</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ip</strong> (<em>Optional</em><em>[</em><em>IPv4Address</em><em> | </em><em>IPv6Address</em><em>]</em>) – The IP address to be converted.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The string representation of the IP address, or <cite>None</cite> if the input is <cite>None</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.is_private_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">is_private_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#is_private_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.is_private_ip" title="Link to this definition"></a></dt>
+<dd><p>This method checks whether an IP address is a private IP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ip_str</strong> (<em>str</em>) – The IP address to check.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether the IP address is a private IP.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.is_this_ip_anycast">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">is_this_ip_anycast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">searched_ip</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#is_this_ip_anycast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.is_this_ip_anycast" title="Link to this definition"></a></dt>
+<dd><p>This method checks whether an IP address is anycast or not, by searching in the local anycast prefix databases.
+This method would never throw an exception (If the databases don’t exist, it will return False).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>searched_ip</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The IP address to check.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether the IP address is anycast or not.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.randomize_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">randomize_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#randomize_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.randomize_ip" title="Link to this definition"></a></dt>
+<dd><p>Randomizes the host bits of an IPv4 or IPv6 address based on a subnet mask length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ip</strong> (<em>IPv4Address</em><em> | </em><em>IPv6Address</em>) – The IPv4 or IPv6 address to randomize.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new IPv4 or IPv6 address with the same network bits and randomized host bits.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>IPv4Address | IPv6Address | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.ref_id_to_ip_or_name">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">ref_id_to_ip_or_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stratum</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#ref_id_to_ip_or_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.ref_id_to_ip_or_name" title="Link to this definition"></a></dt>
+<dd><p>Represents a method that converts the reference id to the reference ip or reference name.
+If the stratum is 0 or 1 then we can convert the reference id to it’s name (ex: Geostationary Orbit Environment Satellite).
+If the stratum is between 1 and 256 then we can convert the reference id to it’s ip.
+If the stratum is greater than 255, then we have an invalid stratum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ref_id</strong> (<em>int</em>) – the reference id of the ntp server</p></li>
+<li><p><strong>stratum</strong> (<em>int</em>) – the stratum level of the ntp server</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>] | <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">IPv4Address</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">IPv6Address</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>] | <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>a tuple of the ip and name of the ntp server. At least one of them is None. If both are None then the stratum is invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.try_converting_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">try_converting_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#try_converting_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.try_converting_ip" title="Link to this definition"></a></dt>
+<dd><p>This method tries to convert an IPv4 into IPv6 or an IPv6 into an IPv4 using reverse DNS from dnspython.
+It only works if there is a configured PTR record + AAAA record.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client_ip</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The client IP to convert.</p></li>
+<li><p><strong>wanted_ip_type</strong> (<em>int</em>) – The type of IP address that we want.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The converted IPv6 or IPv4 as a string or the original IP if the process failed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="methods-used-for-fetching-data-from-the-config-file">
-<h2>Methods used for fetching data from the config file<a class="headerlink" href="#methods-used-for-fetching-data-from-the-config-file" title="Link to this heading"></a></h2>
+<section id="module-server.app.utils.load_config_data">
+<span id="methods-used-for-fetching-data-from-the-config-file"></span><h2>Methods used for fetching data from the config file<a class="headerlink" href="#module-server.app.utils.load_config_data" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.check_geolite_account_id_and_key">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">check_geolite_account_id_and_key</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#check_geolite_account_id_and_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.check_geolite_account_id_and_key" title="Link to this definition"></a></dt>
+<dd><p>This function checks that we have the account id and key set.
+Only Warnings. It does not raise errors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if we have the account id and key set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_anycast_prefixes_v4_url">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_anycast_prefixes_v4_url</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_anycast_prefixes_v4_url"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_anycast_prefixes_v4_url" title="Link to this definition"></a></dt>
+<dd><p>This method returns the URL prefixes for anycast IPv4 servers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If this variable has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_anycast_prefixes_v6_url">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_anycast_prefixes_v6_url</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_anycast_prefixes_v6_url"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_anycast_prefixes_v6_url" title="Link to this definition"></a></dt>
+<dd><p>This method returns the URL prefixes for anycast IPv6 servers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If this variable has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_edns_default_servers">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_edns_default_servers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_edns_default_servers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_edns_default_servers" title="Link to this definition"></a></dt>
+<dd><p>This method returns the default list of EDNS servers. (in the order of their priorities)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If this variable has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_edns_timeout_s">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_edns_timeout_s</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_edns_timeout_s"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_edns_timeout_s" title="Link to this definition"></a></dt>
+<dd><p>This method returns the timeout for the EDNS query request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If this variable has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_ipv4_edns_server">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_ipv4_edns_server</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_ipv4_edns_server"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_ipv4_edns_server" title="Link to this definition"></a></dt>
+<dd><p>This method returns the first IPv4 EDNS server available in the config.
+It returns None if no IPv4 EDNS server is available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_ipv6_edns_server">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_ipv6_edns_server</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_ipv6_edns_server"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_ipv6_edns_server" title="Link to this definition"></a></dt>
+<dd><p>This method returns the first IPv6 EDNS server available in the config.
+It returns None if no IPv6 EDNS server is available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_mask_ipv4">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_mask_ipv4</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_mask_ipv4"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_mask_ipv4" title="Link to this definition"></a></dt>
+<dd><p>This method returns the mask we use for ipv4 IPs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If this variable has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_mask_ipv6">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_mask_ipv6</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_mask_ipv6"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_mask_ipv6" title="Link to this definition"></a></dt>
+<dd><p>This method returns the mask we use for ipv6 IPs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If this variable has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_max_mind_path_asn">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_max_mind_path_asn</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_max_mind_path_asn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_max_mind_path_asn" title="Link to this definition"></a></dt>
+<dd><p>This method returns the path to the max_mind ASN database used for geolocation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If this variable has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_max_mind_path_city">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_max_mind_path_city</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_max_mind_path_city"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_max_mind_path_city" title="Link to this definition"></a></dt>
+<dd><p>This method returns the path to the max_mind city database used for geolocation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If this variable has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_max_mind_path_country">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_max_mind_path_country</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_max_mind_path_country"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_max_mind_path_country" title="Link to this definition"></a></dt>
+<dd><p>This method returns the path to the max_mind country database used for geolocation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If this variable has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_nr_of_measurements_for_jitter">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_nr_of_measurements_for_jitter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_nr_of_measurements_for_jitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_nr_of_measurements_for_jitter" title="Link to this definition"></a></dt>
+<dd><p>This method returns the number of measurement requested for calculating the jitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If this variable has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_ntp_version">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_ntp_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_ntp_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_ntp_version" title="Link to this definition"></a></dt>
+<dd><p>This method returns the ntp version that we use in measurements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the ntp version has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_rate_limit_per_client_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_rate_limit_per_client_ip</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_rate_limit_per_client_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_rate_limit_per_client_ip" title="Link to this definition"></a></dt>
+<dd><p>This method returns the rate limit for queries per client IP to our server.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If this variable has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_ripe_account_email">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_ripe_account_email</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_ripe_account_email"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_ripe_account_email" title="Link to this definition"></a></dt>
+<dd><p>This function returns the RIPE Atlas account email. (one that has enough credits)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the RIPE Atlas account email is not set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_ripe_api_token">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_ripe_api_token</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_ripe_api_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_ripe_api_token" title="Link to this definition"></a></dt>
+<dd><p>This function returns the RIPE Atlas API token.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the RIPE Atlas API token is not set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_ripe_number_of_probes_per_measurement">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_ripe_number_of_probes_per_measurement</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_ripe_number_of_probes_per_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_ripe_number_of_probes_per_measurement" title="Link to this definition"></a></dt>
+<dd><p>This method returns the number of probes requested and desired for a measurement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If this variable has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_ripe_packets_per_probe">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_ripe_packets_per_probe</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_ripe_packets_per_probe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_ripe_packets_per_probe" title="Link to this definition"></a></dt>
+<dd><p>This method returns the number of tries that a probe will do for a measurement.
+It will send “packets_per_probe” queries for that NTP server. (see RIPE Atlas documentation for more information)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If this variable has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_ripe_server_timeout">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_ripe_server_timeout</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_ripe_server_timeout"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_ripe_server_timeout" title="Link to this definition"></a></dt>
+<dd><p>This method returns the timeout (seconds) that the server has to get data from RIPE Atlas.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If this variable has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_ripe_timeout_per_probe_ms">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_ripe_timeout_per_probe_ms</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_ripe_timeout_per_probe_ms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_ripe_timeout_per_probe_ms" title="Link to this definition"></a></dt>
+<dd><p>This method returns the timeout that a probe has to receive an answer from a measurement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If this variable has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_timeout_measurement_s">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_timeout_measurement_s</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_timeout_measurement_s"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_timeout_measurement_s" title="Link to this definition"></a></dt>
+<dd><p>This method returns the timeout for an NTP measurement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the ntp version has not been correctly set.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.load_config">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">load_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#load_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.load_config" title="Link to this definition"></a></dt>
+<dd><p>It loads the config from a YAML file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>FileNotFoundError</strong> – If the config file does not exist.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.verify_if_config_is_set">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">verify_if_config_is_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#verify_if_config_is_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.verify_if_config_is_set" title="Link to this definition"></a></dt>
+<dd><p>This method ensures that the config file has all the required variables, and they are all correctly set. (the same data type)
+It will return true if everything is fine, else it will rise an exception,</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the config file does not have all the required variables or some of them are invalid.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="methods-used-fetching-geoloaction-information-from-maxmind-databases">
-<h2>Methods used fetching geoloaction information from MaxMind databases<a class="headerlink" href="#methods-used-fetching-geoloaction-information-from-maxmind-databases" title="Link to this heading"></a></h2>
+<section id="module-server.app.utils.location_resolver">
+<span id="methods-used-fetching-geoloaction-information-from-maxmind-databases"></span><h2>Methods used fetching geoloaction information from MaxMind databases<a class="headerlink" href="#module-server.app.utils.location_resolver" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.location_resolver.get_asn_for_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.location_resolver.</span></span><span class="sig-name descname"><span class="pre">get_asn_for_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/location_resolver.html#get_asn_for_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.location_resolver.get_asn_for_ip" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the asn of a given IP address using the MaxMind GeoLite2-ASN database.
+If the asn cannot be determined due to missing data, database issues, or
+the IP not being found, it returns None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>client_ip</strong> (<em>str</em>) – The IP address of the client to geolocate.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The ans for the ip location or None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.location_resolver.get_continent_for_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.location_resolver.</span></span><span class="sig-name descname"><span class="pre">get_continent_for_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/location_resolver.html#get_continent_for_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.location_resolver.get_continent_for_ip" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the continent code of a given IP address using the MaxMind GeoLite2-Country database.
+If the continent code cannot be determined due to missing data, database issues, or
+the IP not being found, it returns None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>client_ip</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The IP address of the client to geolocate.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The continent code for the ip location or None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.location_resolver.get_coordinates_for_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.location_resolver.</span></span><span class="sig-name descname"><span class="pre">get_coordinates_for_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/location_resolver.html#get_coordinates_for_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.location_resolver.get_coordinates_for_ip" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the geographical location (latitude and longitude) of a given IP address
+using the MaxMind GeoLite2-City database.</p>
+<p>If the location cannot be determined due to missing data, database issues, or
+the IP not being found, it returns the coordinates of an (almost) randomly chosen location as a fallback.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>client_ip</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The IP address of the client to geolocate</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tuple containing the latitude and longitude. If the location
+cannot be resolved, returns (25.0, -71.0).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[float, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.location_resolver.get_country_for_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.location_resolver.</span></span><span class="sig-name descname"><span class="pre">get_country_for_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/location_resolver.html#get_country_for_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.location_resolver.get_country_for_ip" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the country code of a given IP address using the MaxMind GeoLite2-Country database.
+If the country code cannot be determined due to missing data, database issues, or
+the IP not being found, it returns None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>client_ip</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The IP address of the client to geolocate.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The country code for the ip location or None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="business-logic-for-the-measurement-engine">
-<h2>Business logic for the measurement engine<a class="headerlink" href="#business-logic-for-the-measurement-engine" title="Link to this heading"></a></h2>
+<section id="module-server.app.utils.perform_measurements">
+<span id="business-logic-for-the-measurement-engine"></span><h2>Business logic for the measurement engine<a class="headerlink" href="#module-server.app.utils.perform_measurements" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.perform_measurements.convert_ntp_response_to_measurement">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.perform_measurements.</span></span><span class="sig-name descname"><span class="pre">convert_ntp_response_to_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_ip_str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntp_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/perform_measurements.html#convert_ntp_response_to_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.perform_measurements.convert_ntp_response_to_measurement" title="Link to this definition"></a></dt>
+<dd><p>This method converts an NTP response to an NTP measurement object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>response</strong> (<em>ntplib.NTPStats</em>) – The NTP response to convert.</p></li>
+<li><p><strong>server_ip_str</strong> (<em>str</em>) – The IP address of the ntp server in string format.</p></li>
+<li><p><strong>server_name</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The name of the ntp server.</p></li>
+<li><p><strong>ntp_version</strong> (<em>int</em>) – The version of the ntp that you want to use.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>It returns an NTP measurement object if the conversion was successful.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpMeasurement.NtpMeasurement" title="server.app.dtos.NtpMeasurement.NtpMeasurement">NtpMeasurement</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.perform_measurements.get_request_settings">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.perform_measurements.</span></span><span class="sig-name descname"><span class="pre">get_request_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip_family_of_ntp_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntp_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/perform_measurements.html#get_request_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.perform_measurements.get_request_settings" title="Link to this definition"></a></dt>
+<dd><p>This method gets the RIPE measurement settings for the performing a RIPE measurement.
+:type ip_family_of_ntp_server: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
+:param ip_family_of_ntp_server: The IP family of the NTP server. (4 or 6)
+:type ip_family_of_ntp_server: int
+:type ntp_server: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
+:param ntp_server: The NTP server IP address or domain name.
+:type ntp_server: str
+:type client_ip: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
+:param client_ip: The IP address of the client.
+:type client_ip: str
+:type probes_requested: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
+:param probes_requested: The number of probes requested.
+:type probes_requested: int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Returns the RIPE measurement settings for the performing a RIPE measurement.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[dict, dict]</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InputError" title="server.app.models.CustomError.InputError"><strong>InputError</strong></a> – If the input is invalid.</p></li>
+<li><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.RipeMeasurementError" title="server.app.models.CustomError.RipeMeasurementError"><strong>RipeMeasurementError</strong></a> – If the ripe measurement could not be performed.</p></li>
+<li><p><strong>ValueError</strong> – If some variable in env is not correctly set.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.perform_measurements.perform_ntp_measurement_domain_name_list">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.perform_measurements.</span></span><span class="sig-name descname"><span class="pre">perform_ntp_measurement_domain_name_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_ip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntp_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/perform_measurements.html#perform_ntp_measurement_domain_name_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.perform_measurements.perform_ntp_measurement_domain_name_list" title="Link to this definition"></a></dt>
+<dd><p>This method performs a NTP measurement on a NTP server from all the IPs got back from its domain name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>server_name</strong> (<em>str</em>) – The name of the ntp server.</p></li>
+<li><p><strong>client_ip</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The IP address of the client (if given).</p></li>
+<li><p><strong>wanted_ip_type</strong> (<em>int</em>) – The IP type that we want to measure.</p></li>
+<li><p><strong>ntp_version</strong> (<em>int</em>) – The version of the ntp that you want to use.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>It returns a list of NTP measurement objects or None if there is a timeout.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[list[<a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpMeasurement.NtpMeasurement" title="server.app.dtos.NtpMeasurement.NtpMeasurement">NtpMeasurement</a>]]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.DNSError" title="server.app.models.CustomError.DNSError"><strong>DNSError</strong></a> – If the domain name is invalid or cannot be converted to an IP list.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.perform_measurements.perform_ntp_measurement_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.perform_measurements.</span></span><span class="sig-name descname"><span class="pre">perform_ntp_measurement_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server_ip_str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntp_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/perform_measurements.html#perform_ntp_measurement_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.perform_measurements.perform_ntp_measurement_ip" title="Link to this definition"></a></dt>
+<dd><p>This method performs an NTP measurement on an NTP server using its IP address.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>server_ip_str</strong> (<em>str</em>) – The IP address of the ntp server in string format.</p></li>
+<li><p><strong>ntp_version</strong> (<em>int</em>) – The version of the ntp that you want to use.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>It returns the NTP measurement object or None if something wrong happened. (usually timeouts)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpMeasurement.NtpMeasurement" title="server.app.dtos.NtpMeasurement.NtpMeasurement">NtpMeasurement</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.perform_measurements.perform_ripe_measurement_domain_name">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.perform_measurements.</span></span><span class="sig-name descname"><span class="pre">perform_ripe_measurement_domain_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/perform_measurements.html#perform_ripe_measurement_domain_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.perform_measurements.perform_ripe_measurement_domain_name" title="Link to this definition"></a></dt>
+<dd><p>This method performs a RIPE measurement on a domain name. It lets the RIPE atlas probe to
+decide which IP of that domain name to use. (You can see this IP from the details of the
+measurement by looking at the measurement ID)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>server_name</strong> (<em>str</em>) – The domain name of the NTP server.</p></li>
+<li><p><strong>client_ip</strong> (<em>str</em>) – The IP address of the NTP server.</p></li>
+<li><p><strong>wanted_ip_type</strong> (<em>int</em>) – The IP type that we want to measure.</p></li>
+<li><p><strong>probes_requested</strong> (<em>int</em>) – The number of probes requested.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>It returns the ID of the measurement and the list of IPs of the domain name.</dt><dd><p>You can find in the measurement what IP it used.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InputError" title="server.app.models.CustomError.InputError"><strong>InputError</strong></a> – If the conversion could not be performed.</p></li>
+<li><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.RipeMeasurementError" title="server.app.models.CustomError.RipeMeasurementError"><strong>RipeMeasurementError</strong></a> – If the ripe measurement could not be performed.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.perform_measurements.perform_ripe_measurement_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.perform_measurements.</span></span><span class="sig-name descname"><span class="pre">perform_ripe_measurement_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ntp_server_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/perform_measurements.html#perform_ripe_measurement_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.perform_measurements.perform_ripe_measurement_ip" title="Link to this definition"></a></dt>
+<dd><p>This method performs a RIPE measurement and returns the ID of the measurement.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ntp_server_ip</strong> (<em>str</em>) – The NTP server IP.</p></li>
+<li><p><strong>client_ip</strong> (<em>str</em>) – The IP of the client.</p></li>
+<li><p><strong>probes_requested</strong> (<em>int</em>) – The number of probes requested.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The ID of the measurement.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InputError" title="server.app.models.CustomError.InputError"><strong>InputError</strong></a> – If the NTP server IP is not valid, probe requested is negative.</p></li>
+<li><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.RipeMeasurementError" title="server.app.models.CustomError.RipeMeasurementError"><strong>RipeMeasurementError</strong></a> – If the ripe measurement could not be performed.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.perform_measurements.print_ntp_measurement">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.perform_measurements.</span></span><span class="sig-name descname"><span class="pre">print_ntp_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measurement</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/perform_measurements.html#print_ntp_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.perform_measurements.print_ntp_measurement" title="Link to this definition"></a></dt>
+<dd><p>It prints the ntp measurement in a human-readable format and returns True if the printing was successful.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>measurement</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpMeasurement.NtpMeasurement" title="server.app.dtos.NtpMeasurement.NtpMeasurement"><em>NtpMeasurement</em></a>) – The NtpMeasurement object.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="methods-used-for-fetching-and-parsing-data-from-ripe-atlas">
-<h2>Methods used for fetching and parsing data from RIPE Atlas<a class="headerlink" href="#methods-used-for-fetching-and-parsing-data-from-ripe-atlas" title="Link to this heading"></a></h2>
+<section id="module-server.app.utils.ripe_fetch_data">
+<span id="methods-used-for-fetching-and-parsing-data-from-ripe-atlas"></span><h2>Methods used for fetching and parsing data from RIPE Atlas<a class="headerlink" href="#module-server.app.utils.ripe_fetch_data" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_fetch_data.check_all_measurements_done">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_fetch_data.</span></span><span class="sig-name descname"><span class="pre">check_all_measurements_done</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measurement_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measurement_req</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_fetch_data.html#check_all_measurements_done"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_fetch_data.check_all_measurements_done" title="Link to this definition"></a></dt>
+<dd><p>Check the status of a RIPE Atlas measurement.</p>
+<p>This function queries the RIPE Atlas API for a given measurement ID and determines
+whether the measurement is complete, ongoing, or should be considered timed out. The status is based
+on the number of probes requested, the measurement status provided by RIPE, and
+how much time has passed since the measurement started.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>measurement_id</strong> (<em>str</em>) – RIPE Atlas measurement ID.</p></li>
+<li><p><strong>measurement_req</strong> (<em>int</em>) – The number of probes expected for the measurement to be considered complete.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>“Complete”: All expected probes have responded or the measurement is stopped.</p></li>
+<li><p>”Ongoing”: The measurement is still in progress and has not exceeded the timeout threshold.</p></li>
+<li><p>”Timeout”: The measurement did not complete within the allowed time window.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.RipeMeasurementError" title="server.app.models.CustomError.RipeMeasurementError"><strong>RipeMeasurementError</strong></a> – If there are errors with the response from ripe, either not received or malformed.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>If the difference between the current time and the measurement’s start time exceeds the configured time in seconds,
+and the measurement is not yet complete, it is considered “Timeout”.</p></li>
+<li><p>This function assumes a successful HTTP response from the RIPE API; if not, it will raise an exception.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_fetch_data.check_all_measurements_scheduled">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_fetch_data.</span></span><span class="sig-name descname"><span class="pre">check_all_measurements_scheduled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measurement_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_fetch_data.html#check_all_measurements_scheduled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_fetch_data.check_all_measurements_scheduled" title="Link to this definition"></a></dt>
+<dd><p>Check if all RIPE Atlas probes for a given measurement have been scheduled.</p>
+<p>This function compares the number of probes requested with the number of probes successfully
+scheduled. If all requested probes are scheduled, it returns True. Otherwise,
+it returns False</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>measurement_id</strong> (<em>str</em>) – The ID of the RIPE Atlas measurement to check.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if all requested probes have been scheduled, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the RIPE API returns an error or if the probe count data
+    is missing or invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_fetch_data.get_data_from_ripe_measurement">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_fetch_data.</span></span><span class="sig-name descname"><span class="pre">get_data_from_ripe_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measurement_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_fetch_data.html#get_data_from_ripe_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_fetch_data.get_data_from_ripe_measurement" title="Link to this definition"></a></dt>
+<dd><p>Fetches raw measurement results from the RIPE Atlas API.</p>
+<p>This function queries the RIPE Atlas v2 API using the provided measurement ID,
+authenticates with an API key stored in the RIPE_KEY environment variable, and
+returns the parsed JSON response as a list of dictionaries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>measurement_id</strong> (<em>str</em>) – The RIPE Atlas measurement ID to fetch results for.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of measurement result entries as dictionaries.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[dict[str, Any]]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.RipeMeasurementError" title="server.app.models.CustomError.RipeMeasurementError"><strong>RipeMeasurementError</strong></a> – If the HTTP request fails or the response cannot be parsed as JSON or the answer is not a list of dicts.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Requires the <cite>RIPE_KEY</cite> environment variable to be set with a valid API key.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_fetch_data.get_probe_data_from_ripe_by_id">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_fetch_data.</span></span><span class="sig-name descname"><span class="pre">get_probe_data_from_ripe_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probe_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_fetch_data.html#get_probe_data_from_ripe_by_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_fetch_data.get_probe_data_from_ripe_by_id" title="Link to this definition"></a></dt>
+<dd><p>Retrieves detailed information about a specific RIPE Atlas probe by its ID.</p>
+<p>This function sends a GET request to the RIPE Atlas API to fetch metadata
+about the specified probe. The request is authenticated using the RIPE API key
+stored in the RIPE_KEY environment variable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>probe_id</strong> (<em>str</em>) – The ID of the RIPE Atlas probe to fetch information for.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing metadata about the probe</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, Any]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.RipeMeasurementError" title="server.app.models.CustomError.RipeMeasurementError"><strong>RipeMeasurementError</strong></a> – If the HTTP request fails or the response is not valid JSON.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Requires the <cite>RIPE_KEY</cite> environment variable to be set with a valid API key.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_fetch_data.is_failed_measurement">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_fetch_data.</span></span><span class="sig-name descname"><span class="pre">is_failed_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_fetch_data.html#is_failed_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_fetch_data.is_failed_measurement" title="Link to this definition"></a></dt>
+<dd><p>Determines if a RIPE measurement entry has failed.</p>
+<p>A measurement is considered failed if all result entries contain the key “x” with value “*”,
+which typically indicates a failed probe response.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>entry</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – A dictionary representing a single measurement entry from the RIPE API.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if all entries in the result indicate failure, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_fetch_data.parse_data_from_ripe_measurement">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_fetch_data.</span></span><span class="sig-name descname"><span class="pre">parse_data_from_ripe_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_measurement</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_fetch_data.html#parse_data_from_ripe_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_fetch_data.parse_data_from_ripe_measurement" title="Link to this definition"></a></dt>
+<dd><p>Parses raw RIPE Atlas measurement data into a list of RipeMeasurement objects.</p>
+<dl class="simple">
+<dt>This function:</dt><dd><ul class="simple">
+<li><p>Determines whether each measurement entry failed or succeeded.</p></li>
+<li><p>Extracts NTP-related server and timing information.</p></li>
+<li><p>Converts timestamps and metrics into structured internal representations.</p></li>
+<li><p>Adds probe-specific metadata fetched from the RIPE API.</p></li>
+<li><p>Returns a status string indicating whether all measurements have been processed.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data_measurement</strong> (<em>list</em><em>[</em><em>dict</em><em>]</em>) – A list of dictionaries representing raw measurement entries from the RIPE Atlas API.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>A list of parsed and structured <cite>RipeMeasurement</cite> objects.</p></li>
+<li><p>A status string returned by <cite>check_all_measurements_done</cite>, indicating
+whether all expected measurements are present and complete.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[list[<a class="reference internal" href="server.app.dtos.html#server.app.dtos.RipeMeasurement.RipeMeasurement" title="server.app.dtos.RipeMeasurement.RipeMeasurement">RipeMeasurement</a>], str]</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Measurements that are marked as failed are still processed, but filled with default values.</p></li>
+<li><p>Probe metadata is fetched using the probe ID (<cite>prb_id</cite>) in each measurement.</p></li>
+<li><p>Timestamps are converted using <cite>convert_float_to_precise_time</cite>.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_fetch_data.parse_probe_data">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_fetch_data.</span></span><span class="sig-name descname"><span class="pre">parse_probe_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probe_response</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_fetch_data.html#parse_probe_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_fetch_data.parse_probe_data" title="Link to this definition"></a></dt>
+<dd><p>Parses probe metadata received from the RIPE Atlas API into a ProbeData object.</p>
+<p>This function extracts relevant information such as the probe ID, IP addresses,
+country code, and coordinates from the API response.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>probe_response</strong> (<em>dict</em>) – The raw dictionary response from the RIPE Atlas probe lookup API.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Parsed information including the probe’s ID, IP addresses, country code, and location.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="server.app.dtos.html#server.app.dtos.ProbeData.ProbeData" title="server.app.dtos.ProbeData.ProbeData">ProbeData</a></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>If an error is present in the response, a default <cite>ProbeData</cite> with dummy values is returned.</p></li>
+<li><p>Coordinates default to <cite>[0.0, 0.0]</cite> if not provided.</p></li>
+<li><p>Country code defaults to <cite>“NO COUNTRY CODE”</cite> if not found.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_fetch_data.successful_measurement">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_fetch_data.</span></span><span class="sig-name descname"><span class="pre">successful_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_fetch_data.html#successful_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_fetch_data.successful_measurement" title="Link to this definition"></a></dt>
+<dd><p>Identifies the index of the successful measurement with the lowest offset.</p>
+<p>A successful measurement is one that contains the “origin-ts” field,
+indicating a valid timestamp. Among all such entries, the one with the
+lowest absolute offset value is considered the most successful.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>entry</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – A dictionary representing a single measurement entry from the RIPE API.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The index of the result entry with the lowest offset, or None if no valid entries exist.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int | None</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="methods-used-for-selecting-the-probes-used-for-ripe-atlas">
-<h2>Methods used for selecting the probes used for RIPE Atlas<a class="headerlink" href="#methods-used-for-selecting-the-probes-used-for-ripe-atlas" title="Link to this heading"></a></h2>
+<section id="module-server.app.utils.ripe_probes">
+<span id="methods-used-for-selecting-the-probes-used-for-ripe-atlas"></span><h2>Methods used for selecting the probes used for RIPE Atlas<a class="headerlink" href="#module-server.app.utils.ripe_probes" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.consume_probes">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">consume_probes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_probes_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_ids</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#consume_probes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.consume_probes" title="Link to this definition"></a></dt>
+<dd><p>This method takes how many probes we need from probes_ids and put them in current_probes_set. If we found enough probes,
+we ignore the remaining probes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>probes_requested</strong> (<em>int</em>) – The number of probes that we still need to request before calling this method.</p></li>
+<li><p><strong>current_probes_set</strong> (<em>set</em><em>[</em><em>int</em><em>]</em>) – The set of probes we are currently requesting.</p></li>
+<li><p><strong>probes_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – A list with the ids of the probes that we found available, and we want to add them.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>The remained number of probes still to find.</p></li>
+<li><p>The updated set of probes that we will use in the measurement.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[int, set[int]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_area_probes">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_area_probes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">area</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_area_probes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_area_probes" title="Link to this definition"></a></dt>
+<dd><p>This method selects n probes from this area.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>area</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The area of the probes.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – The number of probes to select.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The selected probes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InputError" title="server.app.models.CustomError.InputError"><strong>InputError</strong></a> – If area is not valid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_asn_probes">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_asn_probes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip_asn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_asn_probes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_asn_probes" title="Link to this definition"></a></dt>
+<dd><p>This method selects n probes that belong to the same ASN network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ip_asn</strong> (<em>Optional</em><em>[</em><em>str</em><em> | </em><em>int</em><em>]</em>) – The ASN network.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – The number of probes to select.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The selected probes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InputError" title="server.app.models.CustomError.InputError"><strong>InputError</strong></a> – If the ASN network is None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_available_probes_asn">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_available_probes_asn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_asn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_available_probes_asn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_available_probes_asn" title="Link to this definition"></a></dt>
+<dd><p>This method gets the probes available on RIPE Atlas that has the same ASN as the client IP.
+These probes should also support ipv4 or ipv6, it depends on the type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client_ip</strong> (<em>str</em>) – The IP address of the client.</p></li>
+<li><p><strong>ip_asn</strong> (<em>str</em>) – The ASN of the searched network.</p></li>
+<li><p><strong>ip_type</strong> (<em>str</em>) – The IP type (ipv4 or ipv6). (not case-sensitive)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list with the ids of the available probes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[int]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the input is invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_available_probes_asn_and_country">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_available_probes_asn_and_country</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_asn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_country_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_available_probes_asn_and_country"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_available_probes_asn_and_country" title="Link to this definition"></a></dt>
+<dd><p>This method gets the probes available on RIPE Atlas that has the same ASN and country as the client IP.
+These probes should also support ipv4 or ipv6, it depends on the type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client_ip</strong> (<em>str</em>) – The IP address of the client.</p></li>
+<li><p><strong>ip_asn</strong> (<em>str</em>) – The ASN of the searched network.</p></li>
+<li><p><strong>ip_country_code</strong> (<em>str</em>) – The country code of the respective IP.</p></li>
+<li><p><strong>ip_type</strong> (<em>str</em>) – The IP type (ipv4 or ipv6). (not case-sensitive)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list with the ids of the available probes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[int]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the input is invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_available_probes_asn_and_prefix">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_available_probes_asn_and_prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_asn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_available_probes_asn_and_prefix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_available_probes_asn_and_prefix" title="Link to this definition"></a></dt>
+<dd><p>This method gets the probes available on RIPE Atlas that has the same ASN and prefix as the client IP.
+These probes should also support ipv4 or ipv6, it depends on the type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client_ip</strong> (<em>str</em>) – The IP address of the client.</p></li>
+<li><p><strong>ip_asn</strong> (<em>str</em>) – The ASN of the searched network.</p></li>
+<li><p><strong>ip_prefix</strong> (<em>str</em>) – The prefix of the respective IP.</p></li>
+<li><p><strong>ip_type</strong> (<em>str</em>) – The IP type (ipv4 or ipv6). (not case-sensitive)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list with the ids of the available probes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[int]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the input is invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_available_probes_country">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_available_probes_country</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">country_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_available_probes_country"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_available_probes_country" title="Link to this definition"></a></dt>
+<dd><p>This method gets the probes available on RIPE Atlas that has the same country as the client IP.
+These probes should also support ipv4 or ipv6, it depends on the type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client_ip</strong> (<em>str</em>) – The IP address of the client.</p></li>
+<li><p><strong>country_code</strong> (<em>str</em>) – The country code.</p></li>
+<li><p><strong>ip_type</strong> (<em>str</em>) – The IP type (ipv4 or ipv6). It should be lowercase.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list with the ids of the available probes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[int]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the input is invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_available_probes_prefix">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_available_probes_prefix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_available_probes_prefix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_available_probes_prefix" title="Link to this definition"></a></dt>
+<dd><p>This method gets the probes available on RIPE Atlas that has the same prefix as the client IP.
+These probes should also support ipv4 or ipv6, it depends on the type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client_ip</strong> (<em>str</em>) – The IP address of the client.</p></li>
+<li><p><strong>ip_prefix</strong> (<em>str</em>) – The ip_prefix of the searched network.</p></li>
+<li><p><strong>ip_type</strong> (<em>str</em>) – The IP type (ipv4 or ipv6). It should be lowercase.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list with the ids of the available probes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[int]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the input is invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_best_probes_matched_by_single_attribute">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_best_probes_matched_by_single_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_probes_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_asn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_country</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_family</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_best_probes_matched_by_single_attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_best_probes_matched_by_single_attribute" title="Link to this definition"></a></dt>
+<dd><p>This method is responsible for getting the best probes that has a match by a single attribute in this order: ASN, prefix, country.
+As soon as we have enough probes we return.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client_ip</strong> (<em>str</em>) – The IP address of the client.</p></li>
+<li><p><strong>current_probes_set</strong> (<em>set</em><em>[</em><em>int</em><em>]</em>) – The set of probes that we will use for the measurement. (to be sure that we do not include duplicates)</p></li>
+<li><p><strong>ip_asn</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The ASN of the NTP server IP address.</p></li>
+<li><p><strong>ip_prefix</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The prefix of the NTP server IP address.</p></li>
+<li><p><strong>ip_country</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The country of the NTP server IP address.</p></li>
+<li><p><strong>ip_family</strong> (<em>int</em>) – The family of the NTP server IP address. (4 or 6)</p></li>
+<li><p><strong>probes_requested</strong> (<em>int</em>) – The number of probes that we still need to request.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><dl class="simple">
+<dt>The updated number of probes that we still need to find after this method call.</dt><dd><ul>
+<li><p>The set of probe types and the respective number of probes.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[int, set[int]]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InputError" title="server.app.models.CustomError.InputError"><strong>InputError</strong></a> – If the NTP server IP is invalid or if the probes_requested is negative.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_best_probes_with_multiple_attributes">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_best_probes_with_multiple_attributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_probes_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_asn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_country</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_family</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_best_probes_with_multiple_attributes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_best_probes_with_multiple_attributes" title="Link to this definition"></a></dt>
+<dd><p>This method tries to get probes that has the same ASN and prefix OR the same ASN and country and subtract them
+from the probes_requested. These probes have the highest priority as they have multiple attributes as the client IP
+(same ASN and same prefix OR same ASN or same country)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client_ip</strong> (<em>str</em>) – The IP address of the client.</p></li>
+<li><p><strong>current_probes_set</strong> (<em>set</em><em>[</em><em>int</em><em>]</em>) – The set of probes that we will use for the measurement. (to be sure that we do not include duplicates)</p></li>
+<li><p><strong>ip_asn</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The ASN of the NTP server IP address.</p></li>
+<li><p><strong>ip_prefix</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The prefix of the NTP server IP address.</p></li>
+<li><p><strong>ip_country</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The country of the NTP server IP address.</p></li>
+<li><p><strong>ip_family</strong> (<em>int</em>) – The family of the NTP server IP address. (4 or 6)</p></li>
+<li><p><strong>probes_requested</strong> (<em>int</em>) – The number of probes that we still need to request.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The updated number of probes that we still need to find after this method call.</dt><dd><p>a list of the IDs of the probes that we found until now.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[int, set[int]]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InputError" title="server.app.models.CustomError.InputError"><strong>InputError</strong></a> – If the input is invalid or probes_requested is negative.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_country_probes">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_country_probes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip_country_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_country_probes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_country_probes" title="Link to this definition"></a></dt>
+<dd><p>This method selects n probes that belong to the same country.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ip_country_code</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The country code.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – The number of probes to select.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The selected probes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InputError" title="server.app.models.CustomError.InputError"><strong>InputError</strong></a> – If the country code is None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_prefix_probes">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_prefix_probes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip_prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_prefix_probes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_prefix_probes" title="Link to this definition"></a></dt>
+<dd><p>This method selects n probes that has this prefix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ip_prefix</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The IP prefix family.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – The number of probes to select.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The selected probes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InputError" title="server.app.models.CustomError.InputError"><strong>InputError</strong></a> – If the IP prefix is None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_probes">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_probes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_family_of_ntp_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_probes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_probes" title="Link to this definition"></a></dt>
+<dd><p>This method handles all cases regarding what probes we should send.
+This method assumes all inputs are either valid or None. (If there is a typo in the input, the measurement
+may be affected)
+It will try to return the best probes near the client.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client_ip</strong> (<em>str</em>) – The IP address of the client.</p></li>
+<li><p><strong>ip_family_of_ntp_server</strong> (<em>int</em>) – The IP family of the NTP server. (4 or 6)</p></li>
+<li><p><strong>probes_requested</strong> (<em>int</em>) – The total number of probes that we will request.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The list of probes that we will use for the measurement.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[dict]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InputError" title="server.app.models.CustomError.InputError"><strong>InputError</strong></a> – If the client IP address is invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_probes_by_ids">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_probes_by_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probe_ids</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_probes_by_ids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_probes_by_ids" title="Link to this definition"></a></dt>
+<dd><p>This method selects probes by their IDs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>probe_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – The IDs of the probes.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The selected probes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InputError" title="server.app.models.CustomError.InputError"><strong>InputError</strong></a> – If the input is invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_random_probes">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_random_probes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_random_probes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_random_probes" title="Link to this definition"></a></dt>
+<dd><p>This method selects n random probes from all over the world.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – The number of probes to select.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The selected probes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
-<section id="methods-used-for-input-validation">
-<h2>Methods used for input validation<a class="headerlink" href="#methods-used-for-input-validation" title="Link to this heading"></a></h2>
+<section id="module-server.app.utils.validate">
+<span id="methods-used-for-input-validation"></span><h2>Methods used for input validation<a class="headerlink" href="#module-server.app.utils.validate" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.validate.ensure_utc">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.validate.</span></span><span class="sig-name descname"><span class="pre">ensure_utc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/validate.html#ensure_utc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.validate.ensure_utc" title="Link to this definition"></a></dt>
+<dd><p>Ensures that a given <cite>datetime</cite> object is timezone-aware and in UTC.</p>
+<p>This function checks if the provided datetime is naive (i.e., has no timezone info).
+If so, it assigns UTC as the timezone. If it already has a timezone, it converts it to UTC.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dt</strong> (<em>datetime</em>) – A Python <cite>datetime</cite> object, either naive or timezone-aware.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A timezone-aware <cite>datetime</cite> object in UTC.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>datetime</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.validate.is_ip_address">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.validate.</span></span><span class="sig-name descname"><span class="pre">is_ip_address</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/validate.html#is_ip_address"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.validate.is_ip_address" title="Link to this definition"></a></dt>
+<dd><p>It verifies if the given string is a valid IPv4 or IPv6 address. If not, it returns None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ip_str</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – ip address</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.validate.is_valid_domain_name">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.validate.</span></span><span class="sig-name descname"><span class="pre">is_valid_domain_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">domain_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/validate.html#is_valid_domain_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.validate.is_valid_domain_name" title="Link to this definition"></a></dt>
+<dd><p>This method verifies if the given string could be a valid domain name. It verifies the syntax.
+It offers only a basic validation of the syntax. It is just enough for a dns to consider it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>domain_name</strong> (<em>str</em>) – The string to check.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the string could be a valid domain name, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.validate.parse_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.validate.</span></span><span class="sig-name descname"><span class="pre">parse_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/validate.html#parse_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.validate.parse_ip" title="Link to this definition"></a></dt>
+<dd><p>Parses and validates a string as an IPv4 or IPv6 address.</p>
+<p>Attempts to interpret the provided string as a valid IP address using <cite>ipaddress.ip_address()</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ip_str</strong> (<em>str</em>) – The IP address in string format (e.g., “192.168.0.1” or “::1”).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>A valid <cite>IPv4Address</cite> or <cite>IPv6Address</cite> object if parsing succeeds.</p></li>
+<li><p><cite>None</cite> if the string is not a valid IP address.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ipaddress.IPv4Address | ipaddress.IPv6Address | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.validate.sanitize_string">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.validate.</span></span><span class="sig-name descname"><span class="pre">sanitize_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/validate.html#sanitize_string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.validate.sanitize_string" title="Link to this definition"></a></dt>
+<dd><p>This method sanitize a string. It removes null characters () or control characters (-)
+or the DEL character () from a string. It removes them. We do this because our database does not
+allow these characters (security concerns). It prints a warning if the string contains such characters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>s</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The string to sanitize.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The sanitized string, or None if the string is None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 </section>
 

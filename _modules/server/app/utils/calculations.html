@@ -1,0 +1,317 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>server.app.utils.calculations &mdash; NTPinfo  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/custom.css?v=82d09745" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            NTPinfo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.backend.html">Back-end component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.frontend.html">Front-end component</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">NTPinfo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">server.app.utils.calculations</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for server.app.utils.calculations</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ipaddress</span><span class="w"> </span><span class="kn">import</span> <span class="n">ip_address</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpExtraDetails</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpExtraDetails</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpMainDetails</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpMainDetails</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpServerInfo</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpServerInfo</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpTimestamps</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpTimestamps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.ProbeData</span><span class="w"> </span><span class="kn">import</span> <span class="n">ServerLocation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.ip_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_server_ip</span><span class="p">,</span> <span class="n">ip_to_str</span><span class="p">,</span> <span class="n">get_ip_family</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.location_resolver</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_country_for_ip</span><span class="p">,</span> <span class="n">get_coordinates_for_ip</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.load_config_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_nr_of_measurements_for_jitter</span><span class="p">,</span> <span class="n">get_ntp_version</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.db.db_interaction</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_measurements_for_jitter_ip</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpMeasurement</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpMeasurement</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.services.NtpCalculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpCalculator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">ntplib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.PreciseTime</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreciseTime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">radians</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">atan2</span>
+
+
+<div class="viewcode-block" id="calculate_jitter_from_measurements">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.calculations.calculate_jitter_from_measurements">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_jitter_from_measurements</span><span class="p">(</span><span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">initial_measurement</span><span class="p">:</span> <span class="n">NtpMeasurement</span><span class="p">,</span>
+                                       <span class="n">no_measurements</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_nr_of_measurements_for_jitter</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the NTP jitter based on a set of previous measurements and one initial reference measurement.</span>
+
+<span class="sd">    This function computes the jitter by calculating the standard deviation of the offsets</span>
+<span class="sd">    from a given initial measurement and a number of most recent measurements from the same NTP server.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        session (Session): The active SQLAlchemy database session.</span>
+<span class="sd">        initial_measurement (NtpMeasurement): The reference measurement not already stored in the database,</span>
+<span class="sd">                                              used as the baseline for offset comparison.</span>
+<span class="sd">        no_measurements (int): The number of recent historical measurements to fetch from the database</span>
+<span class="sd">                                         for jitter calculation.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple[float, int]:</span>
+<span class="sd">            - float: The calculated jitter in seconds.</span>
+<span class="sd">            - int: The actual number of historical measurements used for the calculation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">offsets</span> <span class="o">=</span> <span class="p">[</span><span class="n">NtpCalculator</span><span class="o">.</span><span class="n">calculate_offset</span><span class="p">(</span><span class="n">initial_measurement</span><span class="o">.</span><span class="n">timestamps</span><span class="p">)]</span>
+    <span class="n">last_measurements</span> <span class="o">=</span> <span class="n">get_measurements_for_jitter_ip</span><span class="p">(</span><span class="n">session</span><span class="o">=</span><span class="n">session</span><span class="p">,</span>
+                                                       <span class="n">ip</span><span class="o">=</span><span class="n">initial_measurement</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">ntp_server_ip</span><span class="p">,</span>
+                                                       <span class="n">number</span><span class="o">=</span><span class="n">no_measurements</span><span class="p">)</span>
+    <span class="n">nr_m</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">last_measurements</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">offsets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">NtpCalculator</span><span class="o">.</span><span class="n">calculate_offset</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">timestamps</span><span class="p">))</span>
+            <span class="n">nr_m</span> <span class="o">=</span> <span class="n">nr_m</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">NtpCalculator</span><span class="o">.</span><span class="n">calculate_jitter</span><span class="p">(</span><span class="n">offsets</span><span class="p">)),</span> <span class="n">nr_m</span></div>
+
+
+
+<div class="viewcode-block" id="ntp_precise_time_to_human_date">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.calculations.ntp_precise_time_to_human_date">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ntp_precise_time_to_human_date</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="n">PreciseTime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a PreciseTime object to a human-readable time string in UTC. (ex:&#39;2025-05-05 14:30:15.123456 UTC&#39;)</span>
+<span class="sd">    We need to shift from ntp time to unix time so we need to subtract all the seconds from 1900 to 1970.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        t (PreciseTime): The PreciseTime object.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: The date in UTC format or empty, depending on whether the PreciseTime object could be converted to UTC.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">ntplib</span><span class="o">.</span><span class="n">_to_time</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">seconds</span> <span class="o">-</span> <span class="n">ntplib</span><span class="o">.</span><span class="n">NTP</span><span class="o">.</span><span class="n">NTP_DELTA</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">fraction</span><span class="p">)</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S.</span><span class="si">%f</span><span class="s2"> UTC&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="convert_float_to_precise_time">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.calculations.convert_float_to_precise_time">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_float_to_precise_time</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreciseTime</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a float value to a PreciseTime object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        value (float): The float value to convert.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        PreciseTime: A PreciseTime object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="n">fraction</span> <span class="o">=</span> <span class="n">ntplib</span><span class="o">.</span><span class="n">_to_frac</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># by default, a second is split into 2^32 parts</span>
+    <span class="k">return</span> <span class="n">PreciseTime</span><span class="p">(</span><span class="n">seconds</span><span class="p">,</span> <span class="n">fraction</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="human_date_to_ntp_precise_time">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.calculations.human_date_to_ntp_precise_time">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">human_date_to_ntp_precise_time</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreciseTime</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a UTC datetime object to a PreciseTime object in NTP time.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dt (datetime): A timezone-aware datetime object in UTC.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        PreciseTime: The corresponding NTP time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dt</span><span class="o">.</span><span class="n">tzinfo</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input datetime must be timezone-aware (UTC)&quot;</span><span class="p">)</span>
+
+    <span class="n">unix_timestamp</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span>
+    <span class="n">ntp_timestamp</span> <span class="o">=</span> <span class="n">unix_timestamp</span> <span class="o">+</span> <span class="n">ntplib</span><span class="o">.</span><span class="n">NTP</span><span class="o">.</span><span class="n">NTP_DELTA</span>
+
+    <span class="n">ntp_seconds</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ntp_timestamp</span><span class="p">)</span>
+    <span class="n">ntp_fraction</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">ntp_timestamp</span> <span class="o">-</span> <span class="n">ntp_seconds</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="mi">32</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">PreciseTime</span><span class="p">(</span><span class="n">ntp_seconds</span><span class="p">,</span> <span class="n">ntp_fraction</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_non_responding_ntp_measurement">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.calculations.get_non_responding_ntp_measurement">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_non_responding_ntp_measurement</span><span class="p">(</span><span class="n">server_ip_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">server_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+                                       <span class="n">ntp_version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_ntp_version</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">NtpMeasurement</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct a default NTP measurement result representing a non-responding NTP server.</span>
+<span class="sd">    This function is used when an NTP server fails to respond. It returns a synthetic `NtpMeasurement` object</span>
+<span class="sd">    with placeholder values (e.g., -1) to indicate that no real measurement was completed. This is used to mark the server</span>
+<span class="sd">    as non-responding on the map.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        server_ip_str (str): The IP address of the NTP server that failed to respond.</span>
+<span class="sd">        server_name (Optional[str]): The hostname of the NTP server, if available.</span>
+<span class="sd">        ntp_version (int): The version of the NTP protocol to report. (default is based on system config)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        NtpMeasurement: An `NtpMeasurement` object filled with placeholder values indicating failure.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        - The `offset`, `rtt`, `stratum`, and other time-related fields are set to -1 or equivalent.</span>
+<span class="sd">        - The `vantage_point_ip` is determined from the local server. If not resolvable, it defaults to 0.0.0.0.</span>
+<span class="sd">        - The location and reference information is generated using available utility functions based on IP.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">vantage_point_ip</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">ip_type</span> <span class="o">=</span> <span class="n">get_ip_family</span><span class="p">(</span><span class="n">server_ip_str</span><span class="p">)</span>
+    <span class="c1"># get the same type</span>
+    <span class="n">vantage_point_ip_temp</span> <span class="o">=</span> <span class="n">get_server_ip</span><span class="p">(</span><span class="n">ip_type</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">vantage_point_ip_temp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">vantage_point_ip</span> <span class="o">=</span> <span class="n">vantage_point_ip_temp</span>
+    <span class="n">server_ip</span> <span class="o">=</span> <span class="n">ip_address</span><span class="p">(</span><span class="n">server_ip_str</span><span class="p">)</span>
+    <span class="n">server_info</span><span class="p">:</span> <span class="n">NtpServerInfo</span> <span class="o">=</span> <span class="n">NtpServerInfo</span><span class="p">(</span>
+        <span class="n">ntp_version</span><span class="o">=</span><span class="n">ntp_version</span><span class="p">,</span>
+        <span class="n">ntp_server_ip</span><span class="o">=</span><span class="n">server_ip</span><span class="p">,</span>
+        <span class="n">ntp_server_name</span><span class="o">=</span><span class="n">server_name</span><span class="p">,</span>
+        <span class="n">ntp_server_ref_parent_ip</span><span class="o">=</span><span class="n">ip_address</span><span class="p">(</span><span class="s2">&quot;0.0.0.0&quot;</span><span class="p">),</span>  <span class="c1"># if you change this value, change it also in &quot;measure&quot;</span>
+        <span class="n">ref_name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="n">ntp_server_location</span><span class="o">=</span><span class="n">ServerLocation</span><span class="p">(</span><span class="n">country_code</span><span class="o">=</span><span class="n">get_country_for_ip</span><span class="p">(</span><span class="n">ip_to_str</span><span class="p">(</span><span class="n">server_ip</span><span class="p">)),</span>
+                                           <span class="n">coordinates</span><span class="o">=</span><span class="n">get_coordinates_for_ip</span><span class="p">(</span><span class="n">ip_to_str</span><span class="p">(</span><span class="n">server_ip</span><span class="p">)))</span>
+    <span class="p">)</span>
+
+    <span class="n">timestamps</span><span class="p">:</span> <span class="n">NtpTimestamps</span> <span class="o">=</span> <span class="n">NtpTimestamps</span><span class="p">(</span>
+        <span class="n">client_sent_time</span><span class="o">=</span><span class="n">PreciseTime</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">server_recv_time</span><span class="o">=</span><span class="n">PreciseTime</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">server_sent_time</span><span class="o">=</span><span class="n">PreciseTime</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">client_recv_time</span><span class="o">=</span><span class="n">PreciseTime</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">main_details</span><span class="p">:</span> <span class="n">NtpMainDetails</span> <span class="o">=</span> <span class="n">NtpMainDetails</span><span class="p">(</span>
+        <span class="n">offset</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">rtt</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">stratum</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">precision</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">reachability</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">extra_details</span><span class="p">:</span> <span class="n">NtpExtraDetails</span> <span class="o">=</span> <span class="n">NtpExtraDetails</span><span class="p">(</span>
+        <span class="n">root_delay</span><span class="o">=</span><span class="n">PreciseTime</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">ntp_last_sync_time</span><span class="o">=</span><span class="n">PreciseTime</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">leap</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">poll</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">root_dispersion</span><span class="o">=</span><span class="n">PreciseTime</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">NtpMeasurement</span><span class="p">(</span><span class="n">vantage_point_ip</span><span class="p">,</span> <span class="n">server_info</span><span class="p">,</span> <span class="n">timestamps</span><span class="p">,</span> <span class="n">main_details</span><span class="p">,</span> <span class="n">extra_details</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="calculate_haversine_distance">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.calculations.calculate_haversine_distance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_haversine_distance</span><span class="p">(</span><span class="n">lat1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">lon1</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">lat2</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">lon2</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    It calculates the haversine distance between two points using this formula:</span>
+<span class="sd">    d = 2 * R * asin(sqrt(a)) where R is Earth&#39;s radius in kilometers</span>
+<span class="sd">    and &#39;a&#39; is a value calculated using the latitude and longitude difference of the two points.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lat1 (float): The latitude of the first point.</span>
+<span class="sd">        lon1 (float): The longitude of the first point.</span>
+<span class="sd">        lat2 (float): The latitude of the second point.</span>
+<span class="sd">        lon2 (float): The longitude of the second point.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        float: The haversine distance between the two points. (in kilometers)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="mf">6371.0</span>
+    <span class="n">dlat</span> <span class="o">=</span> <span class="n">radians</span><span class="p">(</span><span class="n">lat2</span> <span class="o">-</span> <span class="n">lat1</span><span class="p">)</span>
+    <span class="n">dlon</span> <span class="o">=</span> <span class="n">radians</span><span class="p">(</span><span class="n">lon2</span> <span class="o">-</span> <span class="n">lon1</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">dlat</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="n">radians</span><span class="p">(</span><span class="n">lat1</span><span class="p">))</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">radians</span><span class="p">(</span><span class="n">lat2</span><span class="p">))</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">dlon</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">r</span> <span class="o">*</span> <span class="n">atan2</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">a</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">d</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, TU Delft CSE 2000 Group 15d. Licensed under the MIT License.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
