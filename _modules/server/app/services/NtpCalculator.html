@@ -71,7 +71,9 @@
            <div itemprop="articleBody">
              
   <h1>Source code for server.app.services.NtpCalculator</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpTimestamps</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpTimestamps</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpTimestamps</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpTimestamps</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.PreciseTime</span><span class="w"> </span><span class="kn">import</span> <span class="n">PreciseTime</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
@@ -92,10 +94,10 @@
 <span class="sd">        Uses the formula  ((t2 - t1) + (t3 - t4)) / 2</span>
 <span class="sd">        </span>
 <span class="sd">        Args:</span>
-<span class="sd">        timestamps (NtpTimestamps): A single NTP timestamps object, containing data about the 4 key timestamps</span>
+<span class="sd">            timestamps (NtpTimestamps): A single NTP timestamps object, containing data about the 4 key timestamps</span>
 <span class="sd"> </span>
 <span class="sd">        Returns:</span>
-<span class="sd">            float: Clock offset in seconds</span>
+<span class="sd">            float: Clock offset in seconds.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># a = t2 - t1</span>
         <span class="n">a</span> <span class="o">=</span> <span class="n">PreciseTime</span><span class="p">(</span>
@@ -113,10 +115,30 @@
         <span class="k">return</span> <span class="n">offset_seconds</span> <span class="o">+</span> <span class="n">offset_fraction</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="mi">32</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="NtpCalculator.calculate_delay">
-<a class="viewcode-back" href="../../../../server.services.html#server.app.services.NtpCalculator.NtpCalculator.calculate_delay">[docs]</a>
+<div class="viewcode-block" id="NtpCalculator.calculate_offset_from_dict">
+<a class="viewcode-back" href="../../../../server.services.html#server.app.services.NtpCalculator.NtpCalculator.calculate_offset_from_dict">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_delay</span><span class="p">(</span><span class="n">timestamps</span><span class="p">:</span> <span class="n">NtpTimestamps</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_offset_from_dict</span><span class="p">(</span><span class="n">response_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the clock offset between client and server using NTP timestamps from a dictionary.</span>
+<span class="sd">        Uses the formula  ((t2 - t1) + (t3 - t4)) / 2</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            response_dict (dict[str, Any]): A dictionary with the timestamp values. (names are taken from RIPE results)</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: Clock offset in seconds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">offset</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="p">((</span><span class="n">response_dict</span><span class="p">[</span><span class="s1">&#39;receive-ts&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">response_dict</span><span class="p">[</span><span class="s1">&#39;origin-ts&#39;</span><span class="p">])</span> <span class="o">+</span>
+                         <span class="p">(</span><span class="n">response_dict</span><span class="p">[</span><span class="s1">&#39;transmit-ts&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">response_dict</span><span class="p">[</span><span class="s1">&#39;final-ts&#39;</span><span class="p">]))</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">offset</span></div>
+
+
+<div class="viewcode-block" id="NtpCalculator.calculate_rtt">
+<a class="viewcode-back" href="../../../../server.services.html#server.app.services.NtpCalculator.NtpCalculator.calculate_rtt">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_rtt</span><span class="p">(</span><span class="n">timestamps</span><span class="p">:</span> <span class="n">NtpTimestamps</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">         Calculates round-trip delay between client and server using NTP timestamps.</span>
 <span class="sd">         It uses the formula (t4 - t1) - (t3 - t2)</span>
@@ -135,8 +157,9 @@
             <span class="n">timestamps</span><span class="o">.</span><span class="n">server_sent_time</span><span class="o">.</span><span class="n">seconds</span> <span class="o">-</span> <span class="n">timestamps</span><span class="o">.</span><span class="n">server_recv_time</span><span class="o">.</span><span class="n">seconds</span><span class="p">,</span>
             <span class="n">timestamps</span><span class="o">.</span><span class="n">server_sent_time</span><span class="o">.</span><span class="n">fraction</span> <span class="o">-</span> <span class="n">timestamps</span><span class="o">.</span><span class="n">server_recv_time</span><span class="o">.</span><span class="n">fraction</span>
         <span class="p">)</span>
-        <span class="n">ans</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">seconds</span> <span class="o">-</span> <span class="n">b</span><span class="o">.</span><span class="n">seconds</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">fraction</span> <span class="o">-</span> <span class="n">a</span><span class="o">.</span><span class="n">fraction</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="mi">32</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">ans</span></div>
+        <span class="n">rtt_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">seconds</span> <span class="o">-</span> <span class="n">b</span><span class="o">.</span><span class="n">seconds</span><span class="p">)</span>
+        <span class="n">rtt_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">fraction</span> <span class="o">-</span> <span class="n">b</span><span class="o">.</span><span class="n">fraction</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rtt_seconds</span> <span class="o">+</span> <span class="n">rtt_fraction</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="mi">32</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="NtpCalculator.calculate_float_time">

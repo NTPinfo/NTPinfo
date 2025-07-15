@@ -317,26 +317,6 @@ and triggers the appropriate RIPE measurement.</p>
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.services.NtpCalculator.</span></span><span class="sig-name descname"><span class="pre">NtpCalculator</span></span><a class="reference internal" href="_modules/server/app/services/NtpCalculator.html#NtpCalculator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.NtpCalculator.NtpCalculator" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="server.app.services.NtpCalculator.NtpCalculator.calculate_delay">
-<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_delay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/NtpCalculator.html#NtpCalculator.calculate_delay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.NtpCalculator.NtpCalculator.calculate_delay" title="Link to this definition"></a></dt>
-<dd><blockquote>
-<div><p>Calculates round-trip delay between client and server using NTP timestamps.
-It uses the formula (t4 - t1) - (t3 - t2)</p>
-</div></blockquote>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>timestamps</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpTimestamps.NtpTimestamps" title="server.app.dtos.NtpTimestamps.NtpTimestamps"><em>NtpTimestamps</em></a>) – A single NTP timestamps object, containing data about the 4 key timestamps</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Delay in seconds</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="server.app.services.NtpCalculator.NtpCalculator.calculate_float_time">
 <em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_float_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/NtpCalculator.html#NtpCalculator.calculate_float_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.NtpCalculator.NtpCalculator.calculate_float_time" title="Link to this definition"></a></dt>
 <dd><p>Converts a PreciseTime object to a float in seconds.</p>
@@ -375,14 +355,53 @@ It uses the formula (t4 - t1) - (t3 - t2)</p>
 <em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_offset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/NtpCalculator.html#NtpCalculator.calculate_offset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.NtpCalculator.NtpCalculator.calculate_offset" title="Link to this definition"></a></dt>
 <dd><p>Calculates the clock offset between client and server using NTP timestamps.
 Uses the formula  ((t2 - t1) + (t3 - t4)) / 2</p>
-<p>Args:
-timestamps (NtpTimestamps): A single NTP timestamps object, containing data about the 4 key timestamps</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Clock offset in seconds</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timestamps</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpTimestamps.NtpTimestamps" title="server.app.dtos.NtpTimestamps.NtpTimestamps"><em>NtpTimestamps</em></a>) – A single NTP timestamps object, containing data about the 4 key timestamps</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Clock offset in seconds.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.app.services.NtpCalculator.NtpCalculator.calculate_offset_from_dict">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_offset_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/NtpCalculator.html#NtpCalculator.calculate_offset_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.NtpCalculator.NtpCalculator.calculate_offset_from_dict" title="Link to this definition"></a></dt>
+<dd><p>Calculates the clock offset between client and server using NTP timestamps from a dictionary.
+Uses the formula  ((t2 - t1) + (t3 - t4)) / 2</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>response_dict</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – A dictionary with the timestamp values. (names are taken from RIPE results)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Clock offset in seconds.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.app.services.NtpCalculator.NtpCalculator.calculate_rtt">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_rtt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/NtpCalculator.html#NtpCalculator.calculate_rtt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.NtpCalculator.NtpCalculator.calculate_rtt" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Calculates round-trip delay between client and server using NTP timestamps.
+It uses the formula (t4 - t1) - (t3 - t2)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timestamps</strong> (<a class="reference internal" href="server.app.dtos.html#server.app.dtos.NtpTimestamps.NtpTimestamps" title="server.app.dtos.NtpTimestamps.NtpTimestamps"><em>NtpTimestamps</em></a>) – A single NTP timestamps object, containing data about the 4 key timestamps</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Delay in seconds</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>

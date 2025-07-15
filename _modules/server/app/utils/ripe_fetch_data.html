@@ -75,6 +75,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipaddress</span><span class="w"> </span><span class="kn">import</span> <span class="n">ip_address</span><span class="p">,</span> <span class="n">IPv4Address</span><span class="p">,</span> <span class="n">IPv6Address</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.services.NtpCalculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpCalculator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.location_resolver</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_country_for_ip</span><span class="p">,</span> <span class="n">get_coordinates_for_ip</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.models.CustomError</span><span class="w"> </span><span class="kn">import</span> <span class="n">RipeMeasurementError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.load_config_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ripe_api_token</span><span class="p">,</span> <span class="n">get_ripe_server_timeout</span>
@@ -371,18 +372,19 @@
 <span class="sd">        entry (dict[str, Any]): A dictionary representing a single measurement entry from the RIPE API.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        int | None: The index of the result entry with the lowest offset, or None if no valid entries exist.</span>
+<span class="sd">        int | None: The index of the result entry with the lowest absolute offset (closest to 0), or None if no valid entries exist.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;result&quot;</span><span class="p">,</span> <span class="p">[])</span>
-    <span class="n">min_offset</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+    <span class="n">min_abs_offset</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
     <span class="n">min_index</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">result</span><span class="p">):</span>
         <span class="k">if</span> <span class="s2">&quot;origin-ts&quot;</span> <span class="ow">in</span> <span class="n">r</span> <span class="ow">and</span> <span class="s2">&quot;offset&quot;</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">offset</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="s2">&quot;offset&quot;</span><span class="p">]))</span>
-                <span class="k">if</span> <span class="n">offset</span> <span class="o">&lt;</span> <span class="n">min_offset</span><span class="p">:</span>
-                    <span class="n">min_offset</span> <span class="o">=</span> <span class="n">offset</span>
+                <span class="c1"># we want the closest offset to 0 from the packets sent from this probe. (this is why we use abs)</span>
+                <span class="n">abs_offset</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">NtpCalculator</span><span class="o">.</span><span class="n">calculate_offset_from_dict</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">abs_offset</span> <span class="o">&lt;</span> <span class="n">min_abs_offset</span><span class="p">:</span>
+                    <span class="n">min_abs_offset</span> <span class="o">=</span> <span class="n">abs_offset</span>
                     <span class="n">min_index</span> <span class="o">=</span> <span class="n">i</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
                 <span class="k">continue</span>
@@ -456,8 +458,13 @@
                 <span class="n">server_sent_time</span><span class="o">=</span><span class="n">convert_float_to_precise_time</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;transmit-ts&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)),</span>
                 <span class="n">client_recv_time</span><span class="o">=</span><span class="n">convert_float_to_precise_time</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;final-ts&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">))</span>
             <span class="p">)</span>
-            <span class="n">offset</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">NtpCalculator</span><span class="o">.</span><span class="n">calculate_offset</span><span class="p">(</span><span class="n">timestamps</span><span class="p">)</span>
+            <span class="c1"># print(offset, NtpCalculator.calculate_offset_from_dict(result)) # they have exactly the same values</span>
+            <span class="c1"># print(offset, result.get(&#39;offset&#39;, -1.0)) # the RIPE offset had inverted sign</span>
+
             <span class="n">rtt</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rtt&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+            <span class="c1">#rtt = NtpCalculator.calculate_rtt(timestamps) # or we can use our formula which is the same</span>
+            <span class="c1"># print(rtt, result.get(&#39;rtt&#39;, -1.0))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">timestamps</span> <span class="o">=</span> <span class="n">NtpTimestamps</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">PreciseTime</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)))</span>
             <span class="n">offset</span> <span class="o">=</span> <span class="n">rtt</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
