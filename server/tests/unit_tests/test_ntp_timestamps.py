@@ -22,7 +22,7 @@ def test_same_time():
     t = PreciseTime(10000, 10000)
     times = NtpTimestamps(t, t, t, t)
     assert NtpCalculator.calculate_offset(times) == 0.0
-    assert NtpCalculator.calculate_delay(times) == 0.0
+    assert NtpCalculator.calculate_rtt(times) == 0.0
 
 
 def test_different_times_offset():
@@ -34,6 +34,14 @@ def test_different_times_offset():
     # 2^26/2^32=2^-6
     assert round(NtpCalculator.calculate_offset(times), 14) == 0.5 + 2 ** (-6)
 
+def test_different_times_offset_dict():
+    d = {'receive-ts': 10000,
+         'origin-ts': 10002.2,
+         'transmit-ts': 10003.1,
+         'final-ts': 10004.1
+         }
+    assert round(NtpCalculator.calculate_offset_from_dict(d), 4) == -1.6
+
 
 def test_different_times_delay():
     t1 = PreciseTime(10000, 0)
@@ -42,8 +50,7 @@ def test_different_times_delay():
     t4 = PreciseTime(10004, 2 ** 27)
     times = NtpTimestamps(t1, t2, t3, t4)
     # 2^27/2^32=2^-5
-    assert round(NtpCalculator.calculate_delay(times), 14) == 3 - 2 ** (-5)
-
+    assert round(NtpCalculator.calculate_rtt(times), 14) == 3 + 2 ** (-5)
 
 def test_create_object():
     vantage_point_ip = ip_address('127.0.0.1')
