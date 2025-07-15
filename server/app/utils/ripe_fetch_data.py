@@ -2,6 +2,7 @@ import time
 from ipaddress import ip_address, IPv4Address, IPv6Address
 import requests
 
+from server.app.services.NtpCalculator import NtpCalculator
 from server.app.utils.location_resolver import get_country_for_ip, get_coordinates_for_ip
 from server.app.models.CustomError import RipeMeasurementError
 from server.app.utils.load_config_data import get_ripe_api_token, get_ripe_server_timeout
@@ -278,18 +279,19 @@ def successful_measurement(entry: dict[str, Any]) -> int | None:
         entry (dict[str, Any]): A dictionary representing a single measurement entry from the RIPE API.
 
     Returns:
-        int | None: The index of the result entry with the lowest offset, or None if no valid entries exist.
+        int | None: The index of the result entry with the lowest absolute offset (closest to 0), or None if no valid entries exist.
     """
     result = entry.get("result", [])
-    min_offset = float("inf")
+    min_abs_offset = float("inf")
     min_index = None
 
     for i, r in enumerate(result):
         if "origin-ts" in r and "offset" in r:
             try:
-                offset = abs(float(r["offset"]))
-                if offset < min_offset:
-                    min_offset = offset
+                # we want the closest offset to 0 from the packets sent from this probe. (this is why we use abs)
+                abs_offset = abs(NtpCalculator.calculate_offset_from_dict(r))
+                if abs_offset < min_abs_offset:
+                    min_abs_offset = abs_offset
                     min_index = i
             except (ValueError, TypeError):
                 continue
@@ -360,8 +362,13 @@ def parse_data_from_ripe_measurement(data_measurement: list[dict]) -> tuple[list
                 server_sent_time=convert_float_to_precise_time(result.get('transmit-ts', -1.0)),
                 client_recv_time=convert_float_to_precise_time(result.get('final-ts', -1.0))
             )
-            offset = result.get('offset', -1.0)
+            offset = NtpCalculator.calculate_offset(timestamps)
+            # print(offset, NtpCalculator.calculate_offset_from_dict(result)) # they have exactly the same values
+            # print(offset, result.get('offset', -1.0)) # the RIPE offset had inverted sign
+
             rtt = result.get('rtt', -1.0)
+            #rtt = NtpCalculator.calculate_rtt(timestamps) # or we can use our formula which is the same
+            # print(rtt, result.get('rtt', -1.0))
         else:
             timestamps = NtpTimestamps(*(PreciseTime(-1, 0) for _ in range(4)))
             offset = rtt = -1
