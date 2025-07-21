@@ -1,8 +1,11 @@
-### **Group 15d**
+[![Docs](https://img.shields.io/badge/Docs-Live-blue)](https://ntpinfo.github.io/NTPinfo/)
 
 # Are your time servers on time?
 
 ## Active Internet Measurements to evaluate time servers.
+
+## About this project
+This project was developed by Group 15d as part of the **CSE2000 Software Project** course at the **Faculty of Electrical Engineering, Mathematics and Computer Science (EWI)**, **Delft University of Technology (TU Delft)**, as part of the **BSc Computer Science and Engineering** program.
 
 <p align="center">
   <img src="assets/NtpInfoLogo.png" alt="Project Logo" style="width:100%; max-width:100%;"/>
@@ -62,41 +65,33 @@ To set up and run the back-end server, follow these steps:
    Then activate the virtual environment:
     - On **macOS/Linux**:
         ```bash
-        source venv/bin/activate
+        source venv/bin/activate 
         ```
     - On **Windows**:
         ```bash
         .\venv\Scripts\activate
         ```
 
-
 2. **Install and prepare PostgreSQL database**
 
-   2.1. Go to: https://www.enterprisedb.com/downloads/postgres-postgresql-downloads and select the version of PostgreSQL
-   you want to install.
+   2.1 Install PostgreSQL according to your operating system.
 
-   2.2. Go to download file location
-   Double click the `.exe` file  
-   Follow through the installation process and keep track of:
-
-    - where you installed it
-    - the superuser (usually `postgres`)
-    - the port (usually `5432`)
-    - the password (**you should remember this one**)
-
-   2.3. `pgAdmin` should automatically be installed, so accept to install it when prompted.
-
-   2.4. Restart your computer.
-
-   2.5. `pgAdmin` should be in your system if you followed the installation correctly.  
-   Open it, click on **Server** and put in your password if necessary.
-
-   2.6. Right click on **Databases**, click **Create** and create an empty database, preferably named
-   `"measurements"`.  
-   Tables will be handled once you run the back-end server, so do not worry about them right now.
+   👉 You can download it from the official site: https://www.postgresql.org/download/
+   
+   2.2 Make sure the PostgreSQL service is running.
+   
+   2.3 Create a database (recommended name: `measurements`)
+   
+   2.4 Keep track of:
+    - **Username** (e.g., `postgres`)
+    - **Password**
+    - **Port** (default: `5432`)
+   
+   2.5 You can use tools like `psql` or GUI tools such as **pgAdmin** to manage your database.
+   > The necessary tables will be created automatically when running the server.
 
 
-3. **Create a `.env` file** in the `root` directory with your accounts credentials in the following format:
+4. **Create a `.env` file** in the `root` directory with your accounts credentials in the following format:
 
     ```dotenv
     # needed for back-end (server)
@@ -113,16 +108,36 @@ To set up and run the back-end server, follow these steps:
     LICENSE_KEY={geolite key}
     # once every day
     UPDATE_CRON_SCHEDULE=0 0 * * *
+    # when running local
     CLIENT_URL=http://127.0.0.1:5173
-
+    # when runing on docker
+    CLIENT_URL=https://myapp.local
     #needed for front-end (client)
     DOCKER_NETWORK_SUBNET=2001:db8:1::/64
     DOCKER_NETWORK_GATEWAY=2001:db8:1::1
+    # when running locally 
     VITE_CLIENT_HOST=127.0.0.1
     VITE_CLIENT_PORT=5173
+    # when running locally
     VITE_SERVER_HOST_ADDRESS=http://127.0.0.1:8000
+    # replace with actual domain_name/api
+    VITE_SERVER_HOST_ADDRESS=https://myapp.local/api
     # in milliseconds, choose a value you think is reasonable for the offset threshold
     VITE_STATUS_THRESHOLD=1000
+    # port to launch the back-end server (must match the local one in docker-compose)
+    # !! must be the same as the internal one in docker-compose !!
+    SERVER_BIND=[::]:8000
+    # how many workers the backend should work (2 * nr_of_cores + 1)
+    SERVER_WORKERS=4
+    # ports exposed from local machien used for local testing on localhost
+    DB_DOCKER_PORT=15432
+    # when this is changed, CLIENT_URL must also be changed
+    CLIENT_DOCKER_PORT=5173
+    # when this is changed, VITE_SERVER_HOST_ADDRESS must also be changed
+    SERVER_DOCKER_PORT=8000
+    # ports where website is served
+    HTTP_PORT=80
+    HTTPS_PORT=443
     ```
    Besides, the config file with public data for the server is `server/server_config.yaml` and it contains the following
    variables that you can change:
@@ -286,15 +301,70 @@ To run the full stack (server + client + database) using `docker-compose`, follo
    sudo apt install docker-compose
    ```
 
-
 3. **Add a .env file in the root directory**
 
-   **Create a `.env` file** in the `root` directory (the same directory with you `docker-compose.yml`) with your
-   accounts
-   credentials. (You can see this `.env` at the above of the page)
+   Create a `.env` file** in the `root` directory (the same directory with you `docker-compose.yml`)
+   with your accounts credentials. (You can see this `.env` at the above of the page)
 
+4. **Create a temporary certbot container to generate your SSL certs**
 
-4. **Build the Docker containers**
+   Replace the last 2 lines `--email your@email.com` and `-d yourdomain.com` with your own data
+   ```bash
+   docker run --rm \
+     -v $(pwd)/nginx/certbot/www:/var/www/certbot \
+     -v $(pwd)/nginx/certbot/conf:/etc/letsencrypt \
+     certbot/certbot certonly \
+     --webroot \
+     --webroot-path=/var/www/certbot \
+     --agree-tos \
+     --no-eff-email \
+     --email your@email.com \
+     -d yourdomain.com
+   ```
+   Once completed, the certificates should be in `nginx/certbot/conf/live/yourdomain.com/`. These are then automatically
+   moved when running docker-compose to `etc/letsencrypt/live/yourdomain.com/`
+
+5. **Make sure to add the docker path to your certificates to `nginx/conf.d/default.conf`**
+
+   **This is an example**
+
+   **Also make sure to replace `yourdomain.com` with your actual domain.**
+   ```markdown
+   server {
+       listen 80;
+       server_name yourdomain.com;
+   
+       location /.well-known/acme-challenge/ {
+           root /var/www/certbot;
+       }
+   
+       location / {
+           return 301 https://$host$request_uri;
+       }
+   }
+   
+   server {
+       listen 443 ssl;
+       server_name yourdomain.com;
+   
+       ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
+       ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
+   
+       location /api/ {
+           proxy_pass http://backend:8000/;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+       }
+   
+       location / {
+           proxy_pass http://frontend:80;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+       }
+   }
+   ```
+
+6. **Build the Docker containers**
 
    From the root of the project, run this, but make sure that Docker Desktop is open:
 
@@ -313,7 +383,7 @@ To run the full stack (server + client + database) using `docker-compose`, follo
     - If it fails, and you received error `error during connect`, then make sure that you have Docker Desktop open.
 
 
-5. **Start the containers**
+7. **Start the containers**
 
    ```bash
    sudo docker-compose up
@@ -344,7 +414,7 @@ To run the full stack (server + client + database) using `docker-compose`, follo
    sudo docker network ls
    ```
 
-6. **Shut down the containers**
+8. **Shut down the containers**
 
    To gracefully stop all services:
 
@@ -370,6 +440,12 @@ To run the full stack (server + client + database) using `docker-compose`, follo
 - **Backend API**: [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 > Make sure ports `5173` (frontend) and `8000` (backend) are not in use before starting the containers.
+
+### Other matters to consider:
+
+- On the `docker-entrypoint.sh` file the backend server runs with multiple workers, and because of that the logs for the
+  server
+  were moved to the `app/logs/access.log` file in the docker container of the back-end component.
 
 ## Contributing
 

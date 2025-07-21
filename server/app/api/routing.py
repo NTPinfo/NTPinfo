@@ -44,7 +44,7 @@ def read_root() -> str:
         <body>
             <h1>Welcome to the NTPInfo API</h1>
             <p>This API powers the NTPInfo platform, offering real-time metrics collection related to Network Time Protocol (NTP) analysis.</p>
-            <p>See the <a href='/docs'>interactive docs</a> or <a href='/redoc'>ReDoc</a> for more info.</p>
+            <p>See the <a href='/api/docs'>interactive docs</a> or <a href='/api/redoc'>ReDoc</a> for more info.</p>
         </body>
     </html>
     """

@@ -1,0 +1,182 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  POSTGRES_DB: myapp_test
+  POSTGRES_USER: test_user
+  POSTGRES_PASSWORD: test_password
+  DB_HOST: localhost
+  DB_PORT: 5432
+  DB_NAME: myapp_test
+  DB_USER: test_user
+  DB_PASSWORD: test_password
+  DATABASE_URL: postgresql://test_user:test_password@localhost:5432/myapp_test
+
+jobs:
+  # ---------------- TYPECHECK ----------------
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install mypy -r server/requirements.txt
+      - name: Run typecheck
+        run: |
+          source venv/bin/activate
+          mypy
+
+  # ---------------- BACKEND LINT ----------------
+  server_lint:
+    runs-on: ubuntu-latest
+    needs: [ typecheck ]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install flake8 -r server/requirements.txt
+      - name: Run flake8
+        run: |
+          source venv/bin/activate
+          flake8 server/
+
+  # ---------------- BACKEND TESTS ----------------
+  server_tests:
+    runs-on: ubuntu-latest
+    needs: [ typecheck, server_lint, client_lint ]
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r server/requirements.txt
+          pip install pytest pytest-cov
+      - name: Run tests
+        env:
+          ripe_api_token: ${{ secrets.ripe_api_token }}
+          ripe_account_email: ${{ secrets.ripe_account_email }}
+        run: |
+          source venv/bin/activate
+          echo "token=$ripe_api_token" > .env
+          echo "email=$ripe_account_email" >> .env
+          export PYTHONPATH=$PYTHONPATH:$(pwd)  # <-- Add current directory to Python path
+          pytest --cov=server --cov-report=term-missing server/tests/
+          rm -f .env
+
+  # ---------------- CLIENT LINT ----------------
+  client_lint:
+    runs-on: ubuntu-latest
+    needs: [ typecheck ]
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run lint
+
+  # ---------------- CLIENT TESTS ----------------
+  client_tests:
+    runs-on: ubuntu-latest
+    needs: [ typecheck, server_lint, client_lint ]
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - run: |
+          npm ci
+          echo "VITE_SERVER_HOST_ADDRESS=http://127.0.0.1:8000" > .env
+          echo "VITE_STATUS_THRESHOLD=1000" >> .env
+          echo "VITE_CLIENT_HOST=127.0.0.1" >> .env
+          echo "VITE_CLIENT_PORT=5173" >> .env
+      - run: npm run test
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-coverage
+          path: |
+            client/coverage
+
+  # ---------------- DOCS BUILD ----------------
+  build_docs:
+    runs-on: ubuntu-latest
+    needs: [ typecheck, server_lint, client_lint, client_tests, server_tests ]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+      - name: Build docs
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r server/requirements.txt
+          pip install sphinx sphinx-rtd-theme sphinx-autodoc-typehints sphinxcontrib-openapi
+          cd docs
+          make html
+      - name: Upload built docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: sphinx-docs
+          path: |
+            docs/build/html
+
+  # ---------------- DEPLOY DOCS TO GH PAGES ----------------
+  deploy_docs:
+    runs-on: ubuntu-latest
+    needs: build_docs
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v4
+        with:
+          name: sphinx-docs
+          path: public
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: public

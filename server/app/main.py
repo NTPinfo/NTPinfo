@@ -15,6 +15,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 import os
 
+
 def create_app(dev: bool = True) -> FastAPI:
     """
     Create and configure a FastAPI application instance.
@@ -61,22 +62,23 @@ def create_app(dev: bool = True) -> FastAPI:
     app = FastAPI(
         lifespan=lifespan,
         title="NTPInfo API",
+        root_path="/api",
         description=(
             "API of the NTPInfo website. Through this API measurements of NTP servers "
             "can be performed based on IP or domain name. The API has 4 main routes "
             "that are presented in more detail below:"
         ),
         version="1.0.0",
-        docs_url="/docs",
-        redoc_url="/redoc",
-        openapi_url="/openapi.json"
+        docs_url="/docs" if dev else None,
+        redoc_url="/redoc" if dev else None,
+        openapi_url="/openapi.json" if dev else None,
     )
 
     app.state.limiter = limiter
     app.include_router(router)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[os.getenv("CLIENT_URL", "http://127.0.0.1:5173")],
+        allow_origins=[os.getenv("CLIENT_URL", "http://127.0.0.1:5173"), "http://localhost"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -103,3 +105,6 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run("server.app.main:create_app", reload=True)
+
+if __name__ != "__main__":
+    app = create_app(dev=False)

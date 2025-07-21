@@ -25,4 +25,14 @@ cron
 /app/update.sh
 
 # run fastapi app
-exec uvicorn server.app.main:create_app --factory --host 0.0.0.0 --port 8000
+#exec uvicorn server.app.main:create_app --factory --host 0.0.0.0 --port 8000
+
+# Ensure we can import `server` as a top-level package
+export PYTHONPATH=/app
+
+echo "Creating tables if not exist..."
+python3 server/scripts/create_tables.py
+
+# run fastapi on
+# workers = (2 x number_of_cores) + 1
+exec gunicorn server.app.main:app --worker-class uvicorn.workers.UvicornWorker --bind "${SERVER_BIND}" --workers "${SERVER_WORKERS}" --access-logfile logs/access.log

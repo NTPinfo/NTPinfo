@@ -50,6 +50,18 @@ download_anycast_db() {
 
 download_and_extract() {
   DB_NAME=$1
+  TARGET_FILE="${TARGET_DIR}/${DB_NAME}.mmdb"
+  if [ -f "$TARGET_FILE" ]; then
+    if find "$TARGET_FILE" -mmin -1380 | grep -q .; then
+      echo "${DB_NAME}.mmdb is less than 24 hours old. Skipping download."
+      return 0
+    else
+      echo "${DB_NAME}.mmdb is older than 24 hours. Updating..."
+    fi
+  else
+    echo "${DB_NAME}.mmdb does not exist. Downloading..."
+  fi
+
   echo "Downloading ${DB_NAME}..."
   curl -O -J -L -u "$ACCOUNT_ID:$LICENSE_KEY" "https://download.maxmind.com/geoip/databases/${DB_NAME}/download?suffix=tar.gz"
 

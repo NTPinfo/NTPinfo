@@ -5,6 +5,8 @@ from typing import Any, cast, Optional
 import yaml
 from dotenv import load_dotenv
 
+load_dotenv()
+
 
 def load_config() -> dict[str, Any]:
     """
@@ -82,6 +84,7 @@ def get_ripe_api_token() -> str:
         ValueError: If the RIPE Atlas API token is not set.
     """
     ans = os.getenv('ripe_api_token')
+    print(ans)
     if ans is not None:
         return ans
     raise ValueError('ripe_api_token environment variable not set')
