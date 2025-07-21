@@ -36,13 +36,14 @@ def ref_id_to_ip_or_name(ref_id: int, stratum: int) \
         # from ntplib, but without "Unidentified reference source" part
         fields = (ref_id >> 24 & 0xff, ref_id >> 16 & 0xff,
                   ref_id >> 8 & 0xff, ref_id & 0xff)
-        text = "%c%c%c%c" % fields
+        text = ("%c%c%c%c" % fields).rstrip("\00")
         if text in ntplib.NTP.REF_ID_TABLE:
             return None, ntplib.NTP.REF_ID_TABLE[text]
         else:
             return None, text  # ntplib.ref_id_to_text(ref_id, stratum)
     else:
         if stratum < 256:  # we can get an IP address
+            # obs, need to consider IPv6 with that M5 part
             return ip_address(socket.inet_ntoa(ref_id.to_bytes(4, 'big'))), None  # 'big' is from big endian
         else:
             return None, None  # invalid stratum!!
