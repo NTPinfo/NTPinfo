@@ -13,16 +13,32 @@ def test_ip_to_str():
     assert ip_to_str(IPv6Address("2001:db8:3333:4444:5555:6666:7777:8888")) == "2001:db8:3333:4444:5555:6666:7777:8888"
     assert ip_to_str(None) is None
 
+def test_ref_id_to_ip_or_name_stratum01():
+    ip, name = ref_id_to_ip_or_name(0x4e54534e, 0, 4)
+    assert ip is None
+    assert name == "NTSN"
+
+    ip, name = ref_id_to_ip_or_name(0x4e54534e, 1, 6)
+    assert ip is None
+    assert name == "NTSN"
 
 def test_ref_id_to_ip_or_name():
-    ip, name = ref_id_to_ip_or_name(1590075150, 2)
+    ip, name = ref_id_to_ip_or_name(1590075150, 2, 4)
     assert ip == IPv4Address('94.198.159.14')
     assert name is None
 
-    ip, name = ref_id_to_ip_or_name(1590075150, 2000)
+    ip, name = ref_id_to_ip_or_name(1590075150, 2000, 4)
     assert ip is None
     assert name is None
 
+def test_ref_id_to_ip_or_name_ipv6():
+    ip, name = ref_id_to_ip_or_name(1590075150, 2, 6)
+    assert ip is None
+    assert name == "IPv6 MD5 hash: 0x5ec69f0e"
+
+    ip, name = ref_id_to_ip_or_name(1590075150, 2000, 6)
+    assert ip is None
+    assert name is None
 
 def test_get_ip_family():
     assert get_ip_family("189.24.80.23") == 4
