@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.utils.ip_utils import get_ip_family, ref_id_to_ip_or_name
+from server.app.utils.ip_utils import get_ip_family, ref_id_to_ip_or_name
 from server.app.utils.location_resolver import get_asn_for_ip
 from server.app.utils.ip_utils import is_this_ip_anycast
 from server.app.utils.perform_measurements import perform_ntp_measurement_domain_name_list

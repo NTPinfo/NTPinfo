@@ -2,7 +2,6 @@ import ipaddress
 import os
 import random
 import socket
-import struct
 from ipaddress import ip_address, IPv4Address, IPv6Address
 from typing import Optional
 import ntplib
