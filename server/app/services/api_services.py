@@ -116,7 +116,7 @@ def get_ripe_format(measurement: RipeMeasurement) -> dict[str, Any]:
     """
     probe_location: Optional[ServerLocation] = measurement.probe_data.probe_location
     # this code regarding ref_id is because we need to consider IPv6 cases (M5 hashes involved)
-    ref_id_str = "NO REFERENCE"
+    ref_id_str: str | None = "NO REFERENCE"
     try:
         ref_ip, ref_text = ref_id_to_ip_or_name(int(measurement.ref_id), measurement.ntp_measurement.main_details.stratum,
                                           get_ip_family(ip_to_str(measurement.ntp_measurement.server_info.ntp_server_ip)))
