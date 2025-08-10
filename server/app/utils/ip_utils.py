@@ -47,7 +47,6 @@ def ref_id_to_ip_or_name(ref_id: int, stratum: int) \
         else:
             return None, None  # invalid stratum!!
 
-
 def get_ip_family(ip_str: Optional[str]) -> int:
     """
     This method returns the IP family of the given IP address. It returns 4 if we have an IPv4, and

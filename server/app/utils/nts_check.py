@@ -1,12 +1,18 @@
+import ctypes
 import os
+import pprint
 import socket
 import struct
 import time
 
 import certifi
 from OpenSSL import SSL
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM, AESSIV
 
-from app.utils.domain_name_to_ip import domain_name_to_ip_list
+from app.utils.aes_siv_utils import get_encrypted_data_and_tag_AES_SIV_256, get_encrypted_data_and_tag_AES_GSM_256, \
+    get_encrypted_data_and_tag_new_aessiv
+from server.app.utils.domain_name_to_ip import domain_name_to_ip_list
+from docs.source.conf import extensions
 
 
 # measuring an NTS server has 2 steps:
@@ -57,8 +63,12 @@ def perform_nts_key_exchange(server: str):
         "alternative_port": None,
     }
     # prepare the request for Key Exchange.
+    # aead_ids = [15, 16]  # ordered by preference
+    # body = b"".join(struct.pack(">H", aead_id) for aead_id in aead_ids)
+    # record_aead = build_nts_ke_record(4, False, body)
     records = b"".join([
         build_nts_ke_record(1, True, struct.pack(">H", 0)),  # Protocol Negotiation, NTP=0
+        #record_aead,
         build_nts_ke_record(4, False, struct.pack(">H", 15)),  # AEAD algorithm list, AES-SIV-CMAC-256 (0x000f)
         build_nts_ke_record(0, True, b"")  # End of Message
     ])
@@ -139,20 +149,383 @@ def handle_record(type_id, body, current_result):
 
 def pad4(data: bytes) -> bytes:
     return data + b'\x00' * ((4 - len(data) % 4) % 4)
+NTP_DELTA  = 2208988800
 
+def to_ntp_ts(t: float) -> bytes:
+    ntp = t + NTP_DELTA
+    sec  = int(ntp)
+    frac = int((ntp - sec) * (1<<32))
+    return struct.pack("!II", sec, frac),sec,frac
+
+def padded_len(length: int) -> int:
+    return (length + 3) & ~3
+
+def write_ext_uid(uid):
+    total_len = 4 + len(uid)
+    data = bytes([])
+    data += struct.pack('!HH', 0x0104, total_len)
+    data += uid
+    print(f"len uid ext: {len(data)}")
+    return data
+def construct_nonce(ntp_seconds, ntp_fraction):
+    # Pack seconds and fraction as big endian 4-byte each
+    ts_bytes = struct.pack('!II', ntp_seconds, ntp_fraction)
+    # Append 4 zero bytes
+    nonce = ts_bytes + b'\x00' * 4
+    return nonce
+def write_all_cookies(cookies):
+    data = b''
+    i=0
+    for cookie in cookies:
+        data += write_ext_cookie(cookie)
+        i+=1
+        #if i==2:
+        return data
+    return data
+def write_ext_cookie(cookie):
+    cookie_padded_len = padded_len(len(cookie))
+    total_len = 4 + cookie_padded_len
+    data = bytes([])
+    data += struct.pack('!HH', 0x0204, total_len)
+    data += cookie
+    data += (b'\x00' * (cookie_padded_len - len(cookie)))
+    print(f"len cookie ext: {len(data)}")
+    return data
+
+def write_ext_cookie_placeholder(placeholder):
+    total_len = 4 + len(placeholder)
+    data = bytes([])
+    data += struct.pack('!HH', 0x0304, total_len)
+    data += placeholder
+    print(f"len placeholder ext: {len(data)}")
+
+    return data
+
+def write_ext_aead(nonce, ciphertext):
+    padded_nonce_len = padded_len(len(nonce))
+    print("padded nonce length", padded_nonce_len)
+    padded_ciphertext_len = padded_len(len(ciphertext))
+
+    total_len = 4 + 4 + padded_nonce_len + padded_ciphertext_len
+    data = bytes([])
+    data += struct.pack('!HH', 0x0404, total_len)
+    data += struct.pack('!HH', len(nonce), len(ciphertext))
+    data += nonce
+    data += (b'\x00' * (padded_nonce_len - len(nonce)))
+    data += ciphertext
+    data += (b'\x00' * (padded_ciphertext_len - len(ciphertext)))
+    print(f"len aead ext: {len(data)}")
+    return data
+
+
+def to_ntp_header(t1: float) -> bytes:
+    """Build a minimal NTP mode‑3 header with Originate Timestamp = t1."""
+    ntp_ts = t1 + NTP_DELTA
+    sec, frac = int(ntp_ts), int((ntp_ts - int(ntp_ts)) * (1<<32))
+    hdr = bytearray(48)
+    hdr[0] = (0 << 6) | (4 << 3) | 3  # LI=0, VN=4, Mode=3
+    hdr[40:48] = struct.pack('!II', sec, frac)
+    return bytes(hdr)
+
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+from cryptography.hazmat.primitives.ciphers.aead import AESSIV
 def build_nts_measuring_request(keys):
     # header part
     t1 = time.time()
     header = bytearray(48)
-    header[0] = (0<<6)|(4<<3)|3
+    header[0] = (0 << 6) | (4 << 3) | 3
+    # header[2] = 6
+    header[3] = 0x20
+    timpBytes,sec,frac=to_ntp_ts(t1)
+    header[40:48] = timpBytes #to_ntp_ts(t1)  # timestamp
     # header[40:48] = to_ntp_ts(t1)
-    header = bytes(header)
+    # query = bytes(header)
+    extensions = bytes([])
+    extensions_array = [bytes(header)]
+    # print(len(extensions))
+    # header = to_ntp_header(t1)
 
-    # cookie and uid fields
-    cookie = keys['cookies'][0]
-    uid_field = pad4(struct.pack("!HH", 0x0104, 36) + os.urandom(32))
-    cookie_field = pad4(struct.pack("!HH", 0x0204, len(cookie) + 4) + cookie)
-    extension_fields = uid_field + cookie_field
+    # uid
+    unique_id = os.urandom(32)
+    a = write_ext_uid(unique_id)
+    print("uid ext")
+    hexdump(a)
+    extensions += a
+    extensions_array.append(a)
+    print(len(extensions))
+
+    # cookie
+    for c in keys['cookies']:
+        print(f"cookie len {len(c)}")
+    #     hexdump(c)
+    cookie = keys['cookies'][2]
+    # print("cookie len", len(cookie))
+    a = write_ext_cookie(cookie)
+    # a = write_all_cookies(keys['cookies'])
+    # print(cookie)
+    print("cookie ext")
+
+    hexdump(a)
+    extensions += a
+    extensions_array.append(a)
+    print(len(extensions))
+    # cookie placeholder
+    ph_count = 0
+    if ph_count > 0:
+        cookie = b''#!!!!!
+        placeholder_len = padded_len(len(cookie))
+        # placeholder = bytes(placeholder_len)
+        placeholder = os.urandom(placeholder_len)
+        for _ in range(ph_count):
+            extensions += write_ext_cookie_placeholder(placeholder)#!!!ex array
+            print(len(extensions))
+    # aead
+    # associated_data = bytes(header) + extensions
+    # plaintext = extensions
+    associated_data = bytes(header) + extensions
+    #plaintext = b''
+    dummy_ef = struct.pack(">HH", 0x0000, 4)
+    plaintext = b''#associated_data
+    nonce = os.urandom(16)
+    # nonce = construct_nonce(sec,frac)
+
+    # aead = aes_siv.AES_SIV()
+
+    # nonce = os.urandom(16) # it is good.!!!!
+
+    # aead.
+    # cipher = AES.new(keys['c2s_key'], AES.MODE_SIV, nonce=nonce)
+    # cipher.update(associated_data)
+    # ciphertext, tag = cipher.encrypt_and_digest(plaintext)
+
+    # aead 2
+    # aessiv = AESSIV(keys['c2s_key'])
+    enc, tag = get_encrypted_data_and_tag_new_aessiv(keys['c2s_key'], plaintext, associated_data, nonce)
+    # enc, tag = get_encrypted_data_and_tag_AES_GSM_256(keys['c2s_key'], plaintext, associated_data, nonce)
+    # ciphertext  = aessiv.encrypt(plaintext, [associated_data, nonce])
+    # ciphertext=ciphertext[:16]
+    nonce_len = len(nonce)
+    ct_len = len(enc+tag)
+    print("ct len", ct_len)
+    print("nonce len", nonce_len)
+
+    nonce_p = pad4(nonce)
+    ct_p = pad4(enc+tag)
+    print("ct_p ", ct_p)
+    hexdump(ct_p)
+    print("/////")
+    body = struct.pack(">HH", nonce_len, ct_len) + nonce_p + ct_p
+    nts_auth_ef = make_ef(0x0404, body)
+    # nts_auth_field_type = 0x0404
+    # nts_auth_field = struct.pack(">HH", nts_auth_field_type, len(raw) + 4) + raw
+
+    # nonce = raw[:16]  # synthetic IV
+    # ciphertext = raw[16:]
+    # a = write_ext_aead(nonce, ciphertext)
+    # print("aead ext")
+    # hexdump(a)
+    # aead_ext = a
+    print("aead req size", len(nts_auth_ef))
+    hexdump(nts_auth_ef)
+    query = bytes(header) + extensions + nts_auth_ef
+    # query = bytes(header) + extensions + nts_auth_field
+    print("total len query:", len(query))
+    print("==== OUTGOING UDP REQUEST ====")
+    print("total len query:", len(query))
+    hexdump(query)
+    # also show the AEAD EF internal lengths you already print:
+    print("AEAD nonce_len:", nonce_len, "ciphertext_len:", ct_len)
+    # print_nts_raw(query)
+
+    return query, t1
+def make_ef(field_type: int, body: bytes) -> bytes:
+    return struct.pack(">HH", field_type, len(body) + 4) + body
+def pad4_2(b: bytes) -> bytes:
+    pad = (-len(b)) % 4
+    return b + (b'\x00' * pad)
+def parse_aead_extension(data: bytes) -> (bytes, bytes, bytes):
+    """
+    Parse an AEAD extension field from NTS measurement request/response.
+    Returns (nonce, ciphertext, associated_data) components.
+
+    Args:
+        data: full UDP payload starting at the 48-byte NTP header + extensions.
+
+    Raises:
+        ValueError if extension not found or malformed.
+    """
+    # Skip NTP header (48 bytes) and any preceding extensions
+    offset = 48
+    while offset + 4 <= len(data):
+        t, length = struct.unpack_from('!HH', data, offset)
+        print(f"t is{t}")
+        if t == 0x0404:
+            # AEAD extension found
+            ext_start = offset
+            # Unpack nonce and ciphertext lengths
+            nonce_len, ct_len = struct.unpack_from('!HH', data, offset + 4)
+            # Calculate padded lengths
+            def padded(x): return (x + 3) & ~3
+            n_pad = padded(nonce_len)
+            ct_pad = padded(ct_len)
+            # Extract
+            nonce = data[offset+8 : offset+8+nonce_len]
+            ciphertext = data[offset+8+n_pad : offset+8+n_pad+ct_len]
+            #print("aead found")
+            return nonce, ciphertext, data[:offset]  # AAD = header + prev extensions
+        offset += length
+    raise ValueError("AEAD extension not found")
+def decrypt_aead_ext(key: bytes, data: bytes) -> bytes:
+    """
+    Attempt to decrypt and authenticate the AEAD extension field in-place.
+
+    Args:
+        key: 32-byte AEAD key (c2s or s2c)
+        data: full UDP payload including NTP header + extensions + AEAD ext
+
+    Returns:
+        The plaintext (the original extensions) on success, or raises an exception.
+    """
+    print("this we decrypt")
+    hexdump(data)
+    nonce, ciphertext, aad = parse_aead_extension(data)
+    # For AES-SIV, ciphertext already includes the SIV tag at front or end?
+    # In RFC8915, payload = ciphertext || tag, but AESSIV.encrypt returns tag||ciphertext.
+    # So we reassemble raw = tag||ciphertext for decrypt
+    # If your write_ext_aead stored ciphertext||tag, swap here:
+    # raw = tag + ciphertext
+    raw = ciphertext  # if you passed raw=tag||ct as ciphertext
+    aessiv = AESSIV(key)
+    # decrypt returns plaintext
+    print("until here is ok")
+    plaintext = aessiv.decrypt(raw, [aad])
+    print("until here is ok2")
+    return plaintext
+def alloc_aligned(size, align=8):
+    buf = bytearray(size + align)
+    addr = ctypes.addressof(ctypes.c_char.from_buffer(buf))
+    offset = (align - (addr % align)) % align
+    aligned_buf = memoryview(buf)[offset:offset + size]
+    return bytes(aligned_buf)  # Convert to immutable bytes if needed
+
+def encrypt_aead(key, aad, plaintext):
+    cipher = AES.new(key, AES.MODE_SIV)
+    cipher.update(aad)
+    ciphertext, tag = cipher.encrypt_and_digest(plaintext)
+    return ciphertext, tag
+def measure_nts_server(server):
+    # server="time.cloudflare.com"
+    kee = perform_nts_key_exchange(server)
+    for i, c in enumerate(kee['cookies']):
+        print(f"KE cookie[{i}] len={len(c)}")
+        hexdump(c)
+    print("c2s_key len:", len(kee['c2s_key']), "s2c_key len:", len(kee['s2c_key']))
+
+    # print("c2s key length: ",len(kee['c2s_key']))
+    # print("first cookie length: ",len(kee['cookies'][0]))
+
+    pprint.pprint(kee)
+    if kee['alternative_server'] is None:
+        kee['alternative_server']=server
+    if kee['alternative_port'] is None:
+        kee['alternative_port']=123
+
+    packet, t1 = build_nts_measuring_request(kee)
+    try:
+        print("daaa", kee['c2s_key'])
+        ext_plain = decrypt_aead_ext(kee['c2s_key'], packet)
+        print("AEAD ext decrypted successfully; original extensions:", ext_plain)
+    except Exception as e:
+        print("Decryption/authentication failed:", e)
+    print(f"query length: {len(packet)}")
+    resp= send_nts(packet, kee['alternative_server'], kee['alternative_port'])
+    print("==== INCOMING UDP RESPONSE ====")
+    print("resp len:", len(resp))
+    hexdump(resp)
+    hdr = resp[:48]
+    print("resp stratum:", hdr[1], "refid:", hdr[12:16])
+    t4 =time.time()
+    if not resp:
+        print("No response -> timeout", server)
+        raise Exception("No response -> timeout")
+    print(f"Response length: {len(resp)}")
+    hexdump(resp)
+    parse_responsee(resp, kee)
+    # measurement = parse_nts_response(resp, server, kee['s2c_key'], t1, t4)
+    # print_ntp_measurement(measurement)
+    print("ok")
+
+def send_nts(req, host, port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # some basic logic to get an IP (demo code)
+    sock.settimeout(5)
+    print(f"Sending request of length {len(req)}")
+    host = domain_name_to_ip_list(host,None,4)[0]
+    print(host)
+    sock.sendto(req, (host, port))
+    try:
+        resp, _ = sock.recvfrom(2048)
+        return resp
+    except Exception as e:
+        print(e)
+        return None
+    finally:
+        sock.close()
+
+def print_nts_raw(data: bytes):
+    print("header")
+    hexdump(data)
+    # for i in range(0, 48, 4):
+    #     print(data[i:i+4]," ")
+
+def hexdump(data: bytes, width: int = 16, group: int = 4) -> None:
+    """
+    Print bytes in a hex dump style, with 'width' bytes per line,
+    grouped into 'group'-byte clusters separated by double spaces.
+
+    Example output for width=16, group=4:
+    aa bb cc dd  ee ff 00 11  22 33 44 55  66 77 88 99
+    ...
+    """
+    # data = b'#\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xec)\xf5\x18\xebC\xd0\x00'
+    if not isinstance(data, (bytes, bytearray)):
+        raise TypeError("data must be bytes or bytearray")
+
+    for offset in range(0, len(data), width):
+        line_bytes = data[offset : offset + width]
+        # split into groups
+        groups = [
+            line_bytes[i : i + group]
+            for i in range(0, len(line_bytes), group)
+        ]
+        # format each group as hex, then join with double spaces
+        hex_groups = []
+        for g in groups:
+            hex_groups.append(' '.join(f"{b:02x}" for b in g))
+        print('  '.join(hex_groups))
+def parse_responsee(data: bytes, kee, t1: float=2, t4: float=3) -> dict:
+        # unwrap NTP header
+        if len(data) < 48:
+            raise RuntimeError("Response too short")
+        header = data[:48]
+        cur = data[48:]
+
+        # variables
+        unique_id = None
+        new_cookies = []
+
+        # first, detect crypto-NAK
+        stratum = header[1]
+        if stratum == 0:
+            kiss = struct.unpack('!I', header[12:16])[0]
+            if kiss == 0x4e54534e:
+                print("is NTSN")
+        if len(data) == 84:
+                raise RuntimeError("NTS response too short")
+        print(f"stratum: {stratum}")
+measure_nts_server("time.cloudflare.com")
+# measure_nts_server("ntppool1.time.nl")
 
 def perform_nts_measurement(server):
     keys = perform_nts_key_exchange(server)
