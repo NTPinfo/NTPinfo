@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 
+from server.app.utils.ip_utils import get_ip_family, ref_id_to_ip_or_name
 from server.app.utils.location_resolver import get_asn_for_ip
 from server.app.utils.ip_utils import is_this_ip_anycast
 from server.app.utils.perform_measurements import perform_ntp_measurement_domain_name_list
@@ -114,6 +115,17 @@ def get_ripe_format(measurement: RipeMeasurement) -> dict[str, Any]:
                 - NTP measurement data (rtt, offset, timestamps)
     """
     probe_location: Optional[ServerLocation] = measurement.probe_data.probe_location
+    # this code regarding ref_id is because we need to consider IPv6 cases (M5 hashes involved)
+    ref_id_str: str | None = "NO REFERENCE"
+    try:
+        ref_ip, ref_text = ref_id_to_ip_or_name(int(measurement.ref_id), measurement.ntp_measurement.main_details.stratum,
+                                          get_ip_family(ip_to_str(measurement.ntp_measurement.server_info.ntp_server_ip)))
+        if ref_ip is not None:
+            ref_id_str = ip_to_str(ref_ip)
+        elif ref_text is not None:
+            ref_id_str = ref_text
+    except Exception as e: #if ref_id could not be converted to an integer (ex: it was already a str)
+        ref_id_str = measurement.ref_id
     return {
         "ntp_version": measurement.ntp_measurement.server_info.ntp_version,
         "vantage_point_ip": ip_to_str(measurement.ntp_measurement.vantage_point_ip),
@@ -142,7 +154,7 @@ def get_ripe_format(measurement: RipeMeasurement) -> dict[str, Any]:
         "root_dispersion": NtpCalculator.calculate_float_time(
             measurement.ntp_measurement.extra_details.root_dispersion),
         "asn_ntp_server": get_asn_for_ip(str(measurement.ntp_measurement.server_info.ntp_server_ip)),
-        "ref_id": measurement.ref_id,
+        "ref_id": ref_id_str,
         "result": [
             {
                 "client_sent_time": {

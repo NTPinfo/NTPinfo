@@ -17,17 +17,19 @@ from server.app.utils.validate import is_ip_address
 from fastapi import HTTPException, Request
 
 
-def ref_id_to_ip_or_name(ref_id: int, stratum: int) \
+def ref_id_to_ip_or_name(ref_id: int, stratum: int, ip_family: int) \
         -> tuple[None, str] | tuple[IPv4Address | IPv6Address, None] | tuple[None, None]:
     """
     Represents a method that converts the reference id to the reference ip or reference name.
     If the stratum is 0 or 1 then we can convert the reference id to it's name (ex: Geostationary Orbit Environment Satellite).
-    If the stratum is between 1 and 256 then we can convert the reference id to it's ip.
+    If the stratum is between 1 and 256 then we can convert the reference id to it's IP. But if the ip is an IPV6,
+    then there is an M5 hash involved, and all we can do is to show it (we cannot decode it).
     If the stratum is greater than 255, then we have an invalid stratum.
 
     Args:
-        ref_id (int): the reference id of the ntp server
-        stratum (int): the stratum level of the ntp server
+        ref_id (int): the reference id of the ntp server.
+        stratum (int): the stratum level of the ntp server.
+        ip_family (int): the ip family of the ntp server. (4 or 6)
 
     Returns:
         a tuple of the ip and name of the ntp server. At least one of them is None. If both are None then the stratum is invalid.
@@ -36,14 +38,20 @@ def ref_id_to_ip_or_name(ref_id: int, stratum: int) \
         # from ntplib, but without "Unidentified reference source" part
         fields = (ref_id >> 24 & 0xff, ref_id >> 16 & 0xff,
                   ref_id >> 8 & 0xff, ref_id & 0xff)
-        text = "%c%c%c%c" % fields
+        text = ("%c%c%c%c" % fields).rstrip("\00")
         if text in ntplib.NTP.REF_ID_TABLE:
             return None, ntplib.NTP.REF_ID_TABLE[text]
         else:
             return None, text  # ntplib.ref_id_to_text(ref_id, stratum)
     else:
         if stratum < 256:  # we can get an IP address
-            return ip_address(socket.inet_ntoa(ref_id.to_bytes(4, 'big'))), None  # 'big' is from big endian
+            # obs, need to consider IPv6 with that M5 part
+            if ip_family == 4:
+                return ip_address(socket.inet_ntoa(ref_id.to_bytes(4, 'big'))), None  # 'big' is from big endian
+            else:
+                raw = ref_id.to_bytes(4, 'big')
+                return None, f"IPv6 MD5 hash: 0x{raw.hex()}"
+
         else:
             return None, None  # invalid stratum!!
 
