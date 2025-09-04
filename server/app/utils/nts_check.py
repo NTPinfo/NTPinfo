@@ -21,18 +21,19 @@ def get_right_nts_binary_tool_for_your_os() -> str:
     Returns:
         str: the right NTS tool for your OS.
     """
+    # build in wsl with: GOOS=windows GOARCH=amd64 go build -o ntstool_windows_amd64.exe measure_nts.go
     system = platform.system().lower()
     arch = platform.machine().lower()
     print(system)
     if system == "windows":
-        return nts_tools_dir_path / "ntsdetail_windows_amd64.exe"
+        return nts_tools_dir_path / "ntstool_windows_amd64.exe"
     elif system == "linux":
-        return nts_tools_dir_path / "ntsdetail_linux_amd64"
+        return nts_tools_dir_path / "ntstool_linux_amd64"
     elif system == "darwin":
         if arch == "arm64":
-            return nts_tools_dir_path / "ntsdetail_darwin_arm64"
+            return nts_tools_dir_path / "ntstool_darwin_arm64"
         else:
-            return nts_tools_dir_path / "ntsdetail_darwin_amd64"
+            return nts_tools_dir_path / "ntstool_darwin_amd64"
     else:
         raise Exception(f"Unsupported platform: {system} {arch}")
 
@@ -118,7 +119,7 @@ def get_ip_from_nts_response(response_from_binary: str) ->str:
         str: the IP address or ""
     """
     for line in response_from_binary.splitlines():
-        if "Resolver server IP" in line:
+        if "Measured server IP" in line:
             ip = line.split(":")[-1].strip()
             return ip
     return ""
@@ -141,7 +142,7 @@ def did_ke_performed_on_different_ip(original_ip: str, response_from_binary: str
         return False, ip
 
 # measure_nts_server("time.cloudflare.com")1.ntp.ubuntu.com
-# print(perform_nts_measurement_domain_name("time.cloudflare.com"))
+print(perform_nts_measurement_domain_name("time.cloudflare.com"))
 # perform_nts_measurement_domain_name("1.ntp.ubuntu.com")
 # print(perform_nts_measurement_ip("ntppool1.time.nl"))
 
