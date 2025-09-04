@@ -73,6 +73,7 @@
   <h1>Source code for server.app.services.api_services</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.ip_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ip_family</span><span class="p">,</span> <span class="n">ref_id_to_ip_or_name</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.location_resolver</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_asn_for_ip</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.ip_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_this_ip_anycast</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.perform_measurements</span><span class="w"> </span><span class="kn">import</span> <span class="n">perform_ntp_measurement_domain_name_list</span>
@@ -192,6 +193,17 @@
 <span class="sd">                - NTP measurement data (rtt, offset, timestamps)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">probe_location</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ServerLocation</span><span class="p">]</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">probe_data</span><span class="o">.</span><span class="n">probe_location</span>
+    <span class="c1"># this code regarding ref_id is because we need to consider IPv6 cases (M5 hashes involved)</span>
+    <span class="n">ref_id_str</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;NO REFERENCE&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ref_ip</span><span class="p">,</span> <span class="n">ref_text</span> <span class="o">=</span> <span class="n">ref_id_to_ip_or_name</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">measurement</span><span class="o">.</span><span class="n">ref_id</span><span class="p">),</span> <span class="n">measurement</span><span class="o">.</span><span class="n">ntp_measurement</span><span class="o">.</span><span class="n">main_details</span><span class="o">.</span><span class="n">stratum</span><span class="p">,</span>
+                                          <span class="n">get_ip_family</span><span class="p">(</span><span class="n">ip_to_str</span><span class="p">(</span><span class="n">measurement</span><span class="o">.</span><span class="n">ntp_measurement</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">ntp_server_ip</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="n">ref_ip</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ref_id_str</span> <span class="o">=</span> <span class="n">ip_to_str</span><span class="p">(</span><span class="n">ref_ip</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">ref_text</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ref_id_str</span> <span class="o">=</span> <span class="n">ref_text</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span> <span class="c1">#if ref_id could not be converted to an integer (ex: it was already a str)</span>
+        <span class="n">ref_id_str</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">ref_id</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;ntp_version&quot;</span><span class="p">:</span> <span class="n">measurement</span><span class="o">.</span><span class="n">ntp_measurement</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">ntp_version</span><span class="p">,</span>
         <span class="s2">&quot;vantage_point_ip&quot;</span><span class="p">:</span> <span class="n">ip_to_str</span><span class="p">(</span><span class="n">measurement</span><span class="o">.</span><span class="n">ntp_measurement</span><span class="o">.</span><span class="n">vantage_point_ip</span><span class="p">),</span>
@@ -220,7 +232,7 @@
         <span class="s2">&quot;root_dispersion&quot;</span><span class="p">:</span> <span class="n">NtpCalculator</span><span class="o">.</span><span class="n">calculate_float_time</span><span class="p">(</span>
             <span class="n">measurement</span><span class="o">.</span><span class="n">ntp_measurement</span><span class="o">.</span><span class="n">extra_details</span><span class="o">.</span><span class="n">root_dispersion</span><span class="p">),</span>
         <span class="s2">&quot;asn_ntp_server&quot;</span><span class="p">:</span> <span class="n">get_asn_for_ip</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">measurement</span><span class="o">.</span><span class="n">ntp_measurement</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">ntp_server_ip</span><span class="p">)),</span>
-        <span class="s2">&quot;ref_id&quot;</span><span class="p">:</span> <span class="n">measurement</span><span class="o">.</span><span class="n">ref_id</span><span class="p">,</span>
+        <span class="s2">&quot;ref_id&quot;</span><span class="p">:</span> <span class="n">ref_id_str</span><span class="p">,</span>
         <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="p">[</span>
             <span class="p">{</span>
                 <span class="s2">&quot;client_sent_time&quot;</span><span class="p">:</span> <span class="p">{</span>

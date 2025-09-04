@@ -196,7 +196,7 @@
         <span class="k">if</span> <span class="n">vantage_point_ip_temp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">vantage_point_ip</span> <span class="o">=</span> <span class="n">vantage_point_ip_temp</span>
         <span class="n">ref_ip</span><span class="p">,</span> <span class="n">ref_name</span> <span class="o">=</span> <span class="n">ref_id_to_ip_or_name</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">ref_id</span><span class="p">,</span>
-                                                <span class="n">response</span><span class="o">.</span><span class="n">stratum</span><span class="p">)</span>
+                                                <span class="n">response</span><span class="o">.</span><span class="n">stratum</span><span class="p">,</span> <span class="n">get_ip_family</span><span class="p">(</span><span class="n">server_ip_str</span><span class="p">))</span>
         <span class="n">server_ip</span> <span class="o">=</span> <span class="n">ip_address</span><span class="p">(</span><span class="n">server_ip_str</span><span class="p">)</span>
         <span class="n">server_info</span><span class="p">:</span> <span class="n">NtpServerInfo</span> <span class="o">=</span> <span class="n">NtpServerInfo</span><span class="p">(</span>
             <span class="n">ntp_version</span><span class="o">=</span><span class="n">ntp_version</span><span class="p">,</span>

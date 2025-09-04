@@ -92,17 +92,19 @@
 
 <div class="viewcode-block" id="ref_id_to_ip_or_name">
 <a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ip_utils.ref_id_to_ip_or_name">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">ref_id_to_ip_or_name</span><span class="p">(</span><span class="n">ref_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stratum</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> \
+<span class="k">def</span><span class="w"> </span><span class="nf">ref_id_to_ip_or_name</span><span class="p">(</span><span class="n">ref_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stratum</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ip_family</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> \
         <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">IPv4Address</span> <span class="o">|</span> <span class="n">IPv6Address</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents a method that converts the reference id to the reference ip or reference name.</span>
 <span class="sd">    If the stratum is 0 or 1 then we can convert the reference id to it&#39;s name (ex: Geostationary Orbit Environment Satellite).</span>
-<span class="sd">    If the stratum is between 1 and 256 then we can convert the reference id to it&#39;s ip.</span>
+<span class="sd">    If the stratum is between 1 and 256 then we can convert the reference id to it&#39;s IP. But if the ip is an IPV6,</span>
+<span class="sd">    then there is an M5 hash involved, and all we can do is to show it (we cannot decode it).</span>
 <span class="sd">    If the stratum is greater than 255, then we have an invalid stratum.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        ref_id (int): the reference id of the ntp server</span>
-<span class="sd">        stratum (int): the stratum level of the ntp server</span>
+<span class="sd">        ref_id (int): the reference id of the ntp server.</span>
+<span class="sd">        stratum (int): the stratum level of the ntp server.</span>
+<span class="sd">        ip_family (int): the ip family of the ntp server. (4 or 6)</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        a tuple of the ip and name of the ntp server. At least one of them is None. If both are None then the stratum is invalid.</span>
@@ -111,14 +113,20 @@
         <span class="c1"># from ntplib, but without &quot;Unidentified reference source&quot; part</span>
         <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="n">ref_id</span> <span class="o">&gt;&gt;</span> <span class="mi">24</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">,</span> <span class="n">ref_id</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">,</span>
                   <span class="n">ref_id</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">,</span> <span class="n">ref_id</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">)</span>
-        <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%c%c%c%c</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">fields</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;</span><span class="si">%c%c%c%c</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">fields</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\00</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">ntplib</span><span class="o">.</span><span class="n">NTP</span><span class="o">.</span><span class="n">REF_ID_TABLE</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ntplib</span><span class="o">.</span><span class="n">NTP</span><span class="o">.</span><span class="n">REF_ID_TABLE</span><span class="p">[</span><span class="n">text</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">text</span>  <span class="c1"># ntplib.ref_id_to_text(ref_id, stratum)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">stratum</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">:</span>  <span class="c1"># we can get an IP address</span>
-            <span class="k">return</span> <span class="n">ip_address</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">inet_ntoa</span><span class="p">(</span><span class="n">ref_id</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;big&#39;</span><span class="p">))),</span> <span class="kc">None</span>  <span class="c1"># &#39;big&#39; is from big endian</span>
+            <span class="c1"># obs, need to consider IPv6 with that M5 part</span>
+            <span class="k">if</span> <span class="n">ip_family</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ip_address</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">inet_ntoa</span><span class="p">(</span><span class="n">ref_id</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;big&#39;</span><span class="p">))),</span> <span class="kc">None</span>  <span class="c1"># &#39;big&#39; is from big endian</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">raw</span> <span class="o">=</span> <span class="n">ref_id</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;big&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;IPv6 MD5 hash: 0x</span><span class="si">{</span><span class="n">raw</span><span class="o">.</span><span class="n">hex</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>  <span class="c1"># invalid stratum!!</span></div>
 
