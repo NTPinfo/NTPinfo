@@ -310,6 +310,26 @@ def try_converting_ip(client_ip: Optional[str], wanted_ip_type: int) -> Optional
         # It failed. Return the original IP address
         return client_ip
 
+def try_converting_ip_to_domain_name(server_ip: str) -> str:
+    """
+    It tries to get the domain name from the IP.
+
+    Args:
+        server_ip (str): The IP to convert.
+
+    Returns:
+        str: The domain name of the IP if possible or the IP address.
+    """
+    try: #getting PTR record
+        reverse_name = dns.reversename.from_address(server_ip)
+        answer = dns.resolver.resolve(reverse_name, 'PTR')
+        domain_name = str(answer[0]).rstrip('.')
+        print(domain_name)
+        return domain_name
+    except Exception as e:
+        # It failed. Return the original IP address
+        return server_ip
+
 def is_private_ip(ip_str: str) -> bool:
     """
     This method checks whether an IP address is a private IP.
