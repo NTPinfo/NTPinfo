@@ -5,7 +5,7 @@ import pathlib
 
 
 # directory where you keep the NTS Go .exe tools
-nts_tools_dir_path = pathlib.Path(__file__).parent.parent.parent.parent / "tools"
+nts_tools_dir_path = pathlib.Path(__file__).parent.parent.parent.parent / "tools" / "measureNtsTool"
 
 # measuring an NTS server has 2 steps:
 # 1) Key Exchange -> get the cookies and basically the keys for a secure connection
@@ -14,7 +14,7 @@ nts_tools_dir_path = pathlib.Path(__file__).parent.parent.parent.parent / "tools
 
 def get_right_nts_binary_tool_for_your_os() -> str:
     """
-    We use some binary tools (made with Go thanks to Marco) to perform NTS measurements. You need the one that
+    We use some binary tools to perform NTS measurements. You need the one that
     is compatible with your operating system.
     Args:
         none
@@ -37,8 +37,10 @@ def get_right_nts_binary_tool_for_your_os() -> str:
     else:
         raise Exception(f"Unsupported platform: {system} {arch}")
 
+# def convert_nts_response_to_measurement_data(response_from_binary: str):
+#     print("a")
 
-def perform_nts_measurement_domain_name(server_domain_name: str) -> dict[str, str]:
+def perform_nts_measurement_domain_name(server_domain_name: str, wanted_ip_type: int = -1) -> dict[str, str]:
     """
     Perform the NTS measurement for a domain name. It returns the status of the NTS measurement on the overall server
     and a short analysis of the measurement.
@@ -47,21 +49,29 @@ def perform_nts_measurement_domain_name(server_domain_name: str) -> dict[str, st
 
     Args:
         server_domain_name (str): the domain name
+        wanted_ip_type (int): the IP address type (4 ot 6)
     """
     binary_nts_tool = get_right_nts_binary_tool_for_your_os()
-    # verify
-    result = subprocess.run(
-        [str(binary_nts_tool), server_domain_name],
-        capture_output=True, text=True
-    )
-    # ips = domain_name_to_ip_list(server_domain_name, None, 4)
-    # print(ips)
+
+    if wanted_ip_type == -1: # if the user does not want a specific IP type
+        result = subprocess.run(
+            [str(binary_nts_tool), server_domain_name],
+            capture_output=True, text=True
+        )
+    else: # if the user wants a specific IP type
+        result = subprocess.run(
+            [str(binary_nts_tool), server_domain_name, "ipv" + str(wanted_ip_type)],
+            capture_output=True, text=True
+        )
     nts_result_short: dict = {"NTS succeeded": False, "NTS analysis": "None"}
 
     # analyse
     if result.returncode == 0: # it succeeded
         nts_result_short["NTS succeeded"] = True
         nts_result_short["NTS analysis"] = f"It is NTS. One NTS IP is {get_ip_from_nts_response(result.stdout.strip())}"
+    elif result.returncode == 6: # it succeeded, but not with the wanted IP type
+        nts_result_short["NTS succeeded"] = True
+        nts_result_short["NTS analysis"] = f"It is NTS. Failed on ipv{wanted_ip_type}. One working NTS IP is {get_ip_from_nts_response(result.stdout.strip())}"
     else: # something failed
         nts_result_short["NTS analysis"] = result.stdout.strip()
 
@@ -87,7 +97,7 @@ def perform_nts_measurement_ip(server_ip_str: str):
     nts_result_short: dict = {"NTS succeeded": False, "NTS analysis": "None"}
 
     result = subprocess.run(
-        [str(binary_nts_tool), "None", server_ip_str],
+        [str(binary_nts_tool), server_ip_str, server_ip_str],
         capture_output=True, text=True
     )
     # analyse
@@ -106,7 +116,7 @@ def perform_nts_measurement_ip(server_ip_str: str):
     # bool NTS succeeded: true/false
     # NTS analysis: string
     # possible: NTS ok, but KE switched to a different IP address and port: <ip>
-    # return result.stdout.strip()
+    print(result.stdout.strip())
     return nts_result_short
 
 def get_ip_from_nts_response(response_from_binary: str) ->str:
@@ -120,8 +130,7 @@ def get_ip_from_nts_response(response_from_binary: str) ->str:
     """
     for line in response_from_binary.splitlines():
         if "Measured server IP" in line:
-            ip = line.split(":")[-1].strip()
-            return ip
+            return line.split(":", 1)[1].strip()
     return ""
 
 def did_ke_performed_on_different_ip(original_ip: str, response_from_binary: str) -> (bool, str):
@@ -142,7 +151,7 @@ def did_ke_performed_on_different_ip(original_ip: str, response_from_binary: str
         return False, ip
 
 # measure_nts_server("time.cloudflare.com")1.ntp.ubuntu.com
-print(perform_nts_measurement_domain_name("time.cloudflare.com"))
+# print(perform_nts_measurement_domain_name("time.cloudflare.com",4))
 # perform_nts_measurement_domain_name("1.ntp.ubuntu.com")
 # print(perform_nts_measurement_ip("ntppool1.time.nl"))
 
