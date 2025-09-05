@@ -1,8 +1,8 @@
 import subprocess
 import platform
 import pathlib
-
-
+from pathlib import Path
+from typing import Tuple
 
 # directory where you keep the NTS Go .exe tools
 nts_tools_dir_path = pathlib.Path(__file__).parent.parent.parent.parent / "tools" / "measureNtsTool"
@@ -12,7 +12,7 @@ nts_tools_dir_path = pathlib.Path(__file__).parent.parent.parent.parent / "tools
 # 2) Encrypt the NTP request with the keys and measure it.
 
 
-def get_right_nts_binary_tool_for_your_os() -> str:
+def get_right_nts_binary_tool_for_your_os() -> Path:
     """
     We use some binary tools to perform NTS measurements. You need the one that
     is compatible with your operating system.
@@ -80,7 +80,7 @@ def perform_nts_measurement_domain_name(server_domain_name: str, wanted_ip_type:
     return nts_result_short
 
 
-def perform_nts_measurement_ip(server_ip_str: str):
+def perform_nts_measurement_ip(server_ip_str: str) -> dict[str, str]:
     """
     This method performs an NTS measurement on the given server IP.
     However, it does not verify the TLS certificate, because usually certificates only contain
@@ -119,7 +119,7 @@ def perform_nts_measurement_ip(server_ip_str: str):
     print(result.stdout.strip())
     return nts_result_short
 
-def get_ip_from_nts_response(response_from_binary: str) ->str:
+def get_ip_from_nts_response(response_from_binary: str) -> str:
     """
     It gets the IP address from the given response from using the (Go) NTS tool.
 
@@ -133,7 +133,7 @@ def get_ip_from_nts_response(response_from_binary: str) ->str:
             return line.split(":", 1)[1].strip()
     return ""
 
-def did_ke_performed_on_different_ip(original_ip: str, response_from_binary: str) -> (bool, str):
+def did_ke_performed_on_different_ip(original_ip: str, response_from_binary: str) -> Tuple[bool, str]:
     """
     This method tells you if the Key Exchange part changed the IP to a different one. If it is the case, then
     the measurement was continued on that IP address.
@@ -161,7 +161,7 @@ def did_ke_performed_on_different_ip(original_ip: str, response_from_binary: str
 
 
 # a list of known NTS servers according to https://github.com/jauderho/nts-servers
-nts_servers=[
+nts_servers = [
          "time.cloudflare.com",
 "1.ntp.ubuntu.com",
 "2.ntp.ubuntu.com",
