@@ -50,6 +50,8 @@ func main() {
         result, err_code := measureDomainName(args[0])
         if err_code == 0 {
             //now we now the domain name is NTS. Try to get the wanted IP family
+            //wait a bit to not scary the NTS server
+            time.Sleep(500 * time.Millisecond)
             result_ip_family, err_code_ip_family := measureDomainNameWithIPFamily(args[0], args[1])
             if err_code_ip_family == 0 {
                 //success, we got the wanted IP family
@@ -138,7 +140,7 @@ func measureSpecificIP(hostname string, ip string) (string, int) {
     var output strings.Builder
     session, err := nts.NewSessionWithOptions(hostname, &nts.SessionOptions{
         TLSConfig: &tls.Config{
-            ServerName: hostname, // must match certificate
+            ServerName: hostname,
             MinVersion: tls.VersionTLS13,
             InsecureSkipVerify: true,
         },

@@ -4,6 +4,7 @@ import json
 from typing import Optional
 import requests
 
+from server.app.utils.nts_check import perform_nts_measurement_domain_name
 from server.app.dtos.ProbeData import ServerLocation
 from server.app.utils.location_resolver import get_country_for_ip, get_coordinates_for_ip
 from server.app.models.CustomError import InputError, RipeMeasurementError
@@ -44,6 +45,7 @@ def perform_ntp_measurement_domain_name_list(server_name: str, client_ip: Option
     """
     domain_ips: list[str] = domain_name_to_ip_list(server_name, client_ip, wanted_ip_type)
     # domain_ips contains a list of ips that are good to use.
+    #nts_analysis = perform_nts_measurement_domain_name(server_name, False, wanted_ip_type)
     resulted_measurements = []
     ok = False
     for ip_str in domain_ips:
@@ -56,6 +58,7 @@ def perform_ntp_measurement_domain_name_list(server_name: str, client_ip: Option
                                                     ntp_version=ntp_version)
 
             if r is not None:
+               # r.server_info.ref_name=nts_analysis["NTS analysis"] # for testing to see if it works.
                 resulted_measurements.append(r)
                 ok = True
         except Exception as e:
@@ -350,7 +353,7 @@ def get_request_settings(ip_family_of_ntp_server: int, ntp_server: str, client_i
 
 # example to see how you use them
 # print_ntp_measurement(perform_ntp_measurement_domain_name_list("time.apple.com", "5a01:c741:a16:4000::1f2", 6, 4)[0])
-#print_ntp_measurement(perform_ntp_measurement_domain_name_list("time.cloudflare.com", "17.253.6.45", 4,4)[0])
+# print_ntp_measurement(perform_ntp_measurement_domain_name_list("time.cloudflare.com", "17.253.6.45", 4,4)[0])
 # print_ntp_measurement(perform_ntp_measurement_domain_name_list("time.apple.com", "17.253.6.45", 6,4)[0])
 
 # print(perform_ripe_measurement_ip("2a01:b740:a16:4000::1f2","2a01:c741:a16:4000::1f2", 12))

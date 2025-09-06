@@ -1,3 +1,4 @@
+import os
 import subprocess
 import platform
 import pathlib
@@ -21,7 +22,21 @@ def get_right_nts_binary_tool_for_your_os() -> Path:
     Returns:
         str: the right NTS tool for your OS.
     """
-    # build in wsl with: GOOS=windows GOARCH=amd64 go build -o ntstool_windows_amd64.exe measure_nts.go
+    # some useful lines that would help you for compiling Go code or running it in docker
+    # windows build in wsl with: GOOS=windows GOARCH=amd64 go build -o ntstool_windows_amd64.exe measure_nts.go
+    # linux build GOOS=linux GOARCH=amd64 go build -o ntstool_linux_amd64 measure_nts.go
+    # ssh -i ~/parola2.pem ubuntu@<ip>
+    # scp -i ~/parola2.pem "/mnt/c/Users/serba/My Projects/Universitate Tu Delft/Year 2/Q4/SP/15d/ntscheck.zip" ubuntu@54.91.128.251:~
+    # unzip ntscheck.zip
+    # dos2unix docker-entrypoint.sh
+    # prepare .env with IP
+    # docker compose build
+    # docker compose up
+    #   in other wsl panel: docker compose exec backend bash
+    #   chmod +x /app/tools/measureNtsTool/ntstool_linux_amd64
+    #   inside the backend container: chmod +x /app/tools/measureNtsTool/ntstool_linux_amd64
+    # ctrl c and then docker compose down (in the first panel)
+    # build and up again
     system = platform.system().lower()
     arch = platform.machine().lower()
     print(system)
@@ -40,7 +55,8 @@ def get_right_nts_binary_tool_for_your_os() -> Path:
 # def convert_nts_response_to_measurement_data(response_from_binary: str):
 #     print("a")
 
-def perform_nts_measurement_domain_name(server_domain_name: str, wanted_ip_type: int = -1) -> dict[str, str]:
+def perform_nts_measurement_domain_name(server_domain_name: str, add_result_in_analysis: bool, wanted_ip_type: int = -1)\
+        -> dict[str, str]:
     """
     Perform the NTS measurement for a domain name. It returns the status of the NTS measurement on the overall server
     and a short analysis of the measurement.
@@ -49,36 +65,42 @@ def perform_nts_measurement_domain_name(server_domain_name: str, wanted_ip_type:
 
     Args:
         server_domain_name (str): the domain name
+        add_result_in_analysis (bool): whether to add the NTS measurement full data (with offset, rtt etc.) in the analysis
         wanted_ip_type (int): the IP address type (4 ot 6)
     """
-    binary_nts_tool = get_right_nts_binary_tool_for_your_os()
-
-    if wanted_ip_type == -1: # if the user does not want a specific IP type
-        result = subprocess.run(
-            [str(binary_nts_tool), server_domain_name],
-            capture_output=True, text=True
-        )
-    else: # if the user wants a specific IP type
-        result = subprocess.run(
-            [str(binary_nts_tool), server_domain_name, "ipv" + str(wanted_ip_type)],
-            capture_output=True, text=True
-        )
     nts_result_short: dict = {"NTS succeeded": False, "NTS analysis": "None"}
+    try:
+        binary_nts_tool = get_right_nts_binary_tool_for_your_os()
 
-    # analyse
-    if result.returncode == 0: # it succeeded
-        nts_result_short["NTS succeeded"] = True
-        nts_result_short["NTS analysis"] = f"It is NTS. One NTS IP is {get_ip_from_nts_response(result.stdout.strip())}"
-    elif result.returncode == 6: # it succeeded, but not with the wanted IP type
-        nts_result_short["NTS succeeded"] = True
-        nts_result_short["NTS analysis"] = f"It is NTS. Failed on ipv{wanted_ip_type}. One working NTS IP is {get_ip_from_nts_response(result.stdout.strip())}"
-    else: # something failed
-        nts_result_short["NTS analysis"] = result.stdout.strip()
+        if wanted_ip_type == -1: # if the user does not want a specific IP type
+            result = subprocess.run(
+                [str(binary_nts_tool), server_domain_name],
+                capture_output=True, text=True,
+                env=os.environ.copy()
+            )
+        else: # if the user wants a specific IP type
+            result = subprocess.run(
+                [str(binary_nts_tool), server_domain_name, "ipv" + str(wanted_ip_type)],
+                capture_output=True, text=True,
+                env=os.environ.copy()
+            )
 
-    # full measurement details:
-    print(result.stdout.strip())
-    return nts_result_short
+        # analyse
+        if result.returncode == 0: # it succeeded
+            nts_result_short["NTS succeeded"] = True
+            nts_result_short["NTS analysis"] = f"It is NTS. One NTS IP is {get_ip_from_nts_response(result.stdout.strip())}"
+        elif result.returncode == 6: # it succeeded, but not with the wanted IP type
+            nts_result_short["NTS succeeded"] = True
+            nts_result_short["NTS analysis"] = f"It is NTS. Failed on ipv{wanted_ip_type}. One working NTS IP is {get_ip_from_nts_response(result.stdout.strip())}"
+        else: # something failed
+            nts_result_short["NTS analysis"] = result.stdout.strip()
 
+        # full measurement details:
+        print(result.stdout.strip())
+        return nts_result_short
+    except Exception as e:
+        nts_result_short["NTS analysis"] = f"NTS test could not be performed (binary tool not available) {e}"
+        return nts_result_short
 
 def perform_nts_measurement_ip(server_ip_str: str) -> dict[str, str]:
     """
