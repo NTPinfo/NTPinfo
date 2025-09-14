@@ -109,7 +109,9 @@ func parseNTPv5Response(data []byte, clientCookie uint64, clientSentTime float64
 		"tx_timestamp":        header.TxTimestamp,
 		"client_cookie_valid": header.ClientCookie == clientCookie,
 	}
-
+	t4_uint := nowToNtpUint64()
+	t4 := ntp64ToFloatSeconds(t4_uint)
+	info["client_recv_time"] = t4_uint
 	// Parse extension fields if any
 	if len(data) > HEADER_SIZE {
 		exts := []map[string]interface{}{}
@@ -133,7 +135,6 @@ func parseNTPv5Response(data []byte, clientCookie uint64, clientSentTime float64
 	t1 := clientSentTime
 	t2 := ntp64ToFloatSeconds(header.RecvTimestamp)
 	t3 := ntp64ToFloatSeconds(header.TxTimestamp)
-	t4 := ntp64ToFloatSeconds(nowToNtpUint64())
 
 	info["offset_s"] = ((t2 - t2) + (t3 - t4)) / 2 //in seconds
 	info["rtt_s"] = (t4 - t1) - (t3 - t2)          //in seconds
@@ -148,7 +149,7 @@ func performNTPv5Measurement(server string, timeout float64) {
 
 	conn, err := net.Dial("udp", addr)
 	if err != nil {
-		fmt.Printf("error connecting: %v", err)
+		fmt.Printf("error connecting: %v\n", err)
 		os.Exit(2)
 	}
 	defer conn.Close()
@@ -157,7 +158,7 @@ func performNTPv5Measurement(server string, timeout float64) {
 	req, client_cookie := buildNTPv5Request()
 	_, err = conn.Write(req)
 	if err != nil {
-		fmt.Printf("error sending ntpv5 request: %v", err)
+		fmt.Printf("error sending ntpv5 request: %v\n", err)
 		os.Exit(2)
 	}
 
@@ -165,13 +166,13 @@ func performNTPv5Measurement(server string, timeout float64) {
 	resp := make([]byte, 1024)
 	n, err := conn.Read(resp)
 	if err != nil {
-		fmt.Printf("error reading response: %v", err)
-		os.Exit(4)
+		fmt.Printf("measurement timeout: %v\n", err)
+		os.Exit(3)
 	}
 
 	result, err := parseNTPv5Response(resp[:n], client_cookie, t1)
 	if err != nil {
-		fmt.Printf("error parsing response: %v", err)
+		fmt.Printf("error parsing response: %v\n", err)
 		os.Exit(4)
 	}
 	jsonToString(result, &output)

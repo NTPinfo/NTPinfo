@@ -84,7 +84,7 @@ func performNTPv1Measurement(server string, timeout float64) {
 
 	conn, err := net.Dial("udp", addr)
 	if err != nil {
-		fmt.Printf("error connecting: %v", err)
+		fmt.Printf("error connecting: %v\n", err)
 		os.Exit(1)
 	}
 	defer conn.Close()
@@ -92,7 +92,7 @@ func performNTPv1Measurement(server string, timeout float64) {
 	req, t1 := buildNTPv1Request()
 	_, err = conn.Write(req)
 	if err != nil {
-		fmt.Printf("could not send data: %v", err)
+		fmt.Printf("could not send data: %v\n", err)
 		os.Exit(2)
 	}
 
@@ -100,7 +100,7 @@ func performNTPv1Measurement(server string, timeout float64) {
 	resp := make([]byte, 1024)
 	n, err := conn.Read(resp)
 	if err != nil {
-		fmt.Printf("measurement timeout: %v", err)
+		fmt.Printf("measurement timeout: %v\n", err)
 		os.Exit(3)
 	}
 
@@ -108,7 +108,7 @@ func performNTPv1Measurement(server string, timeout float64) {
 	result, err := parseNTPv1Response(resp[:n], t1, t4)
 
 	if err != nil {
-		fmt.Printf("error parsing response: %v", err)
+		fmt.Printf("error parsing response: %v\n", err)
 		os.Exit(4)
 	}
 	jsonToString(result, &output)

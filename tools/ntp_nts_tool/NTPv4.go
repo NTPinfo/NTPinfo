@@ -46,7 +46,7 @@ func buildNTPv4Request() ([]byte, float64) {
 	return req, ntp64ToFloatSeconds(t1)
 }
 
-func parseNTPv4Response(data []byte, t1 float64, t4 float64) (map[string]interface{}, error) {
+func parseNTPv4Response(data []byte, t1 float64, t4_uint uint64) (map[string]interface{}, error) {
 	if len(data) < NTP_PACKET_SIZE {
 		return nil, fmt.Errorf("response too short: %d bytes", len(data))
 	}
@@ -59,26 +59,28 @@ func parseNTPv4Response(data []byte, t1 float64, t4 float64) (map[string]interfa
 
 	t2 := ntp64ToFloatSeconds(h.RecvTimestamp)
 	t3 := ntp64ToFloatSeconds(h.TxTimestamp)
+	t4 := ntp64ToFloatSeconds(t4_uint)
 
 	rtt := (t4 - t1) - (t3 - t2)
 	offset := ((t2 - t2) + (t3 - t4)) / 2
 
 	info := map[string]interface{}{ //same as NTPv3
-		"leap":           (h.LIVNMode >> 6) & 0x03,
-		"version":        (h.LIVNMode >> 3) & 0x07,
-		"mode":           h.LIVNMode & 0x07,
-		"stratum":        h.Stratum,
-		"poll":           h.Poll,
-		"precision":      h.Precision,
-		"root_delay":     time32ToSeconds(h.RootDelay),
-		"root_disp":      time32ToSeconds(h.RootDispersion),
-		"ref_id":         h.RefID, //this may have a different meaning in NTPv4
-		"ref_timestamp":  h.RefTimestamp,
-		"orig_timestamp": h.OrigTimestamp,
-		"recv_timestamp": h.RecvTimestamp,
-		"tx_timestamp":   h.TxTimestamp,
-		"rtt":            rtt,
-		"offset":         offset,
+		"leap":             (h.LIVNMode >> 6) & 0x03,
+		"version":          (h.LIVNMode >> 3) & 0x07,
+		"mode":             h.LIVNMode & 0x07,
+		"stratum":          h.Stratum,
+		"poll":             h.Poll,
+		"precision":        h.Precision,
+		"root_delay":       time32ToSeconds(h.RootDelay),
+		"root_disp":        time32ToSeconds(h.RootDispersion),
+		"ref_id":           h.RefID, //this may have a different meaning in NTPv4
+		"ref_timestamp":    h.RefTimestamp,
+		"orig_timestamp":   h.OrigTimestamp,
+		"recv_timestamp":   h.RecvTimestamp,
+		"tx_timestamp":     h.TxTimestamp,
+		"client_recv_time": t4_uint, //we add this field to be shown in the results
+		"rtt":              rtt,
+		"offset":           offset,
 	}
 
 	// Check if there are extension fields after the 48-byte header
@@ -113,7 +115,7 @@ func performNTPv4Measurement(server string, timeout float64) {
 
 	conn, err := net.Dial("udp", addr)
 	if err != nil {
-		fmt.Printf("error connecting: %v", err)
+		fmt.Printf("error connecting: %v\n", err)
 		os.Exit(1)
 	}
 	defer conn.Close()
@@ -121,7 +123,7 @@ func performNTPv4Measurement(server string, timeout float64) {
 	req, t1 := buildNTPv4Request()
 	_, err = conn.Write(req)
 	if err != nil {
-		fmt.Printf("could not send request: %v", err)
+		fmt.Printf("could not send request: %v\n", err)
 		os.Exit(2)
 	}
 
@@ -129,15 +131,16 @@ func performNTPv4Measurement(server string, timeout float64) {
 	resp := make([]byte, 1024)
 	n, err := conn.Read(resp)
 	if err != nil {
-		fmt.Printf("measurement timeout: %v", err)
+		fmt.Printf("measurement timeout: %v\n", err)
 		os.Exit(3)
 	}
 
-	t4 := ntp64ToFloatSeconds(nowToNtpUint64())
+	//t4 := ntp64ToFloatSeconds(nowToNtpUint64())
+	t4 := nowToNtpUint64()
 	result, err := parseNTPv4Response(resp[:n], t1, t4)
 
 	if err != nil {
-		fmt.Printf("error reading/parsing response: %v", err)
+		fmt.Printf("error reading/parsing response: %v\n", err)
 		os.Exit(4)
 	}
 	jsonToString(result, &output)

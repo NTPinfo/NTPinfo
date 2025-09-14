@@ -56,3 +56,12 @@ func jsonToString(data map[string]interface{}, output *strings.Builder) {
 	}
 	output.WriteString(string(jsonData))
 }
+
+//func jsonToStringWithError(data map[string]interface{}, output *strings.Builder) {
+//	jsonData, err := json.MarshalIndent(data, "", "  ")
+//	if err != nil {
+//		output.WriteString(fmt.Sprintf("Error converting to JSON. Showing raw data\n%v\n", data))
+//		return
+//	}
+//	output.WriteString(string(jsonData))
+//}

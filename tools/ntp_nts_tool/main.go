@@ -8,8 +8,11 @@ import (
 
 var usage_info = `Usage:
     nts <host>
+    nts <host> <timeout_s>
     nts <host_ip>
-    nts <host> ipv4/ipv6 (what IP type you want if possible. If not, you will get the type that is available for NTS)
+    nts <host_ip> <timeout_s>
+    nts <host> ipv4/ipv6     (what IP type you want if possible. If not, you will get the type that is available for NTS)
+    nts <host> ipv4/ipv6 <timeout_s>
 
     <NTP_version> <host>
     <NTP_version> <host> <timeout_s>
@@ -47,23 +50,26 @@ Return codes for measuring NTP:
 	    3 -> measurement timeout
 	    4 -> error parsing response
 
-Warning: In both cases (NTP and NTS) where you use a domain name as the host, consider that this tool does not resolve
-
-	the domain name in terms of the client IP. It resolves the domain name based on the machine that executes this code.
-	If you want to use an IP address (for server) near the client, then resolve it somewhere else and use that IP in this code.
-	(The aim of this tool is to perform NTP and NTS measurement, not to solve DNS problems)
+Warning:
+ 1. In both cases (NTP and NTS) where you use a domain name as the host, consider that this tool does not resolve
+    the domain name in terms of the client IP. It resolves the domain name based on the machine that executes this code.
+    If you want to use an IP address (for server) near the client, then resolve it somewhere else and use that IP in this code.
+    (The aim of this tool is to perform NTP and NTS measurement, not to solve DNS problems)
+ 2. In NTS measurements performed on a specific IP address, KE may redirect to another IP address. If this is the case, a warning
+    will be shown in the response. The measurement succeeded, but KE redirected us to another IP. (you can also see this in
+    host vs measured server ip
 */
 func main() {
 	//server := "2001:4860:4806:c::" //"time.cloudflare.com" //"time.apple.com" //"ntp0.testdns.nl" //"ntp0.testdns.nl" //"time.apple.com"
-
-	server := "162.159.200.1" //"time.cloudflare.com" //args := os.Args[1:]
-	args := []string{"nts", server}
+	args := os.Args[1:]
+	//server := "162.159.200.1" //"time.cloudflare.com" //args := os.Args[1:]
+	//args := []string{"nts", server, "1"}
 	if len(args) < 1 || len(args) > 3 {
 		fmt.Println(usage_info)
 		os.Exit(-100)
 	}
 	if args[0] == "nts" {
-		measureNTS(args[1:]) //[]string{args[1], args[2]})
+		measureNTS(args[1:])
 		os.Exit(0)
 	}
 	//ntp versions part
