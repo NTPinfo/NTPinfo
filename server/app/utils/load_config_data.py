@@ -1,5 +1,9 @@
 import ipaddress
 import os
+import pathlib
+import platform
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Any, cast, Optional
 import yaml
@@ -59,6 +63,13 @@ def verify_if_config_is_set() -> bool:
     get_max_mind_path_asn()
 
     check_geolite_account_id_and_key()
+
+    # check fi ntp_nts tool exists:
+    # commend these 3 lines if it is impossible to compile the file, and you do not care about NTS
+    ntp_nts_tool_path = get_right_ntp_nts_binary_tool_for_your_os()
+    if not ntp_nts_tool_path.exists():
+        raise FileNotFoundError(f"File not found. Please compile it manually. {str(ntp_nts_tool_path)}\n"
+                                f"You could use commands:GOOS=linux GOARCH=amd64 go build -o ntpnts_linux_amd64\n")
     # everything is fine
     return True
 
@@ -282,6 +293,60 @@ def get_edns_timeout_s() -> float | int:
         raise ValueError("edns 'edns_timeout_s' cannot be negative")
     return edns["edns_timeout_s"]
 
+ntp_nts_tools_dir_path = pathlib.Path(__file__).parent.parent.parent.parent / "tools" / "ntp_nts_tool"
+
+def get_right_ntp_nts_binary_tool_for_your_os() -> Path:
+    """
+    We use some binary tools to perform NTS measurements and analyse NTP versions. You need the one that
+    is compatible with your operating system.
+    Args:
+        none
+    Returns:
+        str: the right NTS tool for your OS.
+    """
+    system = platform.system().lower()
+    arch = platform.machine().lower()
+
+    binary_path = ntp_nts_tools_dir_path / "ntpnts_linux_amd64"
+    # system = "linux"
+    # print(system)
+    if system == "windows":
+        binary_path = ntp_nts_tools_dir_path / "ntpnts_windows_amd64.exe"
+    elif system == "linux":
+        binary_path = ntp_nts_tools_dir_path / "ntpnts_linux_amd64"
+    elif system == "darwin":
+        if arch == "arm64":
+            binary_path = ntp_nts_tools_dir_path / "ntpnts_darwin_arm64"
+        else:
+            binary_path = ntp_nts_tools_dir_path / "ntpnts_darwin_amd64"
+    else:
+        raise Exception(f"Unsupported platform: {system} {arch}")
+
+    if not binary_path.exists():
+        print(f"[INFO] {binary_path} not found. Building it with Go...")
+
+        # Check Go availability
+        go_executable = shutil.which("go")
+        if go_executable is None:
+            raise RuntimeError("Go compiler not found in PATH. Install Go or add it to PATH.")
+
+        if not ntp_nts_tools_dir_path.exists():
+            raise RuntimeError(f"Build directory does not exist: {ntp_nts_tools_dir_path}")
+
+        try:
+            result = subprocess.run(
+                [go_executable, "build", "-o", str(binary_path)],
+                cwd=str(ntp_nts_tools_dir_path),
+                env={**os.environ, "GOOS": system, "GOARCH": arch},
+                check=True
+            )
+            if result.returncode != 0:
+                raise RuntimeError(f"Failed to build Go binary for {system}/{arch}")
+            print(f"[INFO] Successfully built {binary_path}")
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"Failed to build NTS tool for {system}/{arch}: {e}")
+
+    return binary_path
 
 def get_ripe_timeout_per_probe_ms() -> float | int:
     """
