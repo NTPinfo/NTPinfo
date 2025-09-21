@@ -1,10 +1,12 @@
+import pprint
+
 import ntplib
 from ipaddress import ip_address
 import json
 from typing import Optional, Tuple
 import requests
 
-from server.app.utils.analyze_ntp_versions import analyse_ntpv1, analyse_ntpv2
+from server.app.utils.analyze_ntp_versions import *
 from server.app.utils.nts_check import perform_nts_measurement_domain_name
 from server.app.dtos.ProbeData import ServerLocation
 from server.app.utils.location_resolver import get_country_for_ip, get_coordinates_for_ip
@@ -163,23 +165,6 @@ def convert_ntp_response_to_measurement(response: ntplib.NTPStats, server_ip_str
         return None
 
 
-def parse_ntp_versions_response_to_dict(content: str) -> dict:
-    """
-    This method parses the response from the Go tool (which is a string looking like a json)
-
-    Args:
-        content (str): The response from the Go tool.
-    Returns:
-        dict: The parsed response.
-    Raises:
-        InputError: If the response is invalid.
-    """
-    try:
-        data = json.loads(content)
-        return data
-    except Exception as e:
-        raise InputError(f"could not parse json {e}")
-
 def analyze_supported_ntp_versions(server: str):
     # ntpvX_supported_confidence is from 0% to 100% (X is from 1 to 5)
     # 0% means: not supported at all (no response)
@@ -220,9 +205,19 @@ def analyze_supported_ntp_versions(server: str):
      ntp_versions_analysis["ntpv2_m_result"]) = analyse_ntpv2(server, str(binary_nts_tool))
 
     # NTPv3
-    # (ntp_versions_analysis["ntpv3_supported_confidence"],
-    #  ntp_versions_analysis["ntpv3_analysis"],
-    #  ntp_versions_analysis["ntpv3_m_result"]) = analyse_ntpv3(server, str(binary_nts_tool))
+    (ntp_versions_analysis["ntpv3_supported_confidence"],
+     ntp_versions_analysis["ntpv3_analysis"],
+     ntp_versions_analysis["ntpv3_m_result"]) = analyse_ntpv3(server, str(binary_nts_tool))
+
+    # NTPv4
+    (ntp_versions_analysis["ntpv4_supported_confidence"],
+     ntp_versions_analysis["ntpv4_analysis"],
+     ntp_versions_analysis["ntpv4_m_result"]) = analyse_ntpv4(server, str(binary_nts_tool))
+
+    # NTPv5
+    (ntp_versions_analysis["ntpv5_supported_confidence"],
+     ntp_versions_analysis["ntpv5_analysis"],
+     ntp_versions_analysis["ntpv5_m_result"]) = analyse_ntpv5(server, str(binary_nts_tool))
     return ntp_versions_analysis
 
 
@@ -416,6 +411,7 @@ def get_request_settings(ip_family_of_ntp_server: int, ntp_server: str, client_i
     return headers, request_content
 
 # example to see how you use them
+# pprint.pprint(analyze_supported_ntp_versions("time.google.com"))
 # print_ntp_measurement(perform_ntp_measurement_domain_name_list("time.apple.com", "5a01:c741:a16:4000::1f2", 6, 4)[0])
 # print_ntp_measurement(perform_ntp_measurement_domain_name_list("time.cloudflare.com", "17.253.6.45", 4,4)[0])
 # print_ntp_measurement(perform_ntp_measurement_domain_name_list("ntpd-rs.sidnlabs.nl", None, 4,5)[0])
