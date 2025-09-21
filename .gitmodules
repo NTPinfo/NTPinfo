@@ -1,0 +1,3 @@
+[submodule "tools/ntp-nts-tool"]
+	path = tools/ntp-nts-tool
+	url = https://github.com/SerbanOrza/ntp-nts-tool.git
