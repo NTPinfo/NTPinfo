@@ -8,6 +8,9 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from starlette.responses import HTMLResponse
 
+from server.app.utils.validate import is_ip_address
+from server.app.dtos.AdvancedSettings import AdvancedSettings
+from server.app.utils.nts_check import perform_nts_measurement_domain_name, perform_nts_measurement_ip
 from server.app.utils.load_config_data import get_rate_limit_per_client_ip
 from server.app.dtos.RipeMeasurementResponse import RipeResult
 from server.app.dtos.NtpMeasurementResponse import MeasurementResponse
@@ -212,6 +215,62 @@ async def read_historic_data_time(server: str,
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Sever error: {str(e)}.")
 
+
+# NTS API
+@router.post(
+    "/measurements/nts/",
+    summary="Perform a live NTS measurement",
+    description="""
+Compute a live NTS synchronization measurement for a specified server.
+
+- Accepts an IP or domain name.
+- Returns data about the measurement
+- It would NOT be used on the main page. Currently it is experimental.
+""",
+    response_model=MeasurementResponse,
+    responses={
+        200: {"description": "Measurement successfully initiated"},
+        400: {"description": "Invalid server address"},
+    }
+)
+@limiter.limit(get_rate_limit_per_client_ip())
+async def perform_and_read_nts_measurement(payload: MeasurementRequest, request: Request,
+                                    session: Session = Depends(get_db)) -> JSONResponse:
+    """
+    This API will perform an NTS measurement on the specified server.
+    Args:
+        payload (MeasurementRequest):
+            A Pydantic model from which we need:
+                - server (str): IP address (IPv4/IPv6) or domain name of the NTP server.
+                - ipv6_measurement (bool): True if the type of IPs that we want to measure is IPv6. False otherwise.
+        request (Request): The Request object that gives you the IP of the client.
+        session (Session): The currently active database session.
+    Returns:
+        JSONResponse: A json response containing an analysis of the NTS measurement.
+    Raises:
+        HTTPException: 400 - If the `server` field is empty or no response.
+    """
+    server = payload.server
+    if len(payload.server) == 0:
+        raise HTTPException(status_code=400, detail="Either 'ip' or 'dn' must be provided.")
+    wanted_ip_type = 6 if payload.ipv6_measurement else 4
+    wanted_ip_type = override_desired_ip_type_if_input_is_ip(server, wanted_ip_type)
+    # build the settings
+    settings = AdvancedSettings()
+    settings.wanted_ip_type = wanted_ip_type
+
+    ans: dict = {}
+    if is_ip_address(server) is None: # domain name case
+        ans = perform_nts_measurement_domain_name(server, settings)
+    else:
+        ans = perform_nts_measurement_ip(server)
+        # add this warning to make things clear (It is hard to try to find the right domain name of an IP address)
+        ans["warning_ip"] = "NTS measurements on IPs cannot check TLS certificate."
+    return JSONResponse(
+        status_code=200,
+        content=ans)
+
+# RIPE APIs
 
 @router.post(
     "/measurements/ripe/trigger/",

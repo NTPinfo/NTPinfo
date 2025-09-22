@@ -4,6 +4,7 @@ import pprint
 import subprocess
 from typing import Tuple
 
+from server.app.dtos.AdvancedSettings import AdvancedSettings
 from server.app.utils.load_config_data import get_timeout_measurement_s
 from server.app.utils.load_config_data import get_right_ntp_nts_binary_tool_for_your_os
 from server.app.models.CustomError import InputError
@@ -41,21 +42,6 @@ from server.app.utils.validate import sanitize_string
 #     #   inside the backend container: chmod +x /app/tools/measureNtsTool/ntstool_linux_amd64
 #     # ctrl c and then docker compose down (in the first panel)
 #     # build and up again
-#     system = platform.system().lower()
-#     arch = platform.machine().lower()
-#     # system = "linux"
-#     print(system)
-#     if system == "windows":
-#         return nts_tools_dir_path / "ntpnts_windows_amd64.exe"
-#     elif system == "linux":
-#         return nts_tools_dir_path / "ntpnts_linux_amd64"
-#     elif system == "darwin":
-#         if arch == "arm64":
-#             return nts_tools_dir_path / "ntpnts_darwin_arm64"
-#         else:
-#             return nts_tools_dir_path / "ntpnts_darwin_amd64"
-#     else:
-#         raise Exception(f"Unsupported platform: {system} {arch}")
 
 def parse_nts_response_to_dict(content: str) -> dict:
     """
@@ -74,7 +60,19 @@ def parse_nts_response_to_dict(content: str) -> dict:
     except Exception as e:
         raise InputError(f"could not parse json {e}")
 
-def perform_nts_measurement_domain_name(server_domain_name: str, wanted_ip_type: int = -1)\
+# def perform_nts_measurement(server: str, settings: AdvancedSettings)\
+#         -> dict[str, str]:
+#     """
+#     Simply a method to combine both domain name and IP
+#     :param server:
+#     :param settings:
+#     :return:
+#     """
+#     if is_ip_address(server) is None: #domain name
+#         return perform_nts_measurement_domain_name(server, settings)
+#     return perform_nts_measurement_ip(server)
+
+def perform_nts_measurement_domain_name(server_domain_name: str, settings: AdvancedSettings)\
         -> dict[str, str]:
     """
     Perform the NTS measurement for a domain name. It returns the status of the NTS measurement on the overall server
@@ -84,13 +82,13 @@ def perform_nts_measurement_domain_name(server_domain_name: str, wanted_ip_type:
 
     Args:
         server_domain_name (str): the domain name
-        wanted_ip_type (int): the IP address type (4 ot 6)
+        settings (AdvancedSettings): the settings for the measurement (wanted_ip_type)
     """
     nts_result_short: dict = {"NTS succeeded": False, "NTS analysis": "None"}
     timeout = get_timeout_measurement_s()
     try:
         binary_nts_tool = get_right_ntp_nts_binary_tool_for_your_os()
-        if wanted_ip_type == -1: # if the user does not want a specific IP type
+        if settings.wanted_ip_type == -1: # if the user does not want a specific IP type
             result = subprocess.run(
                 [str(binary_nts_tool), "nts", server_domain_name,
                  "-t", str(timeout)],
@@ -100,7 +98,7 @@ def perform_nts_measurement_domain_name(server_domain_name: str, wanted_ip_type:
         else: # if the user wants a specific IP type
             result = subprocess.run(
                 [str(binary_nts_tool), "nts", server_domain_name,
-                 "-ipv", str(wanted_ip_type), "-t", str(timeout)],
+                 "-ipv", str(settings.wanted_ip_type), "-t", str(timeout)],
                 capture_output=True, text=True,
                 env=os.environ.copy()
             )
@@ -121,7 +119,8 @@ def perform_nts_measurement_domain_name(server_domain_name: str, wanted_ip_type:
         elif result.returncode == 6: # it succeeded, but not with the wanted IP type
             nts_result_short["NTS succeeded"] = True
             nts_data = parse_nts_response_to_dict(result.stdout.strip())
-            nts_result_short["NTS analysis"] = f"It is NTS, but failed on ipv{wanted_ip_type}. One working NTS IP is {nts_data.get("Measured server IP")}"
+            nts_result_short["NTS analysis"] = (f"It is NTS, but failed on ipv{settings.wanted_ip_type}. "
+                                                f"One working NTS IP is {nts_data.get("Measured server IP")}")
             # put the result data in the output
             nts_result_full = nts_data.copy()
             nts_result_full.update(nts_result_short)
@@ -133,11 +132,12 @@ def perform_nts_measurement_domain_name(server_domain_name: str, wanted_ip_type:
     except Exception as e:
         # error with parsing data. This piece of code is used in case there are problems with the output from
         # the Go tool
-        print(f"Probably a problem with parsing response from Go tool: {e}")
+        #print(f"Probably a problem with parsing response from Go tool: {e}")
         if result.returncode == 0:
             nts_result_short["NTS analysis"] = "NTS measurement succeeded, but could not retrieve data"
         elif result.returncode == 6:
-            nts_result_short["NTS analysis"] = f"Measurement failed on ipv{wanted_ip_type}, but succeeded on the other type. Could not retrieve more data"
+            nts_result_short["NTS analysis"] = (f"Measurement failed on ipv{settings.wanted_ip_type}, "
+                                                f"but succeeded on the other type. Could not retrieve more data")
         else:
             nts_result_short["NTS analysis"] = "NTS measurement failed, but could not retrieve more data"
         return nts_result_short
@@ -156,11 +156,10 @@ def perform_nts_measurement_ip(server_ip_str: str) -> dict:
     Args:
         server_ip_str (str): the server IP
     """
-    # server_domain_name = try_converting_ip_to_domain_name(server_ip_str)
-    binary_nts_tool = get_right_ntp_nts_binary_tool_for_your_os()
     timeout = get_timeout_measurement_s()
     nts_result_short: dict = {"NTS succeeded": False, "NTS analysis": "None"}
     try:
+        binary_nts_tool = get_right_ntp_nts_binary_tool_for_your_os()
         result = subprocess.run(
             [str(binary_nts_tool), "nts", server_ip_str,
              "-t", str(timeout)],
@@ -193,7 +192,7 @@ def perform_nts_measurement_ip(server_ip_str: str) -> dict:
     except Exception as e:
         # error with parsing data. This piece of code is used in case there are problems with the output from
         # the Go tool
-        print(f"Probably a problem with parsing response from Go tool: {e}")
+        #print(f"Probably a problem with parsing response from Go tool: {e}")
         if result.returncode == 0:
             nts_result_short["NTS analysis"] = "NTS measurement succeeded, but could not retrieve data"
         else:

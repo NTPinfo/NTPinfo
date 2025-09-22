@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, model_validator
-from typing import Self
+from typing import Self, Optional
 
 
 class MeasurementRequest(BaseModel):
@@ -12,6 +12,8 @@ class MeasurementRequest(BaseModel):
     """
     server: str
     ipv6_measurement: bool = False
+
+    # ntpv5_draft: Optional[str] = None #it will look like this
 
     @model_validator(mode='after')
     def validate_after(self) -> Self:
