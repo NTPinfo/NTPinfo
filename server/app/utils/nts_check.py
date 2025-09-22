@@ -2,17 +2,15 @@ import json
 import os
 import pprint
 import subprocess
-import platform
-import pathlib
-from pathlib import Path
 from typing import Tuple
 
+from server.app.utils.load_config_data import get_timeout_measurement_s
 from server.app.utils.load_config_data import get_right_ntp_nts_binary_tool_for_your_os
 from server.app.models.CustomError import InputError
 from server.app.utils.validate import sanitize_string
 
 # directory where you keep the NTS Go .exe tools
-nts_tools_dir_path = pathlib.Path(__file__).parent.parent.parent.parent / "tools" / "ntp_nts_tool"
+# nts_tools_dir_path = pathlib.Path(__file__).parent.parent.parent.parent / "tools" / "ntp-nts-tool"
 
 # measuring an NTS server has 2 steps:
 # 1) Key Exchange -> get the cookies and basically the keys for a secure connection
@@ -71,7 +69,7 @@ def parse_nts_response_to_dict(content: str) -> dict:
         InputError: If the response is invalid.
     """
     try:
-        data = json.loads(content)
+        data: dict = json.loads(content)
         return data
     except Exception as e:
         raise InputError(f"could not parse json {e}")
@@ -89,17 +87,20 @@ def perform_nts_measurement_domain_name(server_domain_name: str, wanted_ip_type:
         wanted_ip_type (int): the IP address type (4 ot 6)
     """
     nts_result_short: dict = {"NTS succeeded": False, "NTS analysis": "None"}
+    timeout = get_timeout_measurement_s()
     try:
         binary_nts_tool = get_right_ntp_nts_binary_tool_for_your_os()
         if wanted_ip_type == -1: # if the user does not want a specific IP type
             result = subprocess.run(
-                [str(binary_nts_tool), "nts", server_domain_name],
+                [str(binary_nts_tool), "nts", server_domain_name,
+                 "-t", str(timeout)],
                 capture_output=True, text=True,
                 env=os.environ.copy()
             )
         else: # if the user wants a specific IP type
             result = subprocess.run(
-                [str(binary_nts_tool), "nts", server_domain_name, "ipv" + str(wanted_ip_type)],
+                [str(binary_nts_tool), "nts", server_domain_name,
+                 "-ipv", str(wanted_ip_type), "-t", str(timeout)],
                 capture_output=True, text=True,
                 env=os.environ.copy()
             )
@@ -157,10 +158,12 @@ def perform_nts_measurement_ip(server_ip_str: str) -> dict:
     """
     # server_domain_name = try_converting_ip_to_domain_name(server_ip_str)
     binary_nts_tool = get_right_ntp_nts_binary_tool_for_your_os()
+    timeout = get_timeout_measurement_s()
     nts_result_short: dict = {"NTS succeeded": False, "NTS analysis": "None"}
     try:
         result = subprocess.run(
-            [str(binary_nts_tool), "nts", server_ip_str],
+            [str(binary_nts_tool), "nts", server_ip_str,
+             "-t", str(timeout)],
             capture_output=True, text=True
         )
     except Exception as e:
@@ -210,7 +213,7 @@ def did_ke_performed_on_different_ip(original_ip: str, nts_data: dict) -> Tuple[
     Returns:
         (bool, str): True if the IP was changed, False otherwise, and the IP on which the measurement was continued.
     """
-    ip: str = nts_data.get("Measured server IP","")
+    ip: str = nts_data.get("Measured server IP", "")
     if ip == "":
         raise InputError("Measured server IP is missing")
     if original_ip != ip:

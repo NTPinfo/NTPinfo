@@ -54,7 +54,24 @@ def ref_id_to_ip_or_name(ref_id: int, stratum: int, ip_family: int) \
 
         else:
             return None, None  # invalid stratum!!
-
+def translate_ref_id(ref_id: int, stratum: int, ip_family: int) -> str:
+    """
+    This method translates the reference id (both name or ip case) into a string
+    Args:
+        ref_id (int): the reference id of the ntp server.
+        stratum (int): the stratum level of the ntp server.
+        ip_family (int): the ip family of the ntp server. (4 or 6)
+    Returns:
+        str: the translated reference id.
+    """
+    ip, name = ref_id_to_ip_or_name(ref_id, stratum, ip_family)
+    if name is not None:
+        return name
+    elif ip is not None:
+        return str(ip)
+    else: #if both are None, and we have an invalid situation, just return ref_id
+        # print("ceva invalid")
+        return str(ref_id)
 def get_ip_family(ip_str: Optional[str]) -> int:
     """
     This method returns the IP family of the given IP address. It returns 4 if we have an IPv4, and

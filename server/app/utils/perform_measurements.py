@@ -3,9 +3,10 @@ import pprint
 import ntplib
 from ipaddress import ip_address
 import json
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any
 import requests
 
+from server.app.dtos.AdvancedSettings import AdvancedSettings
 from server.app.utils.analyze_ntp_versions import *
 from server.app.utils.nts_check import perform_nts_measurement_domain_name
 from server.app.dtos.ProbeData import ServerLocation
@@ -61,7 +62,7 @@ def perform_ntp_measurement_domain_name_list(server_name: str, client_ip: Option
                                                     ntp_version=ntp_version)
 
             if r is not None:
-               # r.server_info.ref_name=nts_analysis["NTS analysis"] # for testing to see if it works.
+                #r.server_info.ref_name=nts_analysis["NTS analysis"] # for testing to see if it works.
                 resulted_measurements.append(r)
                 ok = True
         except Exception as e:
@@ -165,59 +166,40 @@ def convert_ntp_response_to_measurement(response: ntplib.NTPStats, server_ip_str
         return None
 
 
-def analyze_supported_ntp_versions(server: str):
+def analyze_supported_ntp_versions(server: str, settings: AdvancedSettings) -> dict:
+    """
+    This method analyzes supported NTP versions for the specified server. It will provide an analysis on each NTP version
+    from NTPv1 to NTPv5 (draft). (no NTS in this method)
+    Each NTP version analysis will have a "confidence" (0->100) that says how much this server thinks the NTP server supports each versions.
+    For example, if it truly supports an NTP version, the confidence will be 100.
+    Args:
+        server (str): The server to analyze (domain name or IP address).
+        settings (AdvancedSettings): The settings to use for the analysis.
+    Returns:
+        dict: A dictionary containing an analysis on each NTP versions.
+    """
     # ntpvX_supported_confidence is from 0% to 100% (X is from 1 to 5)
     # 0% means: not supported at all (no response)
     # 25% means: received something, but failed to get the data, or invalid format
     # 50% means: received an NTP response, but with a different NTP version (honest server)
     # 75% means: received an NTP response, correct version, but content seems to be from another NTP version (server may have lied)
     # 100% means: fully valid ntpvX response received
-    ntp_versions_analysis = { "ntpv1_supported_confidence": 0,
-                              "ntpv1_analysis": "",
-                              "ntpv1_m_result": {},
-                              "ntpv2_supported_confidence": 0,
-                              "ntpv2_analysis": "",
-                              "ntpv2_m_result": {},
-                              "ntpv3_supported_confidence": 0,
-                              "ntpv3_analysis": "",
-                              "ntpv3_m_result": {},
-                              "ntpv4_supported_confidence": 0,
-                              "ntpv4_analysis": "",
-                              "ntpv4_m_result": {},
-                              "ntpv5_supported_confidence": 0,
-                              "ntpv5_analysis": "",
-                              "ntpv5_m_result": {},
-                              "summary": ""
-                              }
+    ntp_versions_analysis: dict = {}
     try:
         binary_nts_tool = get_right_ntp_nts_binary_tool_for_your_os()
     except Exception as e:
         ntp_versions_analysis["summary"] = "NTP versions test could not be performed (binary tool not available)."
         return ntp_versions_analysis
-    # NTPv1 (difficult because I do not found any server that responded with NTPv1):
-    (ntp_versions_analysis["ntpv1_supported_confidence"],
-     ntp_versions_analysis["ntpv1_analysis"],
-     ntp_versions_analysis["ntpv1_m_result"]) = analyse_ntpv1(server, str(binary_nts_tool))
 
-    # NTPv2
-    (ntp_versions_analysis["ntpv2_supported_confidence"],
-     ntp_versions_analysis["ntpv2_analysis"],
-     ntp_versions_analysis["ntpv2_m_result"]) = analyse_ntpv2(server, str(binary_nts_tool))
-
-    # NTPv3
-    (ntp_versions_analysis["ntpv3_supported_confidence"],
-     ntp_versions_analysis["ntpv3_analysis"],
-     ntp_versions_analysis["ntpv3_m_result"]) = analyse_ntpv3(server, str(binary_nts_tool))
-
-    # NTPv4
-    (ntp_versions_analysis["ntpv4_supported_confidence"],
-     ntp_versions_analysis["ntpv4_analysis"],
-     ntp_versions_analysis["ntpv4_m_result"]) = analyse_ntpv4(server, str(binary_nts_tool))
-
-    # NTPv5
-    (ntp_versions_analysis["ntpv5_supported_confidence"],
-     ntp_versions_analysis["ntpv5_analysis"],
-     ntp_versions_analysis["ntpv5_m_result"]) = analyse_ntpv5(server, str(binary_nts_tool))
+    if settings.analyse_all_ntp_versions: # more easily and reliable if we want all NTP versions
+        ntp_versions_analysis = directly_analyze_all_ntp_versions(server, str(binary_nts_tool), settings.ntpv5_draft)
+    else:
+        for ntp_version in settings.ntp_versions_to_analyze: # we assume settings has valid input
+            (ntp_versions_analysis[ntp_version + "_supported_confidence"],
+             ntp_versions_analysis[ntp_version + "ntpv1_analysis"],
+             # settings.ntpv5_draft will be considered if and only if the ntp_version is "ntpv5"
+             ntp_versions_analysis[ntp_version + "ntpv1_m_result"]) = run_tool_on_ntp_version(server, str(binary_nts_tool),
+                                                                                                   ntp_version, settings.ntpv5_draft)
     return ntp_versions_analysis
 
 
@@ -411,7 +393,11 @@ def get_request_settings(ip_family_of_ntp_server: int, ntp_server: str, client_i
     return headers, request_content
 
 # example to see how you use them
-# pprint.pprint(analyze_supported_ntp_versions("time.google.com"))
+# s=AdvancedSettings()
+# s.analyse_all_ntp_versions=True
+# s.ntp_versions_to_analyze=["ntpv1", "ntpv2", "ntpv3", "ntpv4", "ntpv5"]
+# s.ntpv5_draft="draft-ietf-ntp-ntpv5-06"
+# pprint.pprint(analyze_supported_ntp_versions("time.google.com",s))
 # print_ntp_measurement(perform_ntp_measurement_domain_name_list("time.apple.com", "5a01:c741:a16:4000::1f2", 6, 4)[0])
 # print_ntp_measurement(perform_ntp_measurement_domain_name_list("time.cloudflare.com", "17.253.6.45", 4,4)[0])
 # print_ntp_measurement(perform_ntp_measurement_domain_name_list("ntpd-rs.sidnlabs.nl", None, 4,5)[0])
