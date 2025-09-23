@@ -10,6 +10,8 @@ def test_load_config(mock):
         load_config()
 
 
+@patch("server.app.utils.load_config_data.Path.exists")
+@patch("server.app.utils.load_config_data.get_right_ntp_nts_binary_tool_for_your_os")
 @patch("server.app.utils.load_config_data.check_geolite_account_id_and_key")
 @patch("server.app.utils.load_config_data.get_max_mind_path_asn")
 @patch("server.app.utils.load_config_data.get_max_mind_path_country")
@@ -36,7 +38,7 @@ def test_verify_if_config_is_set(mock_ripe_account_email, mock_ripe_api_token, m
                                  mock_ripe_packets_per_probe,
                                  mock_ripe_number_of_probes_per_measurement, mock_ripe_server_timeout, mock_anycast_4,
                                  mock_anycast_6, mock_city, mock_country,
-                                 mock_asn, mock_geolite_account):
+                                 mock_asn, mock_geolite_account, mock_get_binary, mock_path_exists):
     mock_ripe_account_email.return_value = "e@email.com"
     mock_ripe_api_token.return_value = "e"
     mock_ntp_version.return_value = 4
@@ -56,6 +58,8 @@ def test_verify_if_config_is_set(mock_ripe_account_email, mock_ripe_api_token, m
     mock_country.return_value = "link"
     mock_asn.return_value = "link"
     mock_geolite_account.return_value = True
+    mock_get_binary.return_value = Path("tools/")
+    mock_path_exists.return_value = True
 
     verify_if_config_is_set()
     mock_ripe_account_email.assert_called_once()
