@@ -12,7 +12,10 @@ This project was developed by Group 15d as part of the **CSE2000 Software Projec
 </p>
 
 ---
+## Cloning the project
 
+Please use `git clone --recurse-submodules https://github.com/NTPinfo/NTPinfo.git` because the project has a submodule.
+If you already cloned it without `--recurse-submodules` then just run `git submodule update --init --recursive`
 ## Product Structure
 
 The product is split into 2 parts:
@@ -227,8 +230,15 @@ To set up and run the back-end server, follow these steps:
     - Be sure to schedule running this file once every day or to manually update them, if you want up-to-date
       information.
 
+6. **Compile the NTP-NTS tool (for NTS and NTP versions analysis)**:
 
-6. **Run the server (from the root directory)**:
+   You will need to have a compiled version of this tool (it will be used by Python). In case there is not already a compiled version, please create it using the following steps.
+   Steps:
+   - Go to folder `tools/ntp-nts-tool`
+   - Run the following command for your system :
+        - linux: `GOOS=linux GOARCH=amd64 go build -o ntpnts_linux_amd64`
+        - windows: `GOOS=windows GOARCH=amd64 go build -o ntpnts_windows_amd64.exe`
+7. **Run the server (from the root directory)**:
 
     ```bash
     uvicorn server.app.main:create_app --reload --factory

@@ -54,8 +54,24 @@ def ref_id_to_ip_or_name(ref_id: int, stratum: int, ip_family: int) \
 
         else:
             return None, None  # invalid stratum!!
-
-
+def translate_ref_id(ref_id: int, stratum: int, ip_family: int) -> str:
+    """
+    This method translates the reference id (both name or ip case) into a string
+    Args:
+        ref_id (int): the reference id of the ntp server.
+        stratum (int): the stratum level of the ntp server.
+        ip_family (int): the ip family of the ntp server. (4 or 6)
+    Returns:
+        str: the translated reference id.
+    """
+    ip, name = ref_id_to_ip_or_name(ref_id, stratum, ip_family)
+    if name is not None:
+        return name
+    elif ip is not None:
+        return str(ip)
+    else: #if both are None, and we have an invalid situation, just return ref_id
+        # print("ceva invalid")
+        return str(ref_id)
 def get_ip_family(ip_str: Optional[str]) -> int:
     """
     This method returns the IP family of the given IP address. It returns 4 if we have an IPv4, and
@@ -318,6 +334,26 @@ def try_converting_ip(client_ip: Optional[str], wanted_ip_type: int) -> Optional
     except Exception as e:
         # It failed. Return the original IP address
         return client_ip
+
+def try_converting_ip_to_domain_name(server_ip: str) -> str:
+    """
+    It tries to get the domain name from the IP.
+
+    Args:
+        server_ip (str): The IP to convert.
+
+    Returns:
+        str: The domain name of the IP if possible or the IP address.
+    """
+    try: #getting PTR record
+        reverse_name = dns.reversename.from_address(server_ip)
+        answer = dns.resolver.resolve(reverse_name, 'PTR')
+        domain_name = str(answer[0]).rstrip('.')
+        print(domain_name)
+        return domain_name
+    except Exception as e:
+        # It failed. Return the original IP address
+        return server_ip
 
 def is_private_ip(ip_str: str) -> bool:
     """

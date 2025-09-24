@@ -30,6 +30,7 @@ services:
       - "${SERVER_DOCKER_PORT}:8000"
     volumes:
       - ./logs:/app/logs
+      - ./tools:/app/tools
     networks:
       - my-net
 
