@@ -71,12 +71,17 @@
            <div itemprop="articleBody">
              
   <h1>Source code for server.app.utils.perform_measurements</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ntplib</span>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pprint</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">ntplib</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipaddress</span><span class="w"> </span><span class="kn">import</span> <span class="n">ip_address</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Any</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.AdvancedSettings</span><span class="w"> </span><span class="kn">import</span> <span class="n">AdvancedSettings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.analyze_ntp_versions</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.nts_check</span><span class="w"> </span><span class="kn">import</span> <span class="n">perform_nts_measurement_domain_name</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.ProbeData</span><span class="w"> </span><span class="kn">import</span> <span class="n">ServerLocation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.location_resolver</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_country_for_ip</span><span class="p">,</span> <span class="n">get_coordinates_for_ip</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.models.CustomError</span><span class="w"> </span><span class="kn">import</span> <span class="n">InputError</span><span class="p">,</span> <span class="n">RipeMeasurementError</span>
@@ -85,7 +90,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.ip_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ip_family</span><span class="p">,</span> <span class="n">ref_id_to_ip_or_name</span><span class="p">,</span> <span class="n">get_server_ip</span><span class="p">,</span> <span class="n">ip_to_str</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.load_config_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_ripe_account_email</span><span class="p">,</span> <span class="n">get_ripe_api_token</span><span class="p">,</span> <span class="n">get_ntp_version</span><span class="p">,</span> \
     <span class="n">get_timeout_measurement_s</span><span class="p">,</span> <span class="n">get_ripe_number_of_probes_per_measurement</span><span class="p">,</span> \
-    <span class="n">get_ripe_timeout_per_probe_ms</span><span class="p">,</span> <span class="n">get_ripe_packets_per_probe</span>
+    <span class="n">get_ripe_timeout_per_probe_ms</span><span class="p">,</span> <span class="n">get_ripe_packets_per_probe</span><span class="p">,</span> <span class="n">get_right_ntp_nts_binary_tool_for_your_os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.ripe_probes</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_probes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.domain_name_to_ip</span><span class="w"> </span><span class="kn">import</span> <span class="n">domain_name_to_ip_list</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpExtraDetails</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpExtraDetails</span>
@@ -119,6 +124,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">domain_ips</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">domain_name_to_ip_list</span><span class="p">(</span><span class="n">server_name</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">)</span>
     <span class="c1"># domain_ips contains a list of ips that are good to use.</span>
+    <span class="c1">#nts_analysis = perform_nts_measurement_domain_name(server_name, False, wanted_ip_type)</span>
     <span class="n">resulted_measurements</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">ok</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="k">for</span> <span class="n">ip_str</span> <span class="ow">in</span> <span class="n">domain_ips</span><span class="p">:</span>
@@ -131,6 +137,7 @@
                                                     <span class="n">ntp_version</span><span class="o">=</span><span class="n">ntp_version</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1">#r.server_info.ref_name=nts_analysis[&quot;NTS analysis&quot;] # for testing to see if it works.</span>
                 <span class="n">resulted_measurements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
                 <span class="n">ok</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -238,6 +245,46 @@
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in convert response to measurement:&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="analyze_supported_ntp_versions">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.perform_measurements.analyze_supported_ntp_versions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">analyze_supported_ntp_versions</span><span class="p">(</span><span class="n">server</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">AdvancedSettings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method analyzes supported NTP versions for the specified server. It will provide an analysis on each NTP version</span>
+<span class="sd">    from NTPv1 to NTPv5 (draft). (no NTS in this method)</span>
+<span class="sd">    Each NTP version analysis will have a &quot;confidence&quot; (0-&gt;100) that says how much this server thinks the NTP server supports each versions.</span>
+<span class="sd">    For example, if it truly supports an NTP version, the confidence will be 100.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        server (str): The server to analyze (domain name or IP address).</span>
+<span class="sd">        settings (AdvancedSettings): The settings to use for the analysis.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: A dictionary containing an analysis on each NTP versions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># ntpvX_supported_confidence is from 0% to 100% (X is from 1 to 5)</span>
+    <span class="c1"># 0% means: not supported at all (no response)</span>
+    <span class="c1"># 25% means: received something, but failed to get the data, or invalid format</span>
+    <span class="c1"># 50% means: received an NTP response, but with a different NTP version (honest server)</span>
+    <span class="c1"># 75% means: received an NTP response, correct version, but content seems to be from another NTP version (server may have lied)</span>
+    <span class="c1"># 100% means: fully valid ntpvX response received</span>
+    <span class="n">ntp_versions_analysis</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">binary_nts_tool</span> <span class="o">=</span> <span class="n">get_right_ntp_nts_binary_tool_for_your_os</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">ntp_versions_analysis</span><span class="p">[</span><span class="s2">&quot;summary&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;NTP versions test could not be performed (binary tool not available).&quot;</span>
+        <span class="k">return</span> <span class="n">ntp_versions_analysis</span>
+
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">analyse_all_ntp_versions</span><span class="p">:</span> <span class="c1"># more easily and reliable if we want all NTP versions</span>
+        <span class="n">ntp_versions_analysis</span> <span class="o">=</span> <span class="n">directly_analyze_all_ntp_versions</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">binary_nts_tool</span><span class="p">),</span> <span class="n">settings</span><span class="o">.</span><span class="n">ntpv5_draft</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">ntp_version</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">ntp_versions_to_analyze</span><span class="p">:</span> <span class="c1"># we assume settings has valid input</span>
+            <span class="p">(</span><span class="n">ntp_versions_analysis</span><span class="p">[</span><span class="n">ntp_version</span> <span class="o">+</span> <span class="s2">&quot;_supported_confidence&quot;</span><span class="p">],</span>
+             <span class="n">ntp_versions_analysis</span><span class="p">[</span><span class="n">ntp_version</span> <span class="o">+</span> <span class="s2">&quot;ntpv1_analysis&quot;</span><span class="p">],</span>
+             <span class="c1"># settings.ntpv5_draft will be considered if and only if the ntp_version is &quot;ntpv5&quot;</span>
+             <span class="n">ntp_versions_analysis</span><span class="p">[</span><span class="n">ntp_version</span> <span class="o">+</span> <span class="s2">&quot;ntpv1_m_result&quot;</span><span class="p">])</span> <span class="o">=</span> <span class="n">run_tool_on_ntp_version</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">binary_nts_tool</span><span class="p">),</span>
+                                                                                                   <span class="n">ntp_version</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">ntpv5_draft</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ntp_versions_analysis</span></div>
 
 
 
@@ -443,8 +490,14 @@
 
 
 <span class="c1"># example to see how you use them</span>
+<span class="c1"># s=AdvancedSettings()</span>
+<span class="c1"># s.analyse_all_ntp_versions=True</span>
+<span class="c1"># s.ntp_versions_to_analyze=[&quot;ntpv1&quot;, &quot;ntpv2&quot;, &quot;ntpv3&quot;, &quot;ntpv4&quot;, &quot;ntpv5&quot;]</span>
+<span class="c1"># s.ntpv5_draft=&quot;draft-ietf-ntp-ntpv5-06&quot;</span>
+<span class="c1"># pprint.pprint(analyze_supported_ntp_versions(&quot;time.google.com&quot;,s))</span>
 <span class="c1"># print_ntp_measurement(perform_ntp_measurement_domain_name_list(&quot;time.apple.com&quot;, &quot;5a01:c741:a16:4000::1f2&quot;, 6, 4)[0])</span>
-<span class="c1"># print_ntp_measurement(perform_ntp_measurement_domain_name_list(&quot;time.apple.com&quot;, &quot;17.253.6.45&quot;, 4,4)[0])</span>
+<span class="c1"># print_ntp_measurement(perform_ntp_measurement_domain_name_list(&quot;time.cloudflare.com&quot;, &quot;17.253.6.45&quot;, 4,4)[0])</span>
+<span class="c1"># print_ntp_measurement(perform_ntp_measurement_domain_name_list(&quot;ntpd-rs.sidnlabs.nl&quot;, None, 4,5)[0])</span>
 <span class="c1"># print_ntp_measurement(perform_ntp_measurement_domain_name_list(&quot;time.apple.com&quot;, &quot;17.253.6.45&quot;, 6,4)[0])</span>
 
 <span class="c1"># print(perform_ripe_measurement_ip(&quot;2a01:b740:a16:4000::1f2&quot;,&quot;2a01:c741:a16:4000::1f2&quot;, 12))</span>

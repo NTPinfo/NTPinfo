@@ -73,6 +73,10 @@
   <h1>Source code for server.app.utils.load_config_data</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">ipaddress</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pathlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">platform</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">Optional</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
@@ -80,6 +84,7 @@
 
 <span class="n">load_dotenv</span><span class="p">()</span>
 
+<span class="n">ntp_nts_tools_dir_path</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s2">&quot;tools&quot;</span> <span class="o">/</span> <span class="s2">&quot;ntp-nts-tool&quot;</span>
 
 <div class="viewcode-block" id="load_config">
 <a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.load_config_data.load_config">[docs]</a>
@@ -137,6 +142,13 @@
     <span class="n">get_max_mind_path_asn</span><span class="p">()</span>
 
     <span class="n">check_geolite_account_id_and_key</span><span class="p">()</span>
+
+    <span class="c1"># check fi ntp_nts tool exists:</span>
+    <span class="c1"># commend these 3 lines if it is impossible to compile the file, and you do not care about NTS or other version than NTPv4</span>
+    <span class="n">ntp_nts_tool_path</span> <span class="o">=</span> <span class="n">get_right_ntp_nts_binary_tool_for_your_os</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ntp_nts_tool_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File not found. Please compile it manually. </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">ntp_nts_tool_path</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                                <span class="sa">f</span><span class="s2">&quot;You could use command: GOOS=linux GOARCH=amd64 go build -o ntpnts_linux_amd64</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="c1"># everything is fine</span>
     <span class="k">return</span> <span class="kc">True</span></div>
 
@@ -396,6 +408,76 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;edns &#39;edns_timeout_s&#39; cannot be negative&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">edns</span><span class="p">[</span><span class="s2">&quot;edns_timeout_s&quot;</span><span class="p">]</span></div>
 
+
+
+<div class="viewcode-block" id="get_right_ntp_nts_binary_tool_for_your_os">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.load_config_data.get_right_ntp_nts_binary_tool_for_your_os">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_right_ntp_nts_binary_tool_for_your_os</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    We use some binary tools to perform NTS measurements and analyse NTP versions. You need the one that</span>
+<span class="sd">    is compatible with your operating system.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        none</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Path: The path to the right ntp-nts binary tool for the specified system.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">system</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">arch</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">machine</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="c1"># binary_path = ntp_nts_tools_dir_path / &quot;ntpnts_linux_amd64&quot;</span>
+    <span class="k">if</span> <span class="n">system</span> <span class="o">==</span> <span class="s2">&quot;windows&quot;</span><span class="p">:</span>
+        <span class="n">binary_path</span> <span class="o">=</span> <span class="n">ntp_nts_tools_dir_path</span> <span class="o">/</span> <span class="s2">&quot;ntpnts_windows_amd64.exe&quot;</span>
+    <span class="k">elif</span> <span class="n">system</span> <span class="o">==</span> <span class="s2">&quot;linux&quot;</span><span class="p">:</span>
+        <span class="n">binary_path</span> <span class="o">=</span> <span class="n">ntp_nts_tools_dir_path</span> <span class="o">/</span> <span class="s2">&quot;ntpnts_linux_amd64&quot;</span>
+    <span class="k">elif</span> <span class="n">system</span> <span class="o">==</span> <span class="s2">&quot;darwin&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;arm64&quot;</span><span class="p">:</span>
+            <span class="n">binary_path</span> <span class="o">=</span> <span class="n">ntp_nts_tools_dir_path</span> <span class="o">/</span> <span class="s2">&quot;ntpnts_darwin_arm64&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">binary_path</span> <span class="o">=</span> <span class="n">ntp_nts_tools_dir_path</span> <span class="o">/</span> <span class="s2">&quot;ntpnts_darwin_amd64&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported platform: </span><span class="si">{</span><span class="n">system</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">arch</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">binary_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">build_ntp_nts_binary_tool</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">arch</span><span class="p">,</span> <span class="n">binary_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">binary_path</span></div>
+
+
+<div class="viewcode-block" id="build_ntp_nts_binary_tool">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.load_config_data.build_ntp_nts_binary_tool">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_ntp_nts_binary_tool</span><span class="p">(</span><span class="n">system</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">arch</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">binary_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method tries to compile the ntp-nts-tool into a binary</span>
+<span class="sd">    Args:</span>
+<span class="sd">        system (str): The system to build the ntp-nts tool for.</span>
+<span class="sd">        arch (str): The architecture to build the ntp-nts tool for.</span>
+<span class="sd">        binary_path (Path): The path to the ntp-nts binary tool.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Path: The path to the right ntp-nts binary tool for the specified system.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[INFO] </span><span class="si">{</span><span class="n">binary_path</span><span class="si">}</span><span class="s2"> not found. Building it with Go...&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check Go availability</span>
+    <span class="n">go_executable</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;go&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">go_executable</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Go compiler not found in PATH. Install Go or add it to PATH.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ntp_nts_tools_dir_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Build directory does not exist: </span><span class="si">{</span><span class="n">ntp_nts_tools_dir_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">go_executable</span><span class="p">,</span> <span class="s2">&quot;build&quot;</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">binary_path</span><span class="p">)],</span>
+            <span class="n">cwd</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">ntp_nts_tools_dir_path</span><span class="p">),</span>
+            <span class="n">env</span><span class="o">=</span><span class="p">{</span><span class="o">**</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">,</span> <span class="s2">&quot;GOOS&quot;</span><span class="p">:</span> <span class="n">system</span><span class="p">,</span> <span class="s2">&quot;GOARCH&quot;</span><span class="p">:</span> <span class="n">arch</span><span class="p">},</span>
+            <span class="n">check</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to build Go binary for </span><span class="si">{</span><span class="n">system</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">arch</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[INFO] Successfully built </span><span class="si">{</span><span class="n">binary_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">CalledProcessError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to build NTS tool for </span><span class="si">{</span><span class="n">system</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">arch</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">binary_path</span></div>
 
 
 <div class="viewcode-block" id="get_ripe_timeout_per_probe_ms">

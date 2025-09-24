@@ -130,7 +130,26 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>  <span class="c1"># invalid stratum!!</span></div>
 
-
+<div class="viewcode-block" id="translate_ref_id">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ip_utils.translate_ref_id">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">translate_ref_id</span><span class="p">(</span><span class="n">ref_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">stratum</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ip_family</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method translates the reference id (both name or ip case) into a string</span>
+<span class="sd">    Args:</span>
+<span class="sd">        ref_id (int): the reference id of the ntp server.</span>
+<span class="sd">        stratum (int): the stratum level of the ntp server.</span>
+<span class="sd">        ip_family (int): the ip family of the ntp server. (4 or 6)</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        str: the translated reference id.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ip</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">ref_id_to_ip_or_name</span><span class="p">(</span><span class="n">ref_id</span><span class="p">,</span> <span class="n">stratum</span><span class="p">,</span> <span class="n">ip_family</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">name</span>
+    <span class="k">elif</span> <span class="n">ip</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span> <span class="c1">#if both are None, and we have an invalid situation, just return ref_id</span>
+        <span class="c1"># print(&quot;ceva invalid&quot;)</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">ref_id</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="get_ip_family">
 <a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ip_utils.get_ip_family">[docs]</a>
@@ -423,6 +442,29 @@
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="c1"># It failed. Return the original IP address</span>
         <span class="k">return</span> <span class="n">client_ip</span></div>
+
+
+<div class="viewcode-block" id="try_converting_ip_to_domain_name">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ip_utils.try_converting_ip_to_domain_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">try_converting_ip_to_domain_name</span><span class="p">(</span><span class="n">server_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    It tries to get the domain name from the IP.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        server_ip (str): The IP to convert.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: The domain name of the IP if possible or the IP address.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span> <span class="c1">#getting PTR record</span>
+        <span class="n">reverse_name</span> <span class="o">=</span> <span class="n">dns</span><span class="o">.</span><span class="n">reversename</span><span class="o">.</span><span class="n">from_address</span><span class="p">(</span><span class="n">server_ip</span><span class="p">)</span>
+        <span class="n">answer</span> <span class="o">=</span> <span class="n">dns</span><span class="o">.</span><span class="n">resolver</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">reverse_name</span><span class="p">,</span> <span class="s1">&#39;PTR&#39;</span><span class="p">)</span>
+        <span class="n">domain_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">answer</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">domain_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">domain_name</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># It failed. Return the original IP address</span>
+        <span class="k">return</span> <span class="n">server_ip</span></div>
 
 
 <div class="viewcode-block" id="is_private_ip">

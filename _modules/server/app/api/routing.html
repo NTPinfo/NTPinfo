@@ -81,6 +81,9 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">starlette.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTMLResponse</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.validate</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_ip_address</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.AdvancedSettings</span><span class="w"> </span><span class="kn">import</span> <span class="n">AdvancedSettings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.nts_check</span><span class="w"> </span><span class="kn">import</span> <span class="n">perform_nts_measurement_domain_name</span><span class="p">,</span> <span class="n">perform_nts_measurement_ip</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.load_config_data</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_rate_limit_per_client_ip</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.RipeMeasurementResponse</span><span class="w"> </span><span class="kn">import</span> <span class="n">RipeResult</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.NtpMeasurementResponse</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeasurementResponse</span>
@@ -294,6 +297,62 @@
         <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Sever error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span></div>
 
 
+
+<span class="c1"># NTS API</span>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">&quot;/measurements/nts/&quot;</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;Perform a live NTS measurement&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Compute a live NTS synchronization measurement for a specified server.</span>
+
+<span class="s2">- Accepts an IP or domain name.</span>
+<span class="s2">- Returns data about the measurement</span>
+<span class="s2">- It would NOT be used on the main page. Currently it is experimental.</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">MeasurementResponse</span><span class="p">,</span>
+    <span class="n">responses</span><span class="o">=</span><span class="p">{</span>
+        <span class="mi">200</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Measurement successfully initiated&quot;</span><span class="p">},</span>
+        <span class="mi">400</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Invalid server address&quot;</span><span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">get_rate_limit_per_client_ip</span><span class="p">())</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">perform_and_read_nts_measurement</span><span class="p">(</span><span class="n">payload</span><span class="p">:</span> <span class="n">MeasurementRequest</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
+                                    <span class="n">session</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This API will perform an NTS measurement on the specified server.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        payload (MeasurementRequest):</span>
+<span class="sd">            A Pydantic model from which we need:</span>
+<span class="sd">                - server (str): IP address (IPv4/IPv6) or domain name of the NTP server.</span>
+<span class="sd">                - ipv6_measurement (bool): True if the type of IPs that we want to measure is IPv6. False otherwise.</span>
+<span class="sd">        request (Request): The Request object that gives you the IP of the client.</span>
+<span class="sd">        session (Session): The currently active database session.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        JSONResponse: A json response containing an analysis of the NTS measurement.</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        HTTPException: 400 - If the `server` field is empty or no response.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">server</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">server</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">server</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Either &#39;ip&#39; or &#39;dn&#39; must be provided.&quot;</span><span class="p">)</span>
+    <span class="n">wanted_ip_type</span> <span class="o">=</span> <span class="mi">6</span> <span class="k">if</span> <span class="n">payload</span><span class="o">.</span><span class="n">ipv6_measurement</span> <span class="k">else</span> <span class="mi">4</span>
+    <span class="n">wanted_ip_type</span> <span class="o">=</span> <span class="n">override_desired_ip_type_if_input_is_ip</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">)</span>
+    <span class="c1"># build the settings</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="n">AdvancedSettings</span><span class="p">()</span>
+    <span class="n">settings</span><span class="o">.</span><span class="n">wanted_ip_type</span> <span class="o">=</span> <span class="n">wanted_ip_type</span>
+
+    <span class="n">ans</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">is_ip_address</span><span class="p">(</span><span class="n">server</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># domain name case</span>
+        <span class="n">ans</span> <span class="o">=</span> <span class="n">perform_nts_measurement_domain_name</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ans</span> <span class="o">=</span> <span class="n">perform_nts_measurement_ip</span><span class="p">(</span><span class="n">server</span><span class="p">)</span>
+        <span class="c1"># add this warning to make things clear (It is hard to try to find the right domain name of an IP address)</span>
+        <span class="n">ans</span><span class="p">[</span><span class="s2">&quot;warning_ip&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;NTS measurements on IPs cannot check TLS certificate.&quot;</span>
+    <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+        <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+        <span class="n">content</span><span class="o">=</span><span class="n">ans</span><span class="p">)</span>
+
+<span class="c1"># RIPE APIs</span>
 
 <div class="viewcode-block" id="trigger_ripe_measurement">
 <a class="viewcode-back" href="../../../../server.app.api.routing.html#server.app.api.routing.trigger_ripe_measurement">[docs]</a>

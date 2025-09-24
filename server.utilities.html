@@ -615,6 +615,29 @@ If the stratum is greater than 255, then we have an invalid stratum.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.translate_ref_id">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">translate_ref_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stratum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_family</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#translate_ref_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.translate_ref_id" title="Link to this definition"></a></dt>
+<dd><p>This method translates the reference id (both name or ip case) into a string
+:type ref_id: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
+:param ref_id: the reference id of the ntp server.
+:type ref_id: int
+:type stratum: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
+:param stratum: the stratum level of the ntp server.
+:type stratum: int
+:type ip_family: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
+:param ip_family: the ip family of the ntp server. (4 or 6)
+:type ip_family: int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the translated reference id.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="server.app.utils.ip_utils.try_converting_ip">
 <span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">try_converting_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#try_converting_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.try_converting_ip" title="Link to this definition"></a></dt>
 <dd><p>This method tries to convert an IPv4 into IPv6 or an IPv6 into an IPv4 using reverse DNS from dnspython.
@@ -635,9 +658,49 @@ It only works if there is a configured PTR record + AAAA record.</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.try_converting_ip_to_domain_name">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">try_converting_ip_to_domain_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server_ip</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#try_converting_ip_to_domain_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.try_converting_ip_to_domain_name" title="Link to this definition"></a></dt>
+<dd><p>It tries to get the domain name from the IP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>server_ip</strong> (<em>str</em>) – The IP to convert.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The domain name of the IP if possible or the IP address.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-server.app.utils.load_config_data">
 <span id="methods-used-for-fetching-data-from-the-config-file"></span><h2>Methods used for fetching data from the config file<a class="headerlink" href="#module-server.app.utils.load_config_data" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.build_ntp_nts_binary_tool">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">build_ntp_nts_binary_tool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">binary_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#build_ntp_nts_binary_tool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.build_ntp_nts_binary_tool" title="Link to this definition"></a></dt>
+<dd><p>This method tries to compile the ntp-nts-tool into a binary
+:type system: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
+:param system: The system to build the ntp-nts tool for.
+:type system: str
+:type arch: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
+:param arch: The architecture to build the ntp-nts tool for.
+:type arch: str
+:type binary_path: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>
+:param binary_path: The path to the ntp-nts binary tool.
+:type binary_path: Path</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The path to the right ntp-nts binary tool for the specified system.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="server.app.utils.load_config_data.check_geolite_account_id_and_key">
 <span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">check_geolite_account_id_and_key</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#check_geolite_account_id_and_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.check_geolite_account_id_and_key" title="Link to this definition"></a></dt>
@@ -841,6 +904,22 @@ It returns None if no IPv6 EDNS server is available.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.load_config_data.get_right_ntp_nts_binary_tool_for_your_os">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.load_config_data.</span></span><span class="sig-name descname"><span class="pre">get_right_ntp_nts_binary_tool_for_your_os</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/load_config_data.html#get_right_ntp_nts_binary_tool_for_your_os"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.load_config_data.get_right_ntp_nts_binary_tool_for_your_os" title="Link to this definition"></a></dt>
+<dd><p>We use some binary tools to perform NTS measurements and analyse NTP versions. You need the one that
+is compatible with your operating system.
+:param none:</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The path to the right ntp-nts binary tool for the specified system.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1057,6 +1136,29 @@ the IP not being found, it returns None.</p>
 </section>
 <section id="module-server.app.utils.perform_measurements">
 <span id="business-logic-for-the-measurement-engine"></span><h2>Business logic for the measurement engine<a class="headerlink" href="#module-server.app.utils.perform_measurements" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.perform_measurements.analyze_supported_ntp_versions">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.perform_measurements.</span></span><span class="sig-name descname"><span class="pre">analyze_supported_ntp_versions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/perform_measurements.html#analyze_supported_ntp_versions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.perform_measurements.analyze_supported_ntp_versions" title="Link to this definition"></a></dt>
+<dd><p>This method analyzes supported NTP versions for the specified server. It will provide an analysis on each NTP version
+from NTPv1 to NTPv5 (draft). (no NTS in this method)
+Each NTP version analysis will have a “confidence” (0-&gt;100) that says how much this server thinks the NTP server supports each versions.
+For example, if it truly supports an NTP version, the confidence will be 100.
+:type server: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
+:param server: The server to analyze (domain name or IP address).
+:type server: str
+:type settings: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">AdvancedSettings</span></code></span>
+:param settings: The settings to use for the analysis.
+:type settings: AdvancedSettings</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A dictionary containing an analysis on each NTP versions.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="server.app.utils.perform_measurements.convert_ntp_response_to_measurement">
 <span class="sig-prename descclassname"><span class="pre">server.app.utils.perform_measurements.</span></span><span class="sig-name descname"><span class="pre">convert_ntp_response_to_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_ip_str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntp_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/perform_measurements.html#convert_ntp_response_to_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.perform_measurements.convert_ntp_response_to_measurement" title="Link to this definition"></a></dt>

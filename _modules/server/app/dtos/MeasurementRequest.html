@@ -72,7 +72,7 @@
              
   <h1>Source code for server.app.dtos.MeasurementRequest</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">model_validator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Self</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Self</span><span class="p">,</span> <span class="n">Optional</span>
 
 
 <div class="viewcode-block" id="MeasurementRequest">
@@ -87,6 +87,8 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">server</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">ipv6_measurement</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># ntpv5_draft: Optional[str] = None #it will look like this</span>
 
 <div class="viewcode-block" id="MeasurementRequest.validate_after">
 <a class="viewcode-back" href="../../../../server.app.dtos.html#server.app.dtos.MeasurementRequest.MeasurementRequest.validate_after">[docs]</a>
