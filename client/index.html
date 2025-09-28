@@ -2,9 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./src/assets/NTPinfo.png" />
+    <link rel="icon" type="image/png" href="./src/assets/NTPinfo.png" id="favicon" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NTPinfo</title>
+    <script>
+      function updateFavicon() {
+        const favicon = document.getElementById('favicon');
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+          favicon.href = './src/assets/NTPinfoDark.png';
+        } else {
+          favicon.href = './src/assets/NTPinfo.png';
+        }
+      }
+      updateFavicon();
+      if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', updateFavicon);
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
