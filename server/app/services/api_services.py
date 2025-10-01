@@ -1,9 +1,16 @@
+import pprint
+import time
+
 from sqlalchemy.orm import Session
 
+from server.app.dtos.AdvancedSettings import AdvancedSettings
+from server.app.utils.nts_check import perform_nts_measurement_ip
+from server.app.dtos.full_ntp_measurement import FullMeasurementIP, NTPVersions
 from server.app.utils.ip_utils import get_ip_family, ref_id_to_ip_or_name
 from server.app.utils.location_resolver import get_asn_for_ip
 from server.app.utils.ip_utils import is_this_ip_anycast
-from server.app.utils.perform_measurements import perform_ntp_measurement_domain_name_list
+from server.app.utils.perform_measurements import perform_ntp_measurement_domain_name_list, \
+    analyze_supported_ntp_versions
 from server.app.utils.ip_utils import get_server_ip
 from server.app.models.CustomError import InputError, RipeMeasurementError, DNSError
 from server.app.utils.load_config_data import get_nr_of_measurements_for_jitter
@@ -268,6 +275,60 @@ def measure(server: str, wanted_ip_type: int, session: Session, client_ip: Optio
         print("Performing measurement error message:", e)
         return None
 
+def complete_this_measurement(measurement_id, settings: AdvancedSettings) -> None:
+
+    # if the measurement_id is not in the database, then this method does nothing.
+    print(f"starting...{measurement_id}")
+
+    from server.app.db_config import _SessionLocal
+
+    db = _SessionLocal()
+    try:
+        m = db.query(FullMeasurementIP).filter_by(id_m_ip=measurement_id).first()
+        if not m:
+            return
+        server_ip = ""
+        m.status = "starting"
+        db.commit()
+        # adding NTS
+        # m.status = "adding nts"
+        # db.commit()
+        # nts_ans = perform_nts_measurement_ip(server_ip)
+        # adding NTP versions analysis
+        m.status = "adding NTP versions analysis"
+        db.commit()
+        ntpv_ans = analyze_supported_ntp_versions(server_ip, settings)
+        pprint.pprint(ntpv_ans)
+        ntp_vs = NTPVersions(ntpv1_supported_conf=ntpv_ans["ntpv1_supported_confidence"],
+                              ntpv2_supported_conf=ntpv_ans["ntpv2_supported_confidence"],
+                              ntpv3_supported_conf=ntpv_ans["ntpv3_supported_confidence"],
+                              ntpv4_supported_conf=ntpv_ans["ntpv4_supported_confidence"],
+                              ntpv5_supported_conf=ntpv_ans["ntpv5_supported_confidence"],
+                              analysis_v1=ntpv_ans["ntpv1_analysis"],
+                              analysis_v2=ntpv_ans["ntpv2_analysis"],
+                              analysis_v3=ntpv_ans["ntpv3_analysis"],
+                              analysis_v4=ntpv_ans["ntpv4_analysis"],
+                              analysis_v5=ntpv_ans["ntpv5_analysis"],
+                              # and add the results
+                              )
+        # add it to the database
+        db.add(ntp_vs)
+        db.commit()
+        db.refresh(ntp_vs)
+        m.id_vs = ntp_vs.id_vs
+        db.commit()
+        # Do sub-measurements (this is where you call your existing measure() / nts_check / ripe stuff)
+        #time.sleep(7)  # simulate long process
+
+        # Update with results
+        m.status = "finished"
+        db.commit()
+    except Exception as e:
+        print("Completing measurement error message:", e)
+        db.rollback()
+    finally:
+        db.close()
+    print(f"done...{measurement_id}")
 
 def fetch_historic_data_with_timestamps(server: str, start: datetime, end: datetime, session: Session) -> list[
     NtpMeasurement]:

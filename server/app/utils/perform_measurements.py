@@ -172,6 +172,8 @@ def analyze_supported_ntp_versions(server: str, settings: AdvancedSettings) -> d
     from NTPv1 to NTPv5 (draft). (no NTS in this method)
     Each NTP version analysis will have a "confidence" (0->100) that says how much this server thinks the NTP server supports each versions.
     For example, if it truly supports an NTP version, the confidence will be 100.
+    This method returns a dictionary with the whole structure (5*3=15 variables)
+    with each field (even though some NTP version failed, you will still have all the fields).
     Args:
         server (str): The server to analyze (domain name or IP address).
         settings (AdvancedSettings): The settings to use for the analysis.
@@ -188,7 +190,19 @@ def analyze_supported_ntp_versions(server: str, settings: AdvancedSettings) -> d
     try:
         binary_nts_tool = get_right_ntp_nts_binary_tool_for_your_os()
     except Exception as e:
-        ntp_versions_analysis["summary"] = "NTP versions test could not be performed (binary tool not available)."
+        # ntp_versions_analysis["error"] = "NTP versions test could not be performed (binary tool not available)."
+        # This is the case when the tool fails, because python was not able to find it or run it.
+        ntp_versions_analysis["ntpv1_supported_confidence"] = "0"
+        ntp_versions_analysis["ntpv2_supported_confidence"] = "0"
+        ntp_versions_analysis["ntpv3_supported_confidence"] = "0"
+        ntp_versions_analysis["ntpv4_supported_confidence"] = "0"
+        ntp_versions_analysis["ntpv5_supported_confidence"] = "0"
+
+        ntp_versions_analysis["ntpv1_analysis"] = "NTP version failed. Binary tool not available"
+        ntp_versions_analysis["ntpv2_analysis"] = "NTP version failed. Binary tool not available"
+        ntp_versions_analysis["ntpv3_analysis"] = "NTP version failed. Binary tool not available"
+        ntp_versions_analysis["ntpv4_analysis"] = "NTP version failed. Binary tool not available"
+        ntp_versions_analysis["ntpv5_analysis"] = "NTP version failed. Binary tool not available"
         return ntp_versions_analysis
 
     if settings.analyse_all_ntp_versions: # more easily and reliable if we want all NTP versions

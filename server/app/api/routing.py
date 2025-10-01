@@ -1,4 +1,4 @@
-from fastapi import HTTPException, APIRouter, Request, Depends
+from fastapi import HTTPException, APIRouter, Request, Depends, BackgroundTasks
 from fastapi.responses import HTMLResponse
 
 from datetime import datetime, timezone
@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from starlette.responses import HTMLResponse
 
+from server.app.dtos.full_ntp_measurement import FullMeasurementIP
 from server.app.utils.validate import is_ip_address
 from server.app.dtos.AdvancedSettings import AdvancedSettings
 from server.app.utils.nts_check import perform_nts_measurement_domain_name, perform_nts_measurement_ip
@@ -22,7 +23,8 @@ from server.app.utils.ip_utils import ip_to_str
 from server.app.models.CustomError import InputError, RipeMeasurementError
 from server.app.db_config import get_db
 
-from server.app.services.api_services import fetch_ripe_data, override_desired_ip_type_if_input_is_ip
+from server.app.services.api_services import fetch_ripe_data, override_desired_ip_type_if_input_is_ip, \
+    complete_this_measurement
 from server.app.services.api_services import perform_ripe_measurement
 from server.app.rate_limiter import limiter
 from server.app.dtos.MeasurementRequest import MeasurementRequest
@@ -216,6 +218,126 @@ async def read_historic_data_time(server: str,
         raise HTTPException(status_code=500, detail=f"Sever error: {str(e)}.")
 
 
+# @router.post(
+#     "/measurements/exp/",
+#     summary="Perform a live  measurement",
+#     description="""
+# Perform a very complex NTP measurement
+# """,
+#     response_model=MeasurementResponse,
+#     responses={
+#         200: {"description": "Measurement successfully initiated"},
+#         400: {"description": "Invalid server address"},
+#     }
+# )
+# @limiter.limit(get_rate_limit_per_client_ip())
+# async def instantiate_full_measurement(payload: MeasurementRequest, request: Request, background_tasks: BackgroundTasks,
+#                                     session: Session = Depends(get_db)) -> JSONResponse:
+#     """
+#     work in progress
+#     """
+#     server = payload.server
+#     if len(server) == 0:
+#         raise HTTPException(status_code=400, detail="Either 'ip' or 'dn' must be provided.")
+#
+#     wanted_ip_type = 6 if payload.ipv6_measurement else 4
+#     # Override it if we received an IP, not a domain name:
+#     # In case the input is an IP and not a domain name, then "wanted_ip_type" will be ignored and the IP type of the IP will be used.
+#     wanted_ip_type = override_desired_ip_type_if_input_is_ip(server, wanted_ip_type)
+#
+#     # for IPv6 measurements, we need to communicate using IPv6. (we need to have the same protocol as the target)
+#     this_server_ip_strict = get_server_ip(wanted_ip_type)  # strict means we want exactly this type
+#     if this_server_ip_strict is None:  # which means we cannot perform this type of NTP measurements from our server
+#         raise HTTPException(status_code=422,
+#                             detail=f"Our server cannot perform IPv{wanted_ip_type} measurements currently. Try the other IP type.")
+#
+#     # get the client IP (the same type as wanted_ip_type)
+#     client_ip: Optional[str] = client_ip_fetch(request=request, wanted_ip_type=wanted_ip_type)
+#     # build the settings
+#     settings = AdvancedSettings()
+#     settings.wanted_ip_type = wanted_ip_type
+#     settings.analyse_all_ntp_versions = True
+#
+#     # create the measurement
+#     measurement = FullMeasurementIP(
+#         status="pending",
+#         measurement_type="ntpv4",  # or ntpv5, depending
+#         created_at_time=datetime.now(timezone.utc),
+#         settings=str({"wanted_ip_type": wanted_ip_type})  # can also be JSON
+#     )
+#     session.add(measurement)
+#     session.commit()
+#     session.refresh(measurement)
+#     # add content to this measurement
+#     background_tasks.add_task(complete_this_measurement, measurement.id_m_ip, settings)
+#     return JSONResponse(
+#         status_code=200,
+#         content={
+#             "id": measurement.id_m_ip,
+#             "status": measurement.status
+#         })
+@router.post(
+    "/measurements/results/",
+    summary="get measurement results",
+    description="",
+    response_model=MeasurementResponse,
+    responses={
+        200: {"description": "Measurement successfully initiated"},
+        400: {"description": "Invalid server address"},
+    }
+)
+@limiter.limit(get_rate_limit_per_client_ip())
+async def post_full_measurement(request: Request, background_tasks: BackgroundTasks,
+                                    session: Session = Depends(get_db)) -> JSONResponse:
+    settings = AdvancedSettings()
+    settings.wanted_ip_type = 4
+    settings.analyse_all_ntp_versions = True
+    server = "216.239.35.12"
+    # create empty measurement
+    measurement = FullMeasurementIP(
+        status="pending",
+        server_ip=server,
+        measurement_type="ntpv4",
+        created_at_time=datetime.now(timezone.utc),
+        settings=str({"wanted_ip_type": 4})
+    )
+    session.add(measurement)
+    session.commit()
+    session.refresh(measurement)
+    # add content to this measurement
+    background_tasks.add_task(complete_this_measurement, measurement.id_m_ip, settings)
+    return JSONResponse(
+        status_code=200,
+        content={
+            "id": measurement.id_m_ip,
+            "status": measurement.status
+        })
+@router.get(
+    "/measurements/results/{m_id}",
+    summary="get measurement results",
+    description="""
+Perform a very complex NTP measurement
+""",
+    response_model=MeasurementResponse,
+    responses={
+        200: {"description": "Measurement successfully initiated"},
+        400: {"description": "Invalid server address"},
+    }
+)
+@limiter.limit(get_rate_limit_per_client_ip())
+async def poll_full_measurement(m_id: str, request: Request, background_tasks: BackgroundTasks,
+                                    session: Session = Depends(get_db)) -> JSONResponse:
+    m = session.query(FullMeasurementIP).filter_by(id_m_ip=m_id).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="Measurement not found")
+    return JSONResponse(
+        status_code=200,
+        content={
+        "id": m.id_m_ip,
+        "status": m.status,
+        "measurement_type": m.measurement_type,
+        "settings": m.settings
+    })
 # NTS API
 @router.post(
     "/measurements/nts/",

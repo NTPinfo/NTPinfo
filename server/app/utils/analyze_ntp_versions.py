@@ -217,6 +217,8 @@ def analyse_ntpv2_response(m_data: dict) -> Tuple[str, str]:
         r: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
         m_data["ref_id"] = r
     except Exception as e:
+        if conf == "100": # if we thought it was a good server
+            conf = "75"
         analysis = analysis + f"\nCould not translate ref id"
     return conf, analysis
 
@@ -246,7 +248,8 @@ def analyse_ntpv3_response(m_data: dict) -> Tuple[str, str]:
         r: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
         m_data["ref_id"] = r
     except Exception as e:
-        conf = "75"
+        if conf == "100": # if we thought it was a good server
+            conf = "75"
         analysis = analysis + f"\nCould not translate ref id"
     return conf, analysis
 
@@ -269,13 +272,15 @@ def analyse_ntpv4_response(m_data: dict) -> Tuple[str, str]:
         analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get("version")}"
     else:
         # the result says it is NTPv4.
-        conf = "75 or 100"
+        conf = "100"
         analysis = f"It supports NTPv4."
     # update ref id to a string
     try:
         r: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
         m_data["ref_id"] = r
     except Exception as e:
+        if conf == "100": # if we thought it was a good server
+            conf = "75"
         analysis = analysis + f"\nCould not translate ref id"
     return conf, analysis
 def analyse_ntpv5_response(m_data: dict) -> Tuple[str, str]:
