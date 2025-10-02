@@ -3,8 +3,9 @@ import time
 
 from sqlalchemy.orm import Session
 
+from server.app.dtos.full_ntp_measurement import NTSMeasurement, FullMeasurementDN, NTPv4Measurement, NTPv5Measurement
 from server.app.dtos.AdvancedSettings import AdvancedSettings
-from server.app.utils.nts_check import perform_nts_measurement_ip
+from server.app.utils.nts_check import perform_nts_measurement_ip, perform_nts_measurement_domain_name
 from server.app.dtos.full_ntp_measurement import FullMeasurementIP, NTPVersions
 from server.app.utils.ip_utils import get_ip_family, ref_id_to_ip_or_name
 from server.app.utils.location_resolver import get_asn_for_ip
@@ -275,60 +276,186 @@ def measure(server: str, wanted_ip_type: int, session: Session, client_ip: Optio
         print("Performing measurement error message:", e)
         return None
 
-def complete_this_measurement(measurement_id, settings: AdvancedSettings) -> None:
+def complete_this_measurement_dn(measurement_id, settings: AdvancedSettings) -> None:
 
+    # very important: keep this "import" here (Because it needs to be imported after SQLAlchemy has been initialized)
+    from server.app.db_config import _SessionLocal
     # if the measurement_id is not in the database, then this method does nothing.
     print(f"starting...{measurement_id}")
 
-    from server.app.db_config import _SessionLocal
 
     db = _SessionLocal()
+    status = ""
     try:
-        m = db.query(FullMeasurementIP).filter_by(id_m_ip=measurement_id).first()
+        m: FullMeasurementDN | None = db.query(FullMeasurementDN).filter_by(id_m_dn=measurement_id).first()
         if not m:
             return
-        server_ip = ""
-        m.status = "starting"
-        db.commit()
-        # adding NTS
-        # m.status = "adding nts"
+        server = str(m.server)
+        # m.status = "starting"
+        # status = m.status
         # db.commit()
-        # nts_ans = perform_nts_measurement_ip(server_ip)
-        # adding NTP versions analysis
-        m.status = "adding NTP versions analysis"
+
+        # NTS PART
+        # no check because it is done by default
+        m.status = "adding nts"
+        status = m.status
         db.commit()
-        ntpv_ans = analyze_supported_ntp_versions(server_ip, settings)
-        pprint.pprint(ntpv_ans)
-        ntp_vs = NTPVersions(ntpv1_supported_conf=ntpv_ans["ntpv1_supported_confidence"],
-                              ntpv2_supported_conf=ntpv_ans["ntpv2_supported_confidence"],
-                              ntpv3_supported_conf=ntpv_ans["ntpv3_supported_confidence"],
-                              ntpv4_supported_conf=ntpv_ans["ntpv4_supported_confidence"],
-                              ntpv5_supported_conf=ntpv_ans["ntpv5_supported_confidence"],
-                              analysis_v1=ntpv_ans["ntpv1_analysis"],
-                              analysis_v2=ntpv_ans["ntpv2_analysis"],
-                              analysis_v3=ntpv_ans["ntpv3_analysis"],
-                              analysis_v4=ntpv_ans["ntpv4_analysis"],
-                              analysis_v5=ntpv_ans["ntpv5_analysis"],
-                              # and add the results
-                              )
-        # add it to the database
-        db.add(ntp_vs)
+        settings.wanted_ip_type = -1
+        nts_ans = perform_nts_measurement_domain_name(server, settings)
+        nts = NTSMeasurement(succeeded=bool(nts_ans["NTS succeeded"]), analysis=nts_ans["NTS analysis"],
+                             nts_data=nts_ans, measurement_type="ntpv4") # currently we only support NTS with ntpv4
+        db.add(nts)
+        db.flush()
+        m.id_nts = nts.id_nts
         db.commit()
-        db.refresh(ntp_vs)
-        m.id_vs = ntp_vs.id_vs
-        db.commit()
-        # Do sub-measurements (this is where you call your existing measure() / nts_check / ripe stuff)
-        #time.sleep(7)  # simulate long process
+        db.refresh(nts)
+
+        # NTP Versions PART
+        # check the settings -> to see if the client wants NTP version analysis:
+        if settings.analyse_all_ntp_versions or len(settings.ntp_versions_to_analyze) > 0:
+            # adding NTP versions analysis
+            m.status = "adding NTP versions analysis"
+            status = m.status
+            db.commit()
+            ntp_vs = add_ntp_versions_to_db_measurement(db, server, settings, m)
+
 
         # Update with results
         m.status = "finished"
+        status = m.status
         db.commit()
     except Exception as e:
         print("Completing measurement error message:", e)
-        db.rollback()
+        try:
+            db.rollback()
+            m = db.query(FullMeasurementDN).filter_by(id_m_dn=measurement_id).first()
+            if m and m.status != "finished":
+                m.status = "failed"
+                db.commit()
+        except Exception as inner:
+            print("Error while marking failed:", inner)
     finally:
         db.close()
-    print(f"done...{measurement_id}")
+
+
+
+def complete_this_measurement_ip(measurement_id, settings: AdvancedSettings, part_of_dn_measurement=False) -> None:
+
+    # very important: keep this "import" here (Because it needs to be imported after SQLAlchemy has been initialized)
+    from server.app.db_config import _SessionLocal
+    # if the measurement_id is not in the database, then this method does nothing.
+    print(f"starting...{measurement_id}")
+
+    db = _SessionLocal()
+    status = ""
+    try:
+        m: FullMeasurementIP | None = db.query(FullMeasurementIP).filter_by(id_m_ip=measurement_id).first()
+        if not m:
+            return
+        server_ip = str(m.server_ip)
+        # m.status = "starting"
+        # status = m.status
+        # db.commit()
+
+        # NTS PART
+        # if it is part of a dn measurement, you need to check if the client really wants on each IP address.
+        if part_of_dn_measurement == False or settings.nts_analysis_on_each_ip:
+            m.status = "adding nts"
+            status = m.status
+            db.commit()
+            nts_ans = perform_nts_measurement_ip(server_ip)
+            nts = NTSMeasurement(succeeded=bool(nts_ans["NTS succeeded"]), analysis=nts_ans["NTS analysis"],
+                                 nts_data=nts_ans, measurement_type="ntpv4")  # currently we only support NTS with ntpv4
+            db.add(nts)
+            db.flush()
+            m.id_nts = nts.id_nts
+            db.commit()
+            db.refresh(nts)
+
+        # NTP Versions PART
+        # check the settings -> to see if the client wants NTP version analysis:
+        # if is not part of a dn measurement, then check as usual. But if it is, then "analyse_all_ntp_versions" and "ntp_versions_to_analyze"
+        # are settings for the domain name. We need to look at "nts_analysis_on_each_ip" to see if the client also wants to apply the
+        # settings on the IP addresses
+        if part_of_dn_measurement == False or settings.ntp_analysis_on_each_ip:
+            if settings.analyse_all_ntp_versions or len(settings.ntp_versions_to_analyze) > 0:
+                # adding NTP versions analysis
+                m.status = "adding NTP versions analysis"
+                status = m.status
+                db.commit()
+                ntp_vs = add_ntp_versions_to_db_measurement(db, server_ip, settings, m)
+
+        # Update with results
+        m.status = "finished"
+        status = m.status
+        db.commit()
+    except Exception as e:
+        print("Completing measurement error message:", e)
+        try:
+            db.rollback()
+            m = db.query(FullMeasurementIP).filter_by(id_m_ip=measurement_id).first()
+            if m and m.status != "finished":
+                m.status = "failed"
+                db.commit()
+        except Exception as inner:
+            print("Error while marking failed:", inner)
+    finally:
+        db.close()
+
+def add_ntp_versions_to_db_measurement(db, server: str, settings: AdvancedSettings, m: FullMeasurementDN | FullMeasurementIP):
+    # it is ok if this method will throw an error
+    # if m is None:
+    #     return None
+    ntpv_ans = analyze_supported_ntp_versions(server, settings)
+    #if there is an error with our tool (not the results from our tool! Important difference)
+    if ntpv_ans.get("error") is not None:
+        return None
+    pprint.pprint(ntpv_ans)
+    ntp_vs = NTPVersions(ntpv1_supported_conf=ntpv_ans.get("ntpv1_supported_confidence"),
+                         ntpv2_supported_conf=ntpv_ans.get("ntpv2_supported_confidence"),
+                         ntpv3_supported_conf=ntpv_ans.get("ntpv3_supported_confidence"),
+                         ntpv4_supported_conf=ntpv_ans.get("ntpv4_supported_confidence"),
+                         ntpv5_supported_conf=ntpv_ans.get("ntpv5_supported_confidence"),
+                         analysis_v1=ntpv_ans.get("ntpv1_analysis"),
+                         analysis_v2=ntpv_ans.get("ntpv2_analysis"),
+                         analysis_v3=ntpv_ans.get("ntpv3_analysis"),
+                         analysis_v4=ntpv_ans.get("ntpv4_analysis"),
+                         analysis_v5=ntpv_ans.get("ntpv5_analysis"),
+                         # we will add the results immediately
+                         )
+    db.add(ntp_vs)
+    db.flush()  # assign ID without commit yet
+
+    # a local method
+    def add_ntp_measurement(result_key, model_class):
+        result = ntpv_ans.get(result_key)
+        if result and not result.get("error"):
+            measurement = model_class(ntpv_data=result) if model_class == NTPv4Measurement else model_class(
+                ntpv5_data=result)
+            db.add(measurement)
+            db.flush()
+            return measurement
+        return None
+
+    # insert measurements
+    ntpv1 = add_ntp_measurement("ntpv1_m_result", NTPv4Measurement)
+    ntpv2 = add_ntp_measurement("ntpv2_m_result", NTPv4Measurement)
+    ntpv3 = add_ntp_measurement("ntpv3_m_result", NTPv4Measurement)
+    ntpv4 = add_ntp_measurement("ntpv4_m_result", NTPv4Measurement)
+    ntpv5 = add_ntp_measurement("ntpv5_m_result", NTPv5Measurement)
+
+    # link them if they exist
+    if ntpv1: ntp_vs.id_v4_1 = ntpv1.id_v
+    if ntpv2: ntp_vs.id_v4_2 = ntpv2.id_v
+    if ntpv3: ntp_vs.id_v4_3 = ntpv3.id_v
+    if ntpv4: ntp_vs.id_v4_4 = ntpv4.id_v
+    if ntpv5: ntp_vs.id_v5 = ntpv5.id_v5
+
+    m.id_vs = ntp_vs.id_vs
+    db.commit()
+    db.refresh(ntp_vs)
+    return ntp_vs
+
 
 def fetch_historic_data_with_timestamps(server: str, start: datetime, end: datetime, session: Session) -> list[
     NtpMeasurement]:

@@ -19,12 +19,13 @@ class AdvancedSettings(BaseModel):
     """
     wanted_ip_type: int = 4
     measurement_type: str = "ntpv4"  # nts, ntpv1, ntpv2 ... ntpv5
-
+    # NTP versions
     ntp_versions_to_analyze: list[str] = []
     analyse_all_ntp_versions: bool = True
-
     ntp_versions_analysis_on_each_ip: bool = False
+    # NTS (by default, it is done on the server/ip you input, but not on each IP)
     nts_analysis_on_each_ip: bool = False
+
     ntpv5_draft: str = ""
     # custom parameters for RIPE probes
     custom_probes_asn: str = ""

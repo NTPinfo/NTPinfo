@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from starlette.responses import HTMLResponse
 
-from server.app.dtos.full_ntp_measurement import FullMeasurementIP
+from server.app.dtos.full_ntp_measurement import FullMeasurementIP, FullMeasurementDN
 from server.app.utils.validate import is_ip_address
 from server.app.dtos.AdvancedSettings import AdvancedSettings
 from server.app.utils.nts_check import perform_nts_measurement_domain_name, perform_nts_measurement_ip
@@ -24,7 +24,7 @@ from server.app.models.CustomError import InputError, RipeMeasurementError
 from server.app.db_config import get_db
 
 from server.app.services.api_services import fetch_ripe_data, override_desired_ip_type_if_input_is_ip, \
-    complete_this_measurement
+     complete_this_measurement_dn
 from server.app.services.api_services import perform_ripe_measurement
 from server.app.rate_limiter import limiter
 from server.app.dtos.MeasurementRequest import MeasurementRequest
@@ -292,24 +292,44 @@ async def post_full_measurement(request: Request, background_tasks: BackgroundTa
     settings = AdvancedSettings()
     settings.wanted_ip_type = 4
     settings.analyse_all_ntp_versions = True
-    server = "216.239.35.12"
+    server = "time.cloudflare.com"#"216.239.35.12"
+
+    prefix_id = ""
+    id = ""
     # create empty measurement
-    measurement = FullMeasurementIP(
-        status="pending",
-        server_ip=server,
-        measurement_type="ntpv4",
-        created_at_time=datetime.now(timezone.utc),
-        settings=str({"wanted_ip_type": 4})
-    )
-    session.add(measurement)
-    session.commit()
-    session.refresh(measurement)
-    # add content to this measurement
-    background_tasks.add_task(complete_this_measurement, measurement.id_m_ip, settings)
+    if is_ip_address(server):
+        measurement = FullMeasurementIP(
+            status="pending",
+            server_ip=server,
+            measurement_type="ntpv4",
+            created_at_time=datetime.now(timezone.utc),
+            settings=str({"wanted_ip_type": 4})
+        )
+        prefix_id = "ip"
+        session.add(measurement)
+        session.commit()
+        session.refresh(measurement)
+        id = measurement.id_m_ip,
+        # add content to this measurement
+        background_tasks.add_task(complete_this_measurement_dn, id, settings)
+    else:
+        measurement = FullMeasurementDN(
+            status="pending",
+            server=server,
+            created_at_time=datetime.now(timezone.utc),
+            settings=str({"wanted_ip_type": 4})
+        )
+        prefix_id = "dn"
+        session.add(measurement)
+        session.commit()
+        session.refresh(measurement)
+        id = measurement.id_m_dn
+        # add content to this measurement
+        background_tasks.add_task(complete_this_measurement_dn, id, settings)
     return JSONResponse(
         status_code=200,
         content={
-            "id": measurement.id_m_ip,
+            "id": prefix_id+str(id),
             "status": measurement.status
         })
 @router.get(
@@ -327,15 +347,15 @@ Perform a very complex NTP measurement
 @limiter.limit(get_rate_limit_per_client_ip())
 async def poll_full_measurement(m_id: str, request: Request, background_tasks: BackgroundTasks,
                                     session: Session = Depends(get_db)) -> JSONResponse:
-    m = session.query(FullMeasurementIP).filter_by(id_m_ip=m_id).first()
+    m = session.query(FullMeasurementDN).filter_by(id_m_dn=m_id).first()
     if not m:
         raise HTTPException(status_code=404, detail="Measurement not found")
     return JSONResponse(
         status_code=200,
         content={
-        "id": m.id_m_ip,
+        "id": m.id_m_dn,
         "status": m.status,
-        "measurement_type": m.measurement_type,
+       # "measurement_type": m.measurement_type,
         "settings": m.settings
     })
 # NTS API

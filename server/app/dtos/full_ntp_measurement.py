@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, CheckConstraint, JSON, SmallInteger
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, CheckConstraint, JSON, SmallInteger, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from server.app.models.Base import Base
@@ -15,8 +15,16 @@ class NTPv5Measurement(Base):
     id_v5 = Column(Integer, primary_key=True, index=True)
     draft_name = Column(String, nullable=True)
     ntpv5_data = Column(JSON, nullable=False)
-    analysis = Column(Text)
+    analysis = Column(Text, nullable=True)
 
+class NTSMeasurement(Base):
+    __tablename__ = "nts_measurement"
+
+    id_nts = Column(Integer, primary_key=True, autoincrement=True)
+    succeeded = Column(Boolean, nullable=False, default=False)
+    measurement_type = Column(String(10), nullable=False)  # "ntpv4" or "ntpv5"
+    nts_data = Column(JSON, nullable=True)
+    analysis = Column(Text, nullable=True)
 
 class NTPVersions(Base):
     __tablename__ = "ntp_versions"
