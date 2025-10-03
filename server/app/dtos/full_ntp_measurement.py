@@ -35,7 +35,13 @@ class NTPVersions(Base):
     id_v4_4 = Column(Integer, ForeignKey("ntpv4_measurement.id_v"), nullable=True)
     id_v5 = Column(Integer, ForeignKey("ntpv5_measurement.id_v5"), nullable=True)
 
-    ntpv1_supported_conf = Column(SmallInteger, nullable=True)
+    ntpv1_response_version = Column(String(7), nullable=True) # ex: ntpv1
+    ntpv2_response_version = Column(String(7), nullable=True)
+    ntpv3_response_version = Column(String(7), nullable=True)
+    ntpv4_response_version = Column(String(7), nullable=True)
+    ntpv5_response_version = Column(String(7), nullable=True)
+
+    ntpv1_supported_conf = Column(SmallInteger, nullable=True) # ex: 0 or 100
     ntpv2_supported_conf = Column(SmallInteger, nullable=True)
     ntpv3_supported_conf = Column(SmallInteger, nullable=True)
     ntpv4_supported_conf = Column(SmallInteger, nullable=True)
@@ -57,9 +63,10 @@ class FullMeasurementIP(Base):
     id_nts = Column(Integer, nullable=True)
     id_vs = Column(Integer, ForeignKey("ntp_versions.id_vs"), nullable=True)
     id_ripe = Column(Integer, nullable=True)
-    measurement_type = Column(String, CheckConstraint("measurement_type IN ('ntpv4','ntpv5')"))
-    id_v_measurement = Column(Integer, nullable=True)
-    settings = Column(JSON, nullable=True)
+    response_version = Column(String(12), nullable=True) # the ntp version
+    response_error = Column(String, nullable=True) # if there is an error when performing the main measurement
+    id_v_measurement = Column(Integer, nullable=True) #if there was an error, this is null
+    settings = Column(JSON, nullable=True) # it will contain the requested versions
 
 
 class FullMeasurementDN(Base):
@@ -71,6 +78,7 @@ class FullMeasurementDN(Base):
     id_nts = Column(Integer, nullable=True)
     id_vs = Column(Integer, ForeignKey("ntp_versions.id_vs"), nullable=True)
     id_ripe = Column(Integer, nullable=True)
+    response_error = Column(String, nullable=True) # if there is an error with the input
     settings = Column(JSON, nullable=True)
 
     ip_measurements = relationship("FullMeasurementIP",
