@@ -207,7 +207,7 @@ def analyse_ntpv2_response(m_data: dict) -> Tuple[str, str]:
         analysis = str(m_data.get("error"))
     elif str(m_data.get("version")) != "2":  # does not have the same version
         conf = "50"
-        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get("version")}"
+        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get("version")}. Wanted ntpv2."
     else:
         # the result says it is NTPv2.
         conf = "100"
@@ -238,7 +238,7 @@ def analyse_ntpv3_response(m_data: dict) -> Tuple[str, str]:
         analysis = str(m_data.get("error"))
     elif str(m_data.get("version")) != "3":  # does not have the same version
         conf = "50"
-        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get("version")}"
+        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get("version")}. Wanted ntpv3."
     else:
         # the result says it is NTPv3.
         conf = "100"
@@ -269,7 +269,7 @@ def analyse_ntpv4_response(m_data: dict) -> Tuple[str, str]:
         analysis = str(m_data.get("error"))
     elif str(m_data.get("version")) != "4":  # does not have the same version
         conf = "50"
-        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get("version")}"
+        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get("version")}. Wanted ntpv4."
     else:
         # the result says it is NTPv4.
         conf = "100"
@@ -283,6 +283,7 @@ def analyse_ntpv4_response(m_data: dict) -> Tuple[str, str]:
             conf = "75"
         analysis = analysis + f"\nCould not translate ref id"
     return conf, analysis
+
 def analyse_ntpv5_response(m_data: dict) -> Tuple[str, str]:
     """
     This method analyses the data according to NTPv5 version
@@ -299,7 +300,7 @@ def analyse_ntpv5_response(m_data: dict) -> Tuple[str, str]:
         analysis = str(m_data.get("error"))
     elif str(m_data.get("version")) != "5":  # does not have the same version
         conf = "50"
-        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get("version")}"
+        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get("version")}. Wanted ntpv5."
     else:
         # the result says it is NTPv5. But the content could still be NTPv4
         try:
