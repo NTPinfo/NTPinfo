@@ -6,7 +6,7 @@ from server.app.dtos.full_ntp_measurement import FullMeasurementIP, NTSMeasureme
 
 
 # methods to convert to JSON (dict)
-def ntpv4_or_v5_measurement_to_dict(db, m_id: Optional[int], m_version: Optional[str]) -> Optional[dict]:
+def ntpv4_or_v5_measurement_to_dict(db: Session, m_id: Optional[int], m_version: Optional[str]) -> Optional[dict]:
     """
     This method converts an NTPVersions object to a dict/JSON. We need to choose in which format is the measurement.
     NTPv1, NTPv2, NTPv3, NTPv4 are in NTPv4 format, but NTPv5 has its own format.
@@ -20,11 +20,11 @@ def ntpv4_or_v5_measurement_to_dict(db, m_id: Optional[int], m_version: Optional
     if m_id is None or m_version is None:
         return None
     if m_version == "ntpv5":
-        m: Optional[NTPv5Measurement] = db.query(NTPv5Measurement).filter_by(id_v5=m_id).first()
-        return ntpv5_measurement_to_dict(m)
+        m_v: Optional[NTPv5Measurement] = db.query(NTPv5Measurement).filter_by(id=m_id).first()
+        return ntpv5_measurement_to_dict(m_v)
     else: # other versions will be saved in NTPv4 format
-        m: Optional[NTPv4Measurement] = db.query(NTPv4Measurement).filter_by(id_v=m_id).first()
-        return ntpv4_measurement_to_dict(m)
+        m_v5: Optional[NTPv4Measurement] = db.query(NTPv4Measurement).filter_by(id=m_id).first()
+        return ntpv4_measurement_to_dict(m_v5)
 
 def ntpv4_measurement_to_dict(m: Optional[NTPv4Measurement]) -> Optional[dict]:
     """
@@ -38,7 +38,7 @@ def ntpv4_measurement_to_dict(m: Optional[NTPv4Measurement]) -> Optional[dict]:
     if m is None:
         return None
     return {
-        "id": m.id_v,
+        "id": m.id,
         "ntp_data": m.ntpv_data,
     }
 
@@ -53,7 +53,7 @@ def ntpv5_measurement_to_dict(m: Optional[NTPv5Measurement]) -> Optional[dict]:
     if m is None:
         return None
     return {
-        "id": m.id_v5,
+        "id": m.id,
         "draft_name": m.draft_name,
         "ntpv5_analysis": m.analysis,
         "ntpv5_data": m.ntpv5_data,
@@ -135,13 +135,12 @@ def full_measurement_ip_to_dict(db: Session, m: FullMeasurementIP, part_of_dn_me
         "status": m.status,
         "server": m.server_ip,
         "created_at_time": m.created_at_time.isoformat() if m.created_at_time else None,
-        "main_measurement": ntpv4_or_v5_measurement_to_dict(db, m.id_v_measurement, m.response_version),
+        "main_measurement": ntpv4_or_v5_measurement_to_dict(db, m.id_main_measurement, m.response_version),
         "nts": nts_measurement_to_dict(m_nts),
         "ntp_versions": ntp_versions_to_dict(db, m_vs),
         # "id_ripe": m.id_ripe, # this ID does not exist (it is null) if it was part of a domain name measurement
         "response_version": m.response_version,
         "response_error": m.response_error,
-        # "settings": m.settings if isinstance(m.settings, dict) else getattr(m.settings, "dict", lambda: m.settings)(),
     }
     if not part_of_dn_measurement:
         ans["id_ripe"] = m.id_ripe
@@ -181,7 +180,7 @@ def full_measurement_dn_to_dict(db: Session, m: FullMeasurementDN) -> dict:
 # here are the methods that get partial results. It does not search deeper to translate IDs. You will need to query them separately.
 # This is in order to improve the performance.
 
-def partial_measurement_ip_to_dict(db, m: FullMeasurementIP, part_of_dn_measurement: bool=False) -> dict:
+def partial_measurement_ip_to_dict(db: Session, m: FullMeasurementIP, part_of_dn_measurement: bool=False) -> dict:
     """
     This method converts a FullMeasurementIP object to a dict/JSON, but it does not fully take the whole object.
     It just takes the main results and then for the other parts, it provides the IDs to you.
@@ -199,20 +198,18 @@ def partial_measurement_ip_to_dict(db, m: FullMeasurementIP, part_of_dn_measurem
         "status": m.status,
         "server": m.server_ip,
         "created_at_time": m.created_at_time.isoformat() if m.created_at_time else None,
-        "main_measurement": ntpv4_or_v5_measurement_to_dict(db, m.id_v_measurement, m.response_version),
+        "main_measurement": ntpv4_or_v5_measurement_to_dict(db, m.id_main_measurement, m.response_version),
         "nts": nts_measurement_to_dict(m_nts),
         "ntp_versions_id": m.id_vs,   # here it is just the ID
-        #"id_ripe": m.id_ripe,
         "response_version": m.response_version,
         "response_error": m.response_error,
-        #"settings": m.settings if isinstance(m.settings, dict) else getattr(m.settings, "dict", lambda: m.settings)(),
     }
     if not part_of_dn_measurement:
         ans["id_ripe"] = m.id_ripe
         ans["settings"] = m.settings if isinstance(m.settings, dict) else getattr(m.settings, "dict", lambda: m.settings)(),
     return ans
 
-def partial_measurement_dn_to_dict(db, m: FullMeasurementDN) -> dict:
+def partial_measurement_dn_to_dict(db: Session, m: FullMeasurementDN) -> dict:
     """
     This method converts a FullMeasurementDN object to a dict/JSON, but it does not fully take the whole object.
     It just takes the main results and then for the other parts, it provides the IDs to you.
@@ -236,6 +233,6 @@ def partial_measurement_dn_to_dict(db, m: FullMeasurementDN) -> dict:
         "response_error": m.response_error,
         "settings": m.settings if isinstance(m.settings, dict) else getattr(m.settings, "dict", lambda: m.settings)(),
         "ip_measurements_ids": [
-            "ip"+m_ip.id_m_ip for m_ip in m.ip_measurements  # a list with the measurements_ip IDs that have been finished!
+            "ip"+str(m_ip.id_m_ip) for m_ip in m.ip_measurements  # a list with the measurements_ip IDs that have been finished!
         ]
     }
