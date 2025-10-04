@@ -376,7 +376,7 @@ async def trigger_full_measurement(payload: MeasurementRequest, request: Request
     return JSONResponse(
         status_code=200,
         content={
-            "id": prefix_id+str(id),
+            "id": prefix_id + str(id),
             "status": status
         })
 @router.get(
@@ -494,6 +494,15 @@ Query the server and get the the IDs of the parts of the measurement structure. 
 )
 @limiter.limit(get_rate_limit_per_client_ip())
 async def poll_ntp_versions(m_id: Optional[int], request: Request, session: Session = Depends(get_db)) -> JSONResponse:
+    """
+    This API (method) polls the ntp versions part of the measurement.
+    Args:
+        m_id (Optional[int]): The ID of the ntp version part of the measurement.
+        request (Request): The Request object that gives you the IP of the client.
+        session (Session): The currently active database session.
+    Returns:
+        JSONResponse: The response object that gives you the details of this server.
+    """
     if m_id is None:
         raise HTTPException(status_code=400, detail="Invalid measurement ID.")
     m_vs: Optional[NTPVersions] = session.query(NTPVersions).filter_by(id_vs=m_id).first()

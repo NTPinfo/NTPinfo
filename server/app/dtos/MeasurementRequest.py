@@ -23,7 +23,7 @@ class MeasurementRequest(BaseModel):
     server: str
     ipv6_measurement: bool = False
     wanted_ip_type: int = 4
-    measurement_type: str
+    measurement_type: Optional[str] = None
     # NTP versions
     ntp_versions_to_analyze: Optional[list[str]] = None
     analyse_all_ntp_versions: Optional[bool] = None
