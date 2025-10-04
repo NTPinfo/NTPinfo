@@ -49,11 +49,11 @@ class NTPVersions(Base):
     ntpv4_supported_conf: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
     ntpv5_supported_conf: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
 
-    analysis_v1: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    analysis_v2: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    analysis_v3: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    analysis_v4: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    analysis_v5: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    ntpv1_analysis: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    ntpv2_analysis: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    ntpv3_analysis: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    ntpv4_analysis: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    ntpv5_analysis: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
 
 class FullMeasurementIP(Base):
@@ -66,9 +66,10 @@ class FullMeasurementIP(Base):
     id_vs: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("ntp_versions.id_vs"), nullable=True)
     id_ripe: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     response_version: Mapped[Optional[str]] = mapped_column(String(12), nullable=True) # the ntp version
+    ripe_error: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     response_error: Mapped[Optional[str]] = mapped_column(String, nullable=True) # if there is an error when performing the main measurement
     id_main_measurement: Mapped[Optional[int]] = mapped_column(Integer, nullable=True) #if there was an error, this is null
-    settings = Column(JSON, nullable=True) # it will contain the requested versions
+    settings: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True) # it will contain the requested versions
 
 
 class FullMeasurementDN(Base):
@@ -80,8 +81,9 @@ class FullMeasurementDN(Base):
     id_nts: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     id_vs: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("ntp_versions.id_vs"), nullable=True)
     id_ripe: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    ripe_error: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     response_error: Mapped[Optional[str]] = mapped_column(String, nullable=True) # if there is an error with the input
-    settings = Column(JSON, nullable=True)
+    settings: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
     ip_measurements = relationship("FullMeasurementIP",
                                    secondary="dn_ip_link",

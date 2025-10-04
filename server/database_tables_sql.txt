@@ -1,0 +1,78 @@
+CREATE TABLE ntpv4_measurement (
+    id SERIAL PRIMARY KEY,
+    ntpv_data JSONB NOT NULL
+);
+
+CREATE TABLE ntpv5_measurement (
+    id SERIAL PRIMARY KEY,
+    draft_name TEXT,
+    ntpv5_data JSONB NOT NULL,
+    analysis TEXT
+);
+CREATE TABLE nts_measurement (
+    id_nts SERIAL PRIMARY KEY,
+    succeeded BOOLEAN NOT NULL DEFAULT FALSE,
+    analysis TEXT NOT NULL,
+    measurement_type VARCHAR(10) NOT NULL,
+    nts_data JSON,
+);
+CREATE TABLE ntp_versions (
+    id_vs SERIAL PRIMARY KEY,
+
+    id_v4_1 INT REFERENCES ntpv4_measurement(id),
+    id_v4_2 INT REFERENCES ntpv4_measurement(id),
+    id_v4_3 INT REFERENCES ntpv4_measurement(id),
+    id_v4_4 INT REFERENCES ntpv4_measurement(id),
+    id_v5   INT REFERENCES ntpv5_measurement(id),
+    ntpv1_response_version VARCHAR(7),
+    ntpv2_response_version VARCHAR(7),
+    ntpv3_response_version VARCHAR(7),
+    ntpv4_response_version VARCHAR(7),
+    ntpv5_response_version VARCHAR(7),
+    ntpv1_supported_conf SMALLINT,
+    ntpv2_supported_conf SMALLINT,
+    ntpv3_supported_conf SMALLINT,
+    ntpv4_supported_conf SMALLINT,
+    ntpv5_supported_conf SMALLINT,
+    ntpv1_analysis TEXT,
+    ntpv2_analysis TEXT,
+    ntpv3_analysis TEXT,
+    ntpv4_analysis TEXT,
+    ntpv5_analysis TEXT
+);
+CREATE TABLE full_ntp_measurement_ip (
+    id_m_ip SERIAL PRIMARY KEY,
+    status VARCHAR NOT NULL,
+    server_ip TEXT NOT NULL,
+    created_at_time TIMESTAMPTZ DEFAULT now(),
+    id_nts INT REFERENCES nts_measurement(id_nts),
+    id_vs INT REFERENCES ntp_versions(id_vs),
+    id_ripe INT,
+    response_version VARCHAR(12),
+    response_error VARCHAR,
+    id_main_measurement INT,
+    settings JSONB
+);
+
+CREATE TABLE full_ntp_measurement_dn (
+    id_m_dn SERIAL PRIMARY KEY,
+    status VARCHAR NOT NULL,
+    server TEXT NOT NULL,
+    created_at_time TIMESTAMPTZ DEFAULT now(),
+    id_nts INT REFERENCES nts_measurement(id_nts),
+    id_vs INT REFERENCES ntp_versions(id_vs),
+    id_ripe INT,
+    response_error VARCHAR,
+    settings JSONB
+);
+
+CREATE TABLE dn_ip_link (
+    id_dn INT REFERENCES full_ntp_measurement_dn(id_m_dn),
+    id_ip INT REFERENCES full_ntp_measurement_ip(id_m_ip),
+    PRIMARY KEY (id_dn, id_ip)
+);
+
+-- Helpful indices for polling
+CREATE INDEX idx_full_ip_status ON full_ntp_measurement_ip(status);
+CREATE INDEX idx_full_dn_status ON full_ntp_measurement_dn(status);
+CREATE INDEX idx_versions_v4 ON ntp_versions(id_v4_1, id_v4_2, id_v4_3, id_v4_4);

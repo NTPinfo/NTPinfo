@@ -318,17 +318,17 @@ def check_and_get_settings(input_settings: MeasurementRequest) -> AdvancedSettin
     # main measurement settings
     if settings.wanted_ip_type != 4 and settings.wanted_ip_type != 6:
         raise InputError("wanted_ip_type must be 4 or 6")
-    if not settings.measurement_type in ["ntpv1","ntpv2","ntpv3","ntpv4", "ntpv5"]:
+    if not settings.measurement_type in ["ntpv1", "ntpv2", "ntpv3", "ntpv4", "ntpv5"]:
         raise InputError("measurement_type must be ntpv1 or ntpv2 or ntpv3 or ntpv4 or ntpv5")
     # ntp versions settings
-    if not settings.measurement_type in ["ntpv1","ntpv2","ntpv3","ntpv4", "ntpv5"]:
+    if not settings.measurement_type in ["ntpv1", "ntpv2", "ntpv3", "ntpv4", "ntpv5"]:
         raise InputError("measurement_type must be either ntpv1 or ntpv2 or ntpv3 or ntpv4 or ntpv5")
     settings.ntp_versions_to_analyze = list(set(settings.ntp_versions_to_analyze))
     for v in settings.ntp_versions_to_analyze:
-        if not settings.measurement_type in ["ntpv1","ntpv2","ntpv3","ntpv4", "ntpv5"]:
+        if not settings.measurement_type in ["ntpv1", "ntpv2", "ntpv3", "ntpv4", "ntpv5"]:
             raise InputError(f"the version {v} must be either ntpv1 or ntpv2 or ntpv3 or ntpv4 or ntpv5")
     if settings.analyse_all_ntp_versions: # if they want to measure everything, override the list
-        settings.ntp_versions_to_analyze = ["ntpv1","ntpv2","ntpv3","ntpv4", "ntpv5"]
+        settings.ntp_versions_to_analyze = ["ntpv1", "ntpv2", "ntpv3", "ntpv4", "ntpv5"]
 
     # RIPE part
     if settings.custom_client_ip != "" and is_ip_address(settings.custom_client_ip) is None:
@@ -360,7 +360,7 @@ def complete_this_measurement_dn(measurement_id: int, dn_ips: list[str], setting
         m.status = "starting RIPE measurement"
         status = m.status
         db.commit()
-        # actual RIPE part...
+        add_ripe_measurement_id_to_db_measurement(db, server, settings, m)
         # delete the custom client ip
         settings.custom_client_ip = ""
 
@@ -458,7 +458,7 @@ def complete_this_measurement_ip(measurement_id: int, settings: AdvancedSettings
             m.status = "starting RIPE measurement"
             status = m.status
             db.commit()
-            # actual RIPE part...
+            add_ripe_measurement_id_to_db_measurement(db, server_ip, settings, m)
             # delete the custom client ip
             settings.custom_client_ip = ""
         # MAIN NTP measurement PART
@@ -472,6 +472,7 @@ def complete_this_measurement_ip(measurement_id: int, settings: AdvancedSettings
             status = m.status
             db.commit()
             nts_ans = perform_nts_measurement_ip(server_ip)
+            nts_ans["warning_ip"] = "NTS measurements on IPs cannot check TLS certificate."
             # do not add from_dn here because NTS is special and KE of NTS may change the IP
             nts = NTSMeasurement(succeeded=bool(nts_ans["NTS succeeded"]), analysis=nts_ans["NTS analysis"],
                                  nts_data=nts_ans, measurement_type="ntpv4")  # currently we only support NTS with ntpv4
@@ -608,11 +609,11 @@ def add_ntp_versions_to_db_measurement(db: Session, server: str, settings: Advan
                              ntpv3_supported_conf=ntpv_ans.get("ntpv3_supported_confidence"),
                              ntpv4_supported_conf=ntpv_ans.get("ntpv4_supported_confidence"),
                              ntpv5_supported_conf=ntpv_ans.get("ntpv5_supported_confidence"),
-                             analysis_v1=ntpv_ans.get("ntpv1_analysis"),
-                             analysis_v2=ntpv_ans.get("ntpv2_analysis"),
-                             analysis_v3=ntpv_ans.get("ntpv3_analysis"),
-                             analysis_v4=ntpv_ans.get("ntpv4_analysis"),
-                             analysis_v5=ntpv_ans.get("ntpv5_analysis"),
+                             ntpv1_analysis=ntpv_ans.get("ntpv1_analysis"),
+                             ntpv2_analysis=ntpv_ans.get("ntpv2_analysis"),
+                             ntpv3_analysis=ntpv_ans.get("ntpv3_analysis"),
+                             ntpv4_analysis=ntpv_ans.get("ntpv4_analysis"),
+                             ntpv5_analysis=ntpv_ans.get("ntpv5_analysis"),
                              # we will add the results immediately (and their response versions)
                              )
         db.add(ntp_vs)
@@ -668,6 +669,32 @@ def add_ntp_versions_to_db_measurement(db: Session, server: str, settings: Advan
         db.refresh(ntp_vs)
     except Exception as e:
         print(f"error in adding ntp versions: {e}")
+
+def add_ripe_measurement_id_to_db_measurement(db: Session, server: str, settings: AdvancedSettings,
+                                              m: FullMeasurementDN | FullMeasurementIP) -> None:
+    """
+    This method perform the RIPE measurement.
+    It marked the ripe_error field if there are any errors.
+    Args:
+        db (Session): A connection to the database (we need to query some IDs)
+        server (str): The server (IP address or domain name)
+        settings (AdvancedSettings): The settings to use.
+        m (FullMeasurementDN | FullMeasurementIP): Full measurement IP object.
+    Returns:
+        None: nothing
+    """
+    try:
+        ripe_measurement_id = perform_ripe_measurement(server, settings.custom_client_ip, settings.wanted_ip_type)
+        m.id_ripe = int(ripe_measurement_id)
+        db.commit()
+    except RipeMeasurementError as e:
+        print("RIPE measurement initiated, but it failed. RIPE has a problem: ", e)
+        m.ripe_error = "RIPE measurement initiated, but it failed. RIPE has a problem."
+        db.commit()
+    except Exception as e:
+        print("Failed to initiate RIPE measurement: ", e)
+        m.ripe_error = "Failed to initiate RIPE measurement"
+        db.commit()
 
 def fetch_historic_data_with_timestamps(server: str, start: datetime, end: datetime, session: Session) -> list[
     NtpMeasurement]:

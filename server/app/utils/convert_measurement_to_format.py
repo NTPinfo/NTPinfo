@@ -90,27 +90,27 @@ def ntp_versions_to_dict(db: Session, m: Optional[NTPVersions]) -> Optional[dict
         return None
     ans: dict = {
         "ntpv1_supported_conf": m.ntpv1_supported_conf,
-        "ntpv1_analysis": m.analysis_v1,
+        "ntpv1_analysis": m.ntpv1_analysis,
         "ntpv1_response_version": m.ntpv1_response_version,
         "ntpv1_data": ntpv4_or_v5_measurement_to_dict(db, m.id_v4_1, m.ntpv1_response_version),
 
         "ntpv2_supported_conf": m.ntpv2_supported_conf,
-        "ntpv2_analysis": m.analysis_v2,
+        "ntpv2_analysis": m.ntpv2_analysis,
         "ntpv2_response_version": m.ntpv2_response_version,
         "ntpv2_data": ntpv4_or_v5_measurement_to_dict(db, m.id_v4_2, m.ntpv2_response_version),
 
         "ntpv3_supported_conf": m.ntpv3_supported_conf,
-        "ntpv3_analysis": m.analysis_v3,
+        "ntpv3_analysis": m.ntpv3_analysis,
         "ntpv3_response_version": m.ntpv3_response_version,
         "ntpv3_data": ntpv4_or_v5_measurement_to_dict(db, m.id_v4_3, m.ntpv3_response_version),
 
         "ntpv4_supported_conf": m.ntpv4_supported_conf,
-        "ntpv4_analysis": m.analysis_v4,
+        "ntpv4_analysis": m.ntpv4_analysis,
         "ntpv4_response_version": m.ntpv4_response_version,
         "ntpv4_data": ntpv4_or_v5_measurement_to_dict(db, m.id_v4_4, m.ntpv4_response_version),
 
         "ntpv5_supported_conf": m.ntpv5_supported_conf,
-        "ntpv5_analysis": m.analysis_v5,
+        "ntpv5_analysis": m.ntpv5_analysis,
         "ntpv5_response_version": m.ntpv5_response_version,
         "ntpv5_data": ntpv4_or_v5_measurement_to_dict(db, m.id_v5, m.ntpv5_response_version),
     }
@@ -130,8 +130,8 @@ def full_measurement_ip_to_dict(db: Session, m: FullMeasurementIP, part_of_dn_me
     """
     m_nts: Optional[NTSMeasurement] = db.query(NTSMeasurement).filter_by(id_nts=m.id_nts).first()
     m_vs: Optional[NTPVersions] = db.query(NTPVersions).filter_by(id_vs=m.id_vs).first()
-    ans: dict= {
-        "search_id": "ip"+str(m.id_m_ip),
+    ans: dict = {
+        "search_id": "ip" + str(m.id_m_ip),
         "status": m.status,
         "server": m.server_ip,
         "created_at_time": m.created_at_time.isoformat() if m.created_at_time else None,
@@ -140,11 +140,12 @@ def full_measurement_ip_to_dict(db: Session, m: FullMeasurementIP, part_of_dn_me
         "ntp_versions": ntp_versions_to_dict(db, m_vs),
         # "id_ripe": m.id_ripe, # this ID does not exist (it is null) if it was part of a domain name measurement
         "response_version": m.response_version,
+        "ripe_error": m.ripe_error,
         "response_error": m.response_error,
     }
     if not part_of_dn_measurement:
         ans["id_ripe"] = m.id_ripe
-        ans["settings"] = m.settings if isinstance(m.settings, dict) else getattr(m.settings, "dict", lambda: m.settings)(),
+        ans["settings"] = m.settings
     return ans
 
 def full_measurement_dn_to_dict(db: Session, m: FullMeasurementDN) -> dict:
@@ -170,11 +171,12 @@ def full_measurement_dn_to_dict(db: Session, m: FullMeasurementDN) -> dict:
         "nts": nts_measurement_to_dict(m_nts),
         "ntp_versions": ntp_versions_to_dict(db, m_vs),
         "id_ripe": m.id_ripe,
+        "ripe_error": m.ripe_error,
         "response_error": m.response_error,
-        "settings": m.settings if isinstance(m.settings, dict) else getattr(m.settings, "dict", lambda: m.settings)(),
         "ip_measurements": [
             full_measurement_ip_to_dict(db, m_ip, True) for m_ip in m.ip_measurements
-        ]
+        ],
+        "settings": m.settings
     }
 
 # here are the methods that get partial results. It does not search deeper to translate IDs. You will need to query them separately.
@@ -194,7 +196,7 @@ def partial_measurement_ip_to_dict(db: Session, m: FullMeasurementIP, part_of_dn
     """
     m_nts: Optional[NTSMeasurement] = db.query(NTSMeasurement).filter_by(id_nts=m.id_nts).first()
     ans: dict = {
-        "search_id": "ip"+str(m.id_m_ip),
+        "search_id": "ip" + str(m.id_m_ip),
         "status": m.status,
         "server": m.server_ip,
         "created_at_time": m.created_at_time.isoformat() if m.created_at_time else None,
@@ -202,11 +204,12 @@ def partial_measurement_ip_to_dict(db: Session, m: FullMeasurementIP, part_of_dn
         "nts": nts_measurement_to_dict(m_nts),
         "ntp_versions_id": m.id_vs,   # here it is just the ID
         "response_version": m.response_version,
+        "ripe_error": m.ripe_error,
         "response_error": m.response_error,
     }
     if not part_of_dn_measurement:
         ans["id_ripe"] = m.id_ripe
-        ans["settings"] = m.settings if isinstance(m.settings, dict) else getattr(m.settings, "dict", lambda: m.settings)(),
+        ans["settings"] = m.settings
     return ans
 
 def partial_measurement_dn_to_dict(db: Session, m: FullMeasurementDN) -> dict:
@@ -230,9 +233,10 @@ def partial_measurement_dn_to_dict(db: Session, m: FullMeasurementDN) -> dict:
         "nts": nts_measurement_to_dict(m_nts), # this is too small to only send the id.
         "ntp_versions_id": m.id_vs,   # here it is just the ID
         "id_ripe": m.id_ripe,
-        "response_error": m.response_error,
-        "settings": m.settings if isinstance(m.settings, dict) else getattr(m.settings, "dict", lambda: m.settings)(),
         "ip_measurements_ids": [
-            "ip"+str(m_ip.id_m_ip) for m_ip in m.ip_measurements  # a list with the measurements_ip IDs that have been finished!
-        ]
+            "ip" + str(m_ip.id_m_ip) for m_ip in m.ip_measurements  # a list with the measurements_ip IDs that have been finished!
+        ],
+        "ripe_error": m.ripe_error,
+        "response_error": m.response_error,
+        "settings": m.settings #if isinstance(m.settings, dict) else getattr(m.settings, "dict", lambda: m.settings)()
     }

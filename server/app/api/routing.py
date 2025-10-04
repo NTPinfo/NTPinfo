@@ -307,9 +307,9 @@ async def trigger_full_measurement(payload: MeasurementRequest, request: Request
         background_tasks (BackgroundTasks): BackgroundTasks object for making the background task.
         session (Session): The currently active database session.
     """
-    server = payload.server
-    if len(server) == 0:
-        raise HTTPException(status_code=400, detail="Either 'ip' or 'dn' must be provided.")
+    server = sanitize_string(payload.server)
+    if server is None or len(server) == 0:
+        raise HTTPException(status_code=400, detail="Either an 'ip' or a 'dn' must be provided.")
 
     # settings = AdvancedSettings()
     # settings.wanted_ip_type = 4
@@ -336,7 +336,6 @@ async def trigger_full_measurement(payload: MeasurementRequest, request: Request
     prefix_id = ""
     id = ""
     status = ""
-    server = sanitize_string(server)
     # create empty measurement
     if is_ip_address(server):
         full_m_ip = FullMeasurementIP(
@@ -398,8 +397,18 @@ It is recommended to be used only on FullMeasurementIP, or only when the measure
 @limiter.limit(get_rate_limit_per_client_ip())
 async def poll_full_measurement(m_id: Optional[str], request: Request, background_tasks: BackgroundTasks,
                                     session: Session = Depends(get_db)) -> JSONResponse:
+    """
+    This method polls the whole measurement.
+    Args:
+        m_id (Optional[str]): The id of the full ntp measurement on ip or dn.
+        request (Request): Request object for making the limiter work.
+        background_tasks (BackgroundTasks): BackgroundTasks object for making the background task.
+        session (Session): The currently active database session.
+    Returns:
+        JSONResponse: Response object.
+    """
     result_dict: dict = {}
-    m_id= sanitize_string(m_id)
+    m_id = sanitize_string(m_id)
     if m_id is None or len(m_id) == 0:
         raise HTTPException(status_code=400, detail="Invalid measurement ID.")
     if m_id.startswith("ip"):
@@ -437,6 +446,15 @@ Query the server and get the the IDs of the parts of the measurement structure. 
 )
 @limiter.limit(get_rate_limit_per_client_ip())
 async def poll_partial_measurement(m_id: Optional[str], request: Request, session: Session = Depends(get_db)) -> JSONResponse:
+    """
+    This method partially polls the measurement.
+    Args:
+        m_id (Optional[str]): The id of the full ntp measurement on ip or dn.
+        request (Request): Request object for making the limiter work.
+        session (Session): The currently active database session.
+    Returns:
+        JSONResponse: Response object.
+    """
     m_id = sanitize_string(m_id)
     if m_id is None or len(m_id) == 0:
         raise HTTPException(status_code=400, detail="Invalid measurement ID.")
@@ -502,6 +520,46 @@ Compute a live NTS synchronization measurement for a specified server.
         400: {"description": "Invalid server address"},
     }
 )
+@router.get(
+    "/measurements/ntpinfo-server-details/{ip_type}",
+    summary="get measurement results",
+    description="""
+Query the server and get the the IDs of the parts of the measurement structure. You need to poll again for more data. 
+""",
+    response_model=MeasurementResponse,
+    responses={
+        200: {"description": "The json data regarding the details of the server"},
+    }
+)
+@limiter.limit(get_rate_limit_per_client_ip())
+async def get_this_server_details(ip_type: Optional[int], request: Request, session: Session = Depends(get_db)) -> JSONResponse:
+    """
+    This method would provide you the details of this server, the NTPinfo server. You will get the location
+    and the IP address, and you can use them into the website's map.
+    Args:
+        ip_type (int): The desired IP type of the server. If not available, you will get the other type.
+        request (Request): The Request object that gives you the IP of the client.
+        session (Session): The currently active database session.
+    Returns:
+        JSONResponse: The response object that gives you the details of this server.
+    """
+    if ip_type is None:
+        ip_type = 4
+    this_server_ip = get_server_ip_if_possible(ip_type)  # it should always return an IP address
+    return JSONResponse(
+        status_code=200,
+        content={
+            "vantage_point_ip": ip_to_str(this_server_ip),
+            "vantage_point_location": {
+                "country_code": get_country_for_ip(ip_to_str(this_server_ip)),
+                "coordinates": get_coordinates_for_ip(ip_to_str(this_server_ip))
+            },
+            "ripe_message": "You can fetch ripe results at /measurements/ripe/{measurement_id}",
+            "ntpv_message": "You can fetch ntp versions analysis results at /measurements/ntp_versions/{m_id}",
+            "full_ntp_message": "You can fetch full ntp results at /measurements/results/{id}"
+        }
+    )
+
 @limiter.limit(get_rate_limit_per_client_ip())
 async def perform_and_read_nts_measurement(payload: MeasurementRequest, request: Request,
                                     session: Session = Depends(get_db)) -> JSONResponse:
