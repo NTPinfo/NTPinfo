@@ -60,17 +60,6 @@ def parse_nts_response_to_dict(content: str) -> dict:
     except Exception as e:
         raise InputError(f"could not parse json {e}")
 
-# def perform_nts_measurement(server: str, settings: AdvancedSettings)\
-#         -> dict[str, str]:
-#     """
-#     Simply a method to combine both domain name and IP
-#     :param server:
-#     :param settings:
-#     :return:
-#     """
-#     if is_ip_address(server) is None: #domain name
-#         return perform_nts_measurement_domain_name(server, settings)
-#     return perform_nts_measurement_ip(server)
 
 def perform_nts_measurement_domain_name(server_domain_name: str, settings: AdvancedSettings)\
         -> dict[str, str]:

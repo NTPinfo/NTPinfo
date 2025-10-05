@@ -73,8 +73,33 @@ def nts_measurement_to_dict(m: Optional[NTSMeasurement]) -> Optional[dict]:
         "nts_id": m.id_nts,
         "nts_succeeded": m.succeeded,
         "nts_analysis": m.analysis,
-        "nts_data": m.nts_data,
+
+        "host": m.host,
+        "measured_server_ip": m.measured_server_ip,
+        "measured_server_port": m.measured_server_port,
+
+        "offset": m.offset,
+        "rtt": m.rtt,
+        "kiss_code": m.kiss_code,
+        "stratum": m.stratum,
+        "poll": m.poll,
         "nts_measurement_version": m.measurement_type,
+
+        "client_sent_time": int(m.client_sent_time) if m.client_sent_time is not None else None,
+        "server_recv_time": int(m.server_recv_time) if m.server_recv_time is not None else None,
+        "server_sent_time": int(m.server_sent_time) if m.server_sent_time is not None else None,
+        "client_recv_time": int(m.client_recv_time) if m.client_recv_time is not None else None,
+        "ref_time": int(m.ref_time) if m.ref_time is not None else None,
+        "leap": m.leap,
+        "mode": m.mode,
+        "version": m.version,
+        "min_error": m.min_error,
+        "precision": m.precision,
+        "root_delay": m.root_delay,
+        "root_disp": m.root_disp,
+        "root_dist": m.root_dist,
+        "ref_id": m.ref_id,
+        "ref_id_raw": m.ref_id_raw
     }
 
 def ntp_versions_to_dict(db: Session, m: Optional[NTPVersions]) -> Optional[dict]:

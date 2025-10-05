@@ -407,8 +407,10 @@ def complete_this_measurement_dn(measurement_id: int, dn_ips: list[str], setting
         status = m.status
         db.commit()
         nts_ans = perform_nts_measurement_domain_name(server, settings)
-        nts = NTSMeasurement(succeeded=bool(nts_ans["NTS succeeded"]), analysis=nts_ans["NTS analysis"],
-                             nts_data=nts_ans, measurement_type="ntpv4") # currently we only support NTS with ntpv4
+
+        nts = NTSMeasurement.from_dict(nts_ans)
+        # nts = NTSMeasurement(succeeded=bool(nts_ans["NTS succeeded"]), analysis=nts_ans["NTS analysis"],
+        #                      nts_data=nts_ans, measurement_type="ntpv4") # currently we only support NTS with ntpv4
         db.add(nts)
         db.flush()
         m.id_nts = nts.id_nts
@@ -491,8 +493,9 @@ def complete_this_measurement_ip(measurement_id: int, settings: AdvancedSettings
             nts_ans = perform_nts_measurement_ip(server_ip)
             nts_ans["warning_ip"] = "NTS measurements on IPs cannot check TLS certificate."
             # do not add from_dn here because NTS is special and KE of NTS may change the IP
-            nts = NTSMeasurement(succeeded=bool(nts_ans["NTS succeeded"]), analysis=nts_ans["NTS analysis"],
-                                 nts_data=nts_ans, measurement_type="ntpv4")  # currently we only support NTS with ntpv4
+            nts = NTSMeasurement.from_dict(nts_ans)
+            # nts = NTSMeasurement(succeeded=bool(nts_ans["NTS succeeded"]), analysis=nts_ans["NTS analysis"],
+            #                      nts_data=nts_ans, measurement_type="ntpv4")  # currently we only support NTS with ntpv4
             db.add(nts)
             db.flush()
             m.id_nts = nts.id_nts

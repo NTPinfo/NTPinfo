@@ -512,23 +512,7 @@ async def poll_ntp_versions(m_id: Optional[int], request: Request, session: Sess
     return JSONResponse(
         status_code=200,
         content=ntp_versions_to_dict(session, m_vs))
-# NTS API
-@router.post(
-    "/measurements/nts/",
-    summary="Perform a live NTS measurement",
-    description="""
-Compute a live NTS synchronization measurement for a specified server.
 
-- Accepts an IP or domain name.
-- Returns data about the measurement
-- It would NOT be used on the main page. Currently it is experimental.
-""",
-    response_model=MeasurementResponse,
-    responses={
-        200: {"description": "Measurement successfully initiated"},
-        400: {"description": "Invalid server address"},
-    }
-)
 @router.get(
     "/measurements/ntpinfo-server-details/{ip_type}",
     summary="get measurement results",
@@ -568,7 +552,23 @@ async def get_this_server_details(ip_type: Optional[int], request: Request, sess
             "full_ntp_message": "You can fetch full ntp results at /measurements/results/{id}"
         }
     )
+# NTS API
+@router.post(
+    "/measurements/nts/",
+    summary="Perform a live NTS measurement",
+    description="""
+Compute a live NTS synchronization measurement for a specified server.
 
+- Accepts an IP or domain name.
+- Returns data about the measurement
+- It would NOT be used on the main page. Currently it is experimental.
+""",
+    response_model=MeasurementResponse,
+    responses={
+        200: {"description": "Measurement successfully initiated"},
+        400: {"description": "Invalid server address"},
+    }
+)
 @limiter.limit(get_rate_limit_per_client_ip())
 async def perform_and_read_nts_measurement(payload: MeasurementRequest, request: Request,
                                     session: Session = Depends(get_db)) -> JSONResponse:
