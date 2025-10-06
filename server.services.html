@@ -94,6 +94,142 @@
 <section id="module-server.app.services.api_services">
 <span id="business-logic-for-the-api"></span><h2>Business logic for the API<a class="headerlink" href="#module-server.app.services.api_services" title="Link to this heading"></a></h2>
 <dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.add_custom_ntp_measurement_ip_to_db_measurement">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">add_custom_ntp_measurement_ip_to_db_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_dn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#add_custom_ntp_measurement_ip_to_db_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.add_custom_ntp_measurement_ip_to_db_measurement" title="Link to this definition"></a></dt>
+<dd><p>This method is used when you performed a full measurement on an IP address.
+If the measurement fails, you will not see why in the full_m.response_error
+:type db: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code></span>
+:param db: A connection to the database (we need to query some IDs)
+:type db: Session
+:type server_ip: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
+:param server_ip: The IP address of the server.
+:type server_ip: str
+:type settings: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">AdvancedSettings</span></code></span>
+:param settings: The settings to use.
+:type settings: AdvancedSettings
+:type full_m: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">FullMeasurementIP</span></code></span>
+:param full_m: Full measurement IP object.
+:type full_m: FullMeasurementIP
+:type from_dn: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>
+:param from_dn: The domain name of this IP address, if available. (it will simplify the</p>
+<blockquote>
+<div><p>process of searching in the db)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nothing</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.add_ntp_measurement">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">add_ntp_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_dn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#add_ntp_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.add_ntp_measurement" title="Link to this definition"></a></dt>
+<dd><p>This method adds the result (NTP measurement) into the database.
+:type db: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code></span>
+:param db: A connection to the database.
+:type db: Session
+:type result: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span>
+:param result: the result of the adding NTP measurement
+:type result: Optional[dict]
+:type settings: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">AdvancedSettings</span></code></span>
+:param settings: the settings to use
+:type settings: AdvancedSettings
+:type from_dn: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>
+:param from_dn: the domain name of this IP address, if available.
+:type from_dn: Optional[str]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A pair of the measurement and its version.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple[Optional[NTPv4Measurement | NTPv5Measurement], Optional[str]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.add_ntp_versions_to_db_measurement">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">add_ntp_versions_to_db_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_dn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#add_ntp_versions_to_db_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.add_ntp_versions_to_db_measurement" title="Link to this definition"></a></dt>
+<dd><p>This method adds the ntp versions analysis to the database and to the measurement.
+If this fails, then the ID for this measurement will be None/Null when the status of the overall
+measurement will be “finished”.
+:type db: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code></span>
+:param db: A connection to the database (we need to query some IDs)
+:type db: Session
+:type server: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
+:param server: The server (IP address or domain name)
+:type server: str
+:type settings: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">AdvancedSettings</span></code></span>
+:param settings: The settings to use.
+:type settings: AdvancedSettings
+:type m: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">FullMeasurementDN</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">FullMeasurementIP</span></code></span>
+:param m: Full measurement IP object.
+:type m: FullMeasurementDN | FullMeasurementIP
+:type from_dn: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>
+:param from_dn: The domain name of this IP address, if available.
+:type from_dn: Optional[str]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nothing</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.add_ripe_measurement_id_to_db_measurement">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">add_ripe_measurement_id_to_db_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#add_ripe_measurement_id_to_db_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.add_ripe_measurement_id_to_db_measurement" title="Link to this definition"></a></dt>
+<dd><p>This method perform the RIPE measurement.
+It marked the ripe_error field if there are any errors.
+:type db: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code></span>
+:param db: A connection to the database (we need to query some IDs)
+:type db: Session
+:type server: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
+:param server: The server (IP address or domain name)
+:type server: str
+:type settings: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">AdvancedSettings</span></code></span>
+:param settings: The settings to use.
+:type settings: AdvancedSettings
+:type m: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">FullMeasurementDN</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">FullMeasurementIP</span></code></span>
+:param m: Full measurement IP object.
+:type m: FullMeasurementDN | FullMeasurementIP</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nothing</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.check_and_get_settings">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">check_and_get_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#check_and_get_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.check_and_get_settings" title="Link to this definition"></a></dt>
+<dd><p>This method takes the parameters that the client inputted. It checks them and it returns the settings.
+:type input_settings: <span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="server.app.dtos.html#server.app.dtos.MeasurementRequest.MeasurementRequest" title="server.app.dtos.MeasurementRequest.MeasurementRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">MeasurementRequest</span></code></a></span>
+:param input_settings: The parameters that the client inputted.
+:type input_settings: MeasurementRequest</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The settings to be used internally in the server. (valid settings)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>AdvancedSettings</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InputError" title="server.app.models.CustomError.InputError"><strong>InputError</strong></a> – If some settings are invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="server.app.services.api_services.check_ripe_measurement_scheduled">
 <span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">check_ripe_measurement_scheduled</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measurement_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#check_ripe_measurement_scheduled"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.check_ripe_measurement_scheduled" title="Link to this definition"></a></dt>
 <dd><p>Check if a RIPE Atlas measurement has been fully scheduled.</p>
@@ -111,6 +247,48 @@ all requested probes have been scheduled for the given RIPE measurement ID.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If the RIPE API returns an error or unexpected data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.check_settings">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">check_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#check_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.check_settings" title="Link to this definition"></a></dt>
+<dd><p>This method checks the values in the settings.
+:type settings: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">AdvancedSettings</span></code></span>
+:param settings: The parameters that the client inputted.
+:type settings: AdvancedSettings</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The settings to be used internally in the server. (valid settings)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>AdvancedSettings</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InputError" title="server.app.models.CustomError.InputError"><strong>InputError</strong></a> – If some settings are invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.complete_this_measurement_dn">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">complete_this_measurement_dn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measurement_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dn_ips</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#complete_this_measurement_dn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.complete_this_measurement_dn" title="Link to this definition"></a></dt>
+<dd><p>if the measurement_id is not in the database, then this method does nothing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.complete_this_measurement_ip">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">complete_this_measurement_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">measurement_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_of_dn_measurement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_dn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#complete_this_measurement_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.complete_this_measurement_ip" title="Link to this definition"></a></dt>
+<dd><p>if the measurement_id is not in the database, then this method does nothing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -305,6 +483,29 @@ and triggers the appropriate RIPE measurement.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>Exception</strong> – If the server string is invalid or the measurement failed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.take_care_of_exception">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">take_care_of_exception</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measurement_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_measurement</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#take_care_of_exception"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.take_care_of_exception" title="Link to this definition"></a></dt>
+<dd><p>This method takes care of marking the measurement as failed, if something happened.
+:type db: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code></span>
+:param db: A connection to the database (we need to query some IDs).
+:type db: Session
+:type e: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></span>
+:param e: An exception instance.
+:type e: Exception
+:type measurement_id: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
+:param measurement_id: The measurement id.
+:type measurement_id: int
+:type ip_measurement: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>
+:param ip_measurement: Whether the measurement was on an IP address.
+:type ip_measurement: bool</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>

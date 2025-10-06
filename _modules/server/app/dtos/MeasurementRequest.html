@@ -84,11 +84,33 @@
 <span class="sd">    Attributes:</span>
 <span class="sd">        server (str): The IP address or domain name of the NTP server to be measured.</span>
 <span class="sd">        ipv6_measurement (bool): True if the type of IPs that we want to measure is IPv6. False otherwise.</span>
+<span class="sd">        wanted_ip_type (Optional[int]): The wanted IP address type (4 ot 6) in case the &quot;server&quot; is a domain name.</span>
+<span class="sd">        measurement_type (Optional[str]): The measurement type of the NTP measurement. Example: nts, ntpv4, ntpv5.</span>
+<span class="sd">        ntp_versions_to_analyze (Optional[list[str]]): The NTP version to analyze.</span>
+<span class="sd">        analyse_all_ntp_versions (Optional[bool]): whether to analyze all NTP versions.</span>
+<span class="sd">        ntp_versions_analysis_on_each_ip (Optional[bool]): If you want an analysis on each IP address of the domain name.</span>
+<span class="sd">        nts_analysis_on_each_ip (Optional[bool]): If you want an analysis on each IP address of the domain name.</span>
+<span class="sd">        ntpv5_draft (Optional[str]): The draft name for NTPv5.</span>
+<span class="sd">        custom_probes_asn (Optional[str]): The custom ASN for probes.</span>
+<span class="sd">        custom_probes_country (Optional[str]): The custom country for probes.</span>
+<span class="sd">        custom_client_ip (Optional[str]): If you want to get probes close to a specific IP address.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">server</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">ipv6_measurement</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">wanted_ip_type</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">measurement_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># NTP versions</span>
+    <span class="n">ntp_versions_to_analyze</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">analyse_all_ntp_versions</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">ntp_versions_analysis_on_each_ip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">nts_analysis_on_each_ip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="c1"># ntpv5_draft: Optional[str] = None #it will look like this</span>
+    <span class="n">ntpv5_draft</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># custom parameters for RIPE probes</span>
+    <span class="n">custom_probes_asn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">custom_probes_country</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">custom_client_ip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
 
 <div class="viewcode-block" id="MeasurementRequest.validate_after">
 <a class="viewcode-back" href="../../../../server.app.dtos.html#server.app.dtos.MeasurementRequest.MeasurementRequest.validate_after">[docs]</a>

@@ -124,6 +124,116 @@
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.MeasurementRequest.MeasurementRequest.wanted_ip_type">
+<span class="sig-name descname"><span class="pre">wanted_ip_type</span></span><a class="headerlink" href="#server.app.dtos.MeasurementRequest.MeasurementRequest.wanted_ip_type" title="Link to this definition"></a></dt>
+<dd><p>The wanted IP address type (4 ot 6) in case the “server” is a domain name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.MeasurementRequest.MeasurementRequest.measurement_type">
+<span class="sig-name descname"><span class="pre">measurement_type</span></span><a class="headerlink" href="#server.app.dtos.MeasurementRequest.MeasurementRequest.measurement_type" title="Link to this definition"></a></dt>
+<dd><p>The measurement type of the NTP measurement. Example: nts, ntpv4, ntpv5.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.MeasurementRequest.MeasurementRequest.ntp_versions_to_analyze">
+<span class="sig-name descname"><span class="pre">ntp_versions_to_analyze</span></span><a class="headerlink" href="#server.app.dtos.MeasurementRequest.MeasurementRequest.ntp_versions_to_analyze" title="Link to this definition"></a></dt>
+<dd><p>The NTP version to analyze.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[list[str]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.MeasurementRequest.MeasurementRequest.analyse_all_ntp_versions">
+<span class="sig-name descname"><span class="pre">analyse_all_ntp_versions</span></span><a class="headerlink" href="#server.app.dtos.MeasurementRequest.MeasurementRequest.analyse_all_ntp_versions" title="Link to this definition"></a></dt>
+<dd><p>whether to analyze all NTP versions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[bool]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.MeasurementRequest.MeasurementRequest.ntp_versions_analysis_on_each_ip">
+<span class="sig-name descname"><span class="pre">ntp_versions_analysis_on_each_ip</span></span><a class="headerlink" href="#server.app.dtos.MeasurementRequest.MeasurementRequest.ntp_versions_analysis_on_each_ip" title="Link to this definition"></a></dt>
+<dd><p>If you want an analysis on each IP address of the domain name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[bool]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.MeasurementRequest.MeasurementRequest.nts_analysis_on_each_ip">
+<span class="sig-name descname"><span class="pre">nts_analysis_on_each_ip</span></span><a class="headerlink" href="#server.app.dtos.MeasurementRequest.MeasurementRequest.nts_analysis_on_each_ip" title="Link to this definition"></a></dt>
+<dd><p>If you want an analysis on each IP address of the domain name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[bool]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.MeasurementRequest.MeasurementRequest.ntpv5_draft">
+<span class="sig-name descname"><span class="pre">ntpv5_draft</span></span><a class="headerlink" href="#server.app.dtos.MeasurementRequest.MeasurementRequest.ntpv5_draft" title="Link to this definition"></a></dt>
+<dd><p>The draft name for NTPv5.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.MeasurementRequest.MeasurementRequest.custom_probes_asn">
+<span class="sig-name descname"><span class="pre">custom_probes_asn</span></span><a class="headerlink" href="#server.app.dtos.MeasurementRequest.MeasurementRequest.custom_probes_asn" title="Link to this definition"></a></dt>
+<dd><p>The custom ASN for probes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.MeasurementRequest.MeasurementRequest.custom_probes_country">
+<span class="sig-name descname"><span class="pre">custom_probes_country</span></span><a class="headerlink" href="#server.app.dtos.MeasurementRequest.MeasurementRequest.custom_probes_country" title="Link to this definition"></a></dt>
+<dd><p>The custom country for probes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.app.dtos.MeasurementRequest.MeasurementRequest.custom_client_ip">
+<span class="sig-name descname"><span class="pre">custom_client_ip</span></span><a class="headerlink" href="#server.app.dtos.MeasurementRequest.MeasurementRequest.custom_client_ip" title="Link to this definition"></a></dt>
+<dd><p>If you want to get probes close to a specific IP address.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="server.app.dtos.MeasurementRequest.MeasurementRequest.validate_after">
 <span class="sig-name descname"><span class="pre">validate_after</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/dtos/MeasurementRequest.html#MeasurementRequest.validate_after"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.dtos.MeasurementRequest.MeasurementRequest.validate_after" title="Link to this definition"></a></dt>

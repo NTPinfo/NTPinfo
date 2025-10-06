@@ -71,7 +71,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for server.app.api.routing</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Depends</span>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">BackgroundTasks</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTMLResponse</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
@@ -81,6 +81,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">starlette.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTMLResponse</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.convert_measurement_to_format</span><span class="w"> </span><span class="kn">import</span> <span class="n">full_measurement_dn_to_dict</span><span class="p">,</span> <span class="n">full_measurement_ip_to_dict</span><span class="p">,</span> \
+    <span class="n">partial_measurement_dn_to_dict</span><span class="p">,</span> <span class="n">ntp_versions_to_dict</span><span class="p">,</span> <span class="n">partial_measurement_ip_to_dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.domain_name_to_ip</span><span class="w"> </span><span class="kn">import</span> <span class="n">domain_name_to_ip_list</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.validate</span><span class="w"> </span><span class="kn">import</span> <span class="n">sanitize_string</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.full_ntp_measurement</span><span class="w"> </span><span class="kn">import</span> <span class="n">FullMeasurementIP</span><span class="p">,</span> <span class="n">FullMeasurementDN</span><span class="p">,</span> <span class="n">NTPVersions</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.validate</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_ip_address</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.AdvancedSettings</span><span class="w"> </span><span class="kn">import</span> <span class="n">AdvancedSettings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.nts_check</span><span class="w"> </span><span class="kn">import</span> <span class="n">perform_nts_measurement_domain_name</span><span class="p">,</span> <span class="n">perform_nts_measurement_ip</span>
@@ -95,7 +100,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.models.CustomError</span><span class="w"> </span><span class="kn">import</span> <span class="n">InputError</span><span class="p">,</span> <span class="n">RipeMeasurementError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.db_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.services.api_services</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_ripe_data</span><span class="p">,</span> <span class="n">override_desired_ip_type_if_input_is_ip</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.services.api_services</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_ripe_data</span><span class="p">,</span> <span class="n">override_desired_ip_type_if_input_is_ip</span><span class="p">,</span> \
+    <span class="n">complete_this_measurement_dn</span><span class="p">,</span> <span class="n">complete_this_measurement_ip</span><span class="p">,</span> <span class="n">check_and_get_settings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.services.api_services</span><span class="w"> </span><span class="kn">import</span> <span class="n">perform_ripe_measurement</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.rate_limiter</span><span class="w"> </span><span class="kn">import</span> <span class="n">limiter</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.MeasurementRequest</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeasurementRequest</span>
@@ -298,6 +304,275 @@
 
 
 
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">&quot;/measurements/trigger/&quot;</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;get measurement results&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">MeasurementResponse</span><span class="p">,</span>
+    <span class="n">responses</span><span class="o">=</span><span class="p">{</span>
+        <span class="mi">200</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Measurement successfully initiated&quot;</span><span class="p">},</span>
+        <span class="mi">400</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Invalid server address&quot;</span><span class="p">},</span>
+        <span class="mi">422</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Domain name is invalid or cannot be resolved.&quot;</span><span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">get_rate_limit_per_client_ip</span><span class="p">())</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">trigger_full_measurement</span><span class="p">(</span><span class="n">payload</span><span class="p">:</span> <span class="n">MeasurementRequest</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">background_tasks</span><span class="p">:</span> <span class="n">BackgroundTasks</span><span class="p">,</span>
+                                    <span class="n">session</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is the new method to trigger a full measurement. A full measurement consists of the main NTP measurement, an NTS</span>
+<span class="sd">    measurement, NTP versions analysis on each NTP version and a RIPE measurement. You can play with the settings.</span>
+<span class="sd">    The full measurements are grouped in 2 categories: domain name and IP. After triggering a full measurement, you</span>
+<span class="sd">    will receive and ID of the measurement like &quot;dn324&quot; or &quot;ip442&quot;, the prefix is the type, the number is the database ID.</span>
+<span class="sd">    A domain name contains multiple IP measurements, and you can have full options on each IP of the domain name and</span>
+<span class="sd">    on the domain name itself.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        payload (MeasurementRequest): The parameters/options that the client wants</span>
+<span class="sd">        request (Request): Request object for making the limiter work.</span>
+<span class="sd">        background_tasks (BackgroundTasks): BackgroundTasks object for making the background task.</span>
+<span class="sd">        session (Session): The currently active database session.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        JSONResponse: Response object.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">server</span> <span class="o">=</span> <span class="n">sanitize_string</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">server</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">server</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">server</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Either an &#39;ip&#39; or a &#39;dn&#39; must be provided.&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">check_and_get_settings</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="c1"># if the client wants to use its IP address</span>
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">custom_client_ip</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="c1"># get the client IP (the same type as wanted_ip_type)</span>
+        <span class="n">client_ip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">client_ip_fetch</span><span class="p">(</span><span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">wanted_ip_type</span><span class="p">)</span>
+        <span class="c1"># just in case</span>
+        <span class="k">if</span> <span class="n">client_ip</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">503</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Could not retrieve the client IP address.&quot;</span><span class="p">)</span>
+        <span class="n">settings</span><span class="o">.</span><span class="n">custom_client_ip</span> <span class="o">=</span> <span class="n">client_ip</span>
+
+    <span class="c1"># from now on, we would consider &quot;settings.custom_client_ip&quot; to be the client_ip</span>
+
+    <span class="n">prefix_id</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="nb">id</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="c1"># create empty measurement</span>
+    <span class="k">if</span> <span class="n">is_ip_address</span><span class="p">(</span><span class="n">server</span><span class="p">):</span>
+        <span class="n">full_m_ip</span> <span class="o">=</span> <span class="n">FullMeasurementIP</span><span class="p">(</span>
+            <span class="n">status</span><span class="o">=</span><span class="s2">&quot;pending&quot;</span><span class="p">,</span>
+            <span class="n">server_ip</span><span class="o">=</span><span class="n">server</span><span class="p">,</span>
+            <span class="n">created_at_time</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="c1">#,</span>
+            <span class="c1">#settings=settings.model_dump()</span>
+        <span class="p">)</span>
+        <span class="n">prefix_id</span> <span class="o">=</span> <span class="s2">&quot;ip&quot;</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">full_m_ip</span><span class="p">)</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">full_m_ip</span><span class="p">)</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">full_m_ip</span><span class="o">.</span><span class="n">status</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">full_m_ip</span><span class="o">.</span><span class="n">id_m_ip</span><span class="p">)</span>
+        <span class="c1"># add content to this measurement</span>
+        <span class="n">background_tasks</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">complete_this_measurement_ip</span><span class="p">,</span> <span class="n">full_m_ip</span><span class="o">.</span><span class="n">id_m_ip</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># firstly validate that the domain name exists</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">dn_ips</span> <span class="o">=</span> <span class="n">domain_name_to_ip_list</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">wanted_ip_type</span><span class="p">)</span> <span class="c1"># ADD CLIENT IP</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Domain name is invalid or cannot be resolved.&quot;</span><span class="p">)</span>
+        <span class="c1"># now we are sure the domain name has at least an IP address</span>
+        <span class="n">full_m_dn</span> <span class="o">=</span> <span class="n">FullMeasurementDN</span><span class="p">(</span>
+            <span class="n">status</span><span class="o">=</span><span class="s2">&quot;pending&quot;</span><span class="p">,</span>
+            <span class="n">server</span><span class="o">=</span><span class="n">server</span><span class="p">,</span>
+            <span class="n">created_at_time</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="c1">#,</span>
+            <span class="c1">#settings=settings.model_dump()</span>
+        <span class="p">)</span>
+        <span class="n">prefix_id</span> <span class="o">=</span> <span class="s2">&quot;dn&quot;</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">full_m_dn</span><span class="p">)</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">full_m_dn</span><span class="p">)</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">full_m_dn</span><span class="o">.</span><span class="n">status</span>
+        <span class="nb">id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">full_m_dn</span><span class="o">.</span><span class="n">id_m_dn</span><span class="p">)</span>
+        <span class="c1"># add content to this measurement</span>
+        <span class="n">background_tasks</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">complete_this_measurement_dn</span><span class="p">,</span> <span class="n">full_m_dn</span><span class="o">.</span><span class="n">id_m_dn</span><span class="p">,</span> <span class="n">dn_ips</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+        <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+        <span class="n">content</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">prefix_id</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">id</span><span class="p">),</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">status</span>
+        <span class="p">})</span>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">&quot;/measurements/results/</span><span class="si">{m_id}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;get measurement results&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Query the server and get the whole measurement structure. It may be (very) large if you poll frequently especially on a domain name: 10Kb of JSON data.</span>
+<span class="s2">It is recommended to be used only on FullMeasurementIP, or only when the measurement has been finished.</span>
+
+<span class="s2">&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">MeasurementResponse</span><span class="p">,</span>
+    <span class="n">responses</span><span class="o">=</span><span class="p">{</span>
+        <span class="mi">200</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Measurement successfully initiated&quot;</span><span class="p">},</span>
+        <span class="mi">400</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Invalid measurement ID&quot;</span><span class="p">},</span>
+        <span class="mi">404</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Measurement not found&quot;</span><span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">get_rate_limit_per_client_ip</span><span class="p">())</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">poll_full_measurement</span><span class="p">(</span><span class="n">m_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">background_tasks</span><span class="p">:</span> <span class="n">BackgroundTasks</span><span class="p">,</span>
+                                    <span class="n">session</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method polls the whole measurement.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        m_id (Optional[str]): The id of the full ntp measurement on ip or dn.</span>
+<span class="sd">        request (Request): Request object for making the limiter work.</span>
+<span class="sd">        background_tasks (BackgroundTasks): BackgroundTasks object for making the background task.</span>
+<span class="sd">        session (Session): The currently active database session.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        JSONResponse: Response object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">m_id</span> <span class="o">=</span> <span class="n">sanitize_string</span><span class="p">(</span><span class="n">m_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">m_id</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Invalid measurement ID.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m_id</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;ip&quot;</span><span class="p">):</span>
+        <span class="n">m_ip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FullMeasurementIP</span><span class="p">]</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">FullMeasurementIP</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">id_m_ip</span><span class="o">=</span><span class="n">m_id</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">m_ip</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Measurement not found&quot;</span><span class="p">)</span>
+        <span class="n">result_dict</span> <span class="o">=</span> <span class="n">full_measurement_ip_to_dict</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">m_ip</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">m_id</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;dn&quot;</span><span class="p">):</span>
+        <span class="n">m_dn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FullMeasurementDN</span><span class="p">]</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">FullMeasurementDN</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">id_m_dn</span><span class="o">=</span><span class="n">m_id</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">m_dn</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Measurement not found&quot;</span><span class="p">)</span>
+        <span class="n">result_dict</span> <span class="o">=</span> <span class="n">full_measurement_dn_to_dict</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">m_dn</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Invalid measurement ID. It should start with </span><span class="se">\&quot;</span><span class="s2">ip</span><span class="se">\&quot;</span><span class="s2"> or </span><span class="se">\&quot;</span><span class="s2">dn</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># if result_dict.get(&quot;status&quot;) != &quot;finished&quot;:</span>
+    <span class="c1">#     print(&quot;measurement not ready yet...&quot;)</span>
+    <span class="c1">#    raise HTTPException(status_code=400, detail=&quot;Measurement not ready yet. Use polling on partial results until then&quot;)</span>
+    <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+        <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+        <span class="n">content</span><span class="o">=</span><span class="n">result_dict</span><span class="p">)</span>
+
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">&quot;/measurements/partial-results/</span><span class="si">{m_id}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;get measurement results&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Query the server and get the the IDs of the parts of the measurement structure. You need to poll again for more data. </span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">MeasurementResponse</span><span class="p">,</span>
+    <span class="n">responses</span><span class="o">=</span><span class="p">{</span>
+        <span class="mi">200</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;The json data&quot;</span><span class="p">},</span>
+        <span class="mi">400</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Invalid measurement ID&quot;</span><span class="p">},</span>
+        <span class="mi">404</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Measurement not found&quot;</span><span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">get_rate_limit_per_client_ip</span><span class="p">())</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">poll_partial_measurement</span><span class="p">(</span><span class="n">m_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method partially polls the measurement.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        m_id (Optional[str]): The id of the full ntp measurement on ip or dn.</span>
+<span class="sd">        request (Request): Request object for making the limiter work.</span>
+<span class="sd">        session (Session): The currently active database session.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        JSONResponse: Response object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">m_id</span> <span class="o">=</span> <span class="n">sanitize_string</span><span class="p">(</span><span class="n">m_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">m_id</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Invalid measurement ID.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">m_id</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;ip&quot;</span><span class="p">):</span>
+        <span class="c1"># ip case</span>
+        <span class="n">m_ip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FullMeasurementIP</span><span class="p">]</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">FullMeasurementIP</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">id_m_ip</span><span class="o">=</span><span class="n">m_id</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">m_ip</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Measurement not found&quot;</span><span class="p">)</span>
+        <span class="n">result_dict</span> <span class="o">=</span> <span class="n">partial_measurement_ip_to_dict</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">m_ip</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">m_id</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;dn&quot;</span><span class="p">):</span>
+        <span class="c1"># domain name case</span>
+        <span class="n">m_dn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FullMeasurementDN</span><span class="p">]</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">FullMeasurementDN</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">id_m_dn</span><span class="o">=</span><span class="n">m_id</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">m_dn</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Measurement not found&quot;</span><span class="p">)</span>
+        <span class="c1"># return the partial measurement + IDs of what the client needs to poll. The IDs will have finished measurements.</span>
+        <span class="n">result_dict</span> <span class="o">=</span> <span class="n">partial_measurement_dn_to_dict</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">m_dn</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Invalid measurement ID. It should start with </span><span class="se">\&quot;</span><span class="s2">ip</span><span class="se">\&quot;</span><span class="s2"> or </span><span class="se">\&quot;</span><span class="s2">dn</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+        <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+        <span class="n">content</span><span class="o">=</span><span class="n">result_dict</span><span class="p">)</span>
+
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">&quot;/measurements/ntp_versions/</span><span class="si">{m_id}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;get measurement results&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Query the server and get the the IDs of the parts of the measurement structure. You need to poll again for more data. </span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">MeasurementResponse</span><span class="p">,</span>
+    <span class="n">responses</span><span class="o">=</span><span class="p">{</span>
+        <span class="mi">200</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;The json data&quot;</span><span class="p">},</span>
+        <span class="mi">400</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Invalid measurement ID&quot;</span><span class="p">},</span>
+        <span class="mi">404</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Measurement not found&quot;</span><span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">get_rate_limit_per_client_ip</span><span class="p">())</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">poll_ntp_versions</span><span class="p">(</span><span class="n">m_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This API (method) polls the ntp versions part of the measurement.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        m_id (Optional[int]): The ID of the ntp version part of the measurement.</span>
+<span class="sd">        request (Request): The Request object that gives you the IP of the client.</span>
+<span class="sd">        session (Session): The currently active database session.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        JSONResponse: The response object that gives you the details of this server.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">m_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;Invalid measurement ID.&quot;</span><span class="p">)</span>
+    <span class="n">m_vs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NTPVersions</span><span class="p">]</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">NTPVersions</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">id_vs</span><span class="o">=</span><span class="n">m_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">m_vs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">&quot;NTP versions measurement not found&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+        <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+        <span class="n">content</span><span class="o">=</span><span class="n">ntp_versions_to_dict</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">m_vs</span><span class="p">))</span>
+
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">&quot;/measurements/ntpinfo-server-details/</span><span class="si">{ip_type}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">&quot;get measurement results&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Query the server and get the the IDs of the parts of the measurement structure. You need to poll again for more data. </span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">MeasurementResponse</span><span class="p">,</span>
+    <span class="n">responses</span><span class="o">=</span><span class="p">{</span>
+        <span class="mi">200</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;The json data regarding the details of the server&quot;</span><span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="nd">@limiter</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">get_rate_limit_per_client_ip</span><span class="p">())</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_this_server_details</span><span class="p">(</span><span class="n">ip_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method would provide you the details of this server, the NTPinfo server. You will get the location</span>
+<span class="sd">    and the IP address, and you can use them into the website&#39;s map.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        ip_type (int): The desired IP type of the server. If not available, you will get the other type.</span>
+<span class="sd">        request (Request): The Request object that gives you the IP of the client.</span>
+<span class="sd">        session (Session): The currently active database session.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        JSONResponse: The response object that gives you the details of this server.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ip_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ip_type</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">this_server_ip</span> <span class="o">=</span> <span class="n">get_server_ip_if_possible</span><span class="p">(</span><span class="n">ip_type</span><span class="p">)</span>  <span class="c1"># it should always return an IP address</span>
+    <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+        <span class="n">status_code</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+        <span class="n">content</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;vantage_point_ip&quot;</span><span class="p">:</span> <span class="n">ip_to_str</span><span class="p">(</span><span class="n">this_server_ip</span><span class="p">),</span>
+            <span class="s2">&quot;vantage_point_location&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;country_code&quot;</span><span class="p">:</span> <span class="n">get_country_for_ip</span><span class="p">(</span><span class="n">ip_to_str</span><span class="p">(</span><span class="n">this_server_ip</span><span class="p">)),</span>
+                <span class="s2">&quot;coordinates&quot;</span><span class="p">:</span> <span class="n">get_coordinates_for_ip</span><span class="p">(</span><span class="n">ip_to_str</span><span class="p">(</span><span class="n">this_server_ip</span><span class="p">))</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;ripe_message&quot;</span><span class="p">:</span> <span class="s2">&quot;You can fetch ripe results at /measurements/ripe/</span><span class="si">{measurement_id}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ntpv_message&quot;</span><span class="p">:</span> <span class="s2">&quot;You can fetch ntp versions analysis results at /measurements/ntp_versions/</span><span class="si">{m_id}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;full_ntp_message&quot;</span><span class="p">:</span> <span class="s2">&quot;You can fetch full ntp results at /measurements/results/</span><span class="si">{id}</span><span class="s2">&quot;</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
 <span class="c1"># NTS API</span>
 <span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
     <span class="s2">&quot;/measurements/nts/&quot;</span><span class="p">,</span>

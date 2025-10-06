@@ -256,6 +256,8 @@
 <span class="sd">    from NTPv1 to NTPv5 (draft). (no NTS in this method)</span>
 <span class="sd">    Each NTP version analysis will have a &quot;confidence&quot; (0-&gt;100) that says how much this server thinks the NTP server supports each versions.</span>
 <span class="sd">    For example, if it truly supports an NTP version, the confidence will be 100.</span>
+<span class="sd">    This method returns either a dictionary with an error (if running the tool fails), or a dictionary with the whole structure (requested_versions*3=15 variables)</span>
+<span class="sd">    with each field (even though some NTP version failed, you will still have all the fields).</span>
 <span class="sd">    Args:</span>
 <span class="sd">        server (str): The server to analyze (domain name or IP address).</span>
 <span class="sd">        settings (AdvancedSettings): The settings to use for the analysis.</span>
@@ -272,7 +274,8 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="n">binary_nts_tool</span> <span class="o">=</span> <span class="n">get_right_ntp_nts_binary_tool_for_your_os</span><span class="p">()</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="n">ntp_versions_analysis</span><span class="p">[</span><span class="s2">&quot;summary&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;NTP versions test could not be performed (binary tool not available).&quot;</span>
+        <span class="n">ntp_versions_analysis</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;NTP versions test could not be performed (binary tool not available).&quot;</span>
+        <span class="c1"># This is the case when the tool fails, because python was not able to find it or run it.</span>
         <span class="k">return</span> <span class="n">ntp_versions_analysis</span>
 
     <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">analyse_all_ntp_versions</span><span class="p">:</span> <span class="c1"># more easily and reliable if we want all NTP versions</span>
@@ -280,9 +283,9 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">ntp_version</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">ntp_versions_to_analyze</span><span class="p">:</span> <span class="c1"># we assume settings has valid input</span>
             <span class="p">(</span><span class="n">ntp_versions_analysis</span><span class="p">[</span><span class="n">ntp_version</span> <span class="o">+</span> <span class="s2">&quot;_supported_confidence&quot;</span><span class="p">],</span>
-             <span class="n">ntp_versions_analysis</span><span class="p">[</span><span class="n">ntp_version</span> <span class="o">+</span> <span class="s2">&quot;ntpv1_analysis&quot;</span><span class="p">],</span>
+             <span class="n">ntp_versions_analysis</span><span class="p">[</span><span class="n">ntp_version</span> <span class="o">+</span> <span class="s2">&quot;_analysis&quot;</span><span class="p">],</span>
              <span class="c1"># settings.ntpv5_draft will be considered if and only if the ntp_version is &quot;ntpv5&quot;</span>
-             <span class="n">ntp_versions_analysis</span><span class="p">[</span><span class="n">ntp_version</span> <span class="o">+</span> <span class="s2">&quot;ntpv1_m_result&quot;</span><span class="p">])</span> <span class="o">=</span> <span class="n">run_tool_on_ntp_version</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">binary_nts_tool</span><span class="p">),</span>
+             <span class="n">ntp_versions_analysis</span><span class="p">[</span><span class="n">ntp_version</span> <span class="o">+</span> <span class="s2">&quot;_m_result&quot;</span><span class="p">])</span> <span class="o">=</span> <span class="n">run_tool_on_ntp_version</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">binary_nts_tool</span><span class="p">),</span>
                                                                                                    <span class="n">ntp_version</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">ntpv5_draft</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">ntp_versions_analysis</span></div>
 
@@ -492,9 +495,19 @@
 <span class="c1"># example to see how you use them</span>
 <span class="c1"># s=AdvancedSettings()</span>
 <span class="c1"># s.analyse_all_ntp_versions=True</span>
-<span class="c1"># s.ntp_versions_to_analyze=[&quot;ntpv1&quot;, &quot;ntpv2&quot;, &quot;ntpv3&quot;, &quot;ntpv4&quot;, &quot;ntpv5&quot;]</span>
+<span class="c1"># # s.ntp_versions_to_analyze=[&quot;ntpv1&quot;, &quot;ntpv2&quot;, &quot;ntpv3&quot;, &quot;ntpv4&quot;, &quot;ntpv5&quot;]</span>
 <span class="c1"># s.ntpv5_draft=&quot;draft-ietf-ntp-ntpv5-06&quot;</span>
 <span class="c1"># pprint.pprint(analyze_supported_ntp_versions(&quot;time.google.com&quot;,s))</span>
+<span class="c1"># import threading</span>
+<span class="c1">#</span>
+<span class="c1"># def run_tool():</span>
+<span class="c1">#     s = AdvancedSettings()</span>
+<span class="c1">#     s.analyse_all_ntp_versions = True</span>
+<span class="c1">#     # s.ntp_versions_to_analyze=[&quot;ntpv1&quot;, &quot;ntpv2&quot;, &quot;ntpv3&quot;, &quot;ntpv4&quot;, &quot;ntpv5&quot;]</span>
+<span class="c1">#     s.ntpv5_draft = &quot;draft-ietf-ntp-ntpv5-06&quot;</span>
+<span class="c1">#     pprint.pprint(analyze_supported_ntp_versions(&quot;time.google.com&quot;, s))</span>
+<span class="c1">#</span>
+<span class="c1"># threading.Thread(target=run_tool).start()</span>
 <span class="c1"># print_ntp_measurement(perform_ntp_measurement_domain_name_list(&quot;time.apple.com&quot;, &quot;5a01:c741:a16:4000::1f2&quot;, 6, 4)[0])</span>
 <span class="c1"># print_ntp_measurement(perform_ntp_measurement_domain_name_list(&quot;time.cloudflare.com&quot;, &quot;17.253.6.45&quot;, 4,4)[0])</span>
 <span class="c1"># print_ntp_measurement(perform_ntp_measurement_domain_name_list(&quot;ntpd-rs.sidnlabs.nl&quot;, None, 4,5)[0])</span>
