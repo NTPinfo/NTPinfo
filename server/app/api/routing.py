@@ -222,64 +222,6 @@ async def read_historic_data_time(server: str,
         raise HTTPException(status_code=500, detail=f"Sever error: {str(e)}.")
 
 
-# @router.post(
-#     "/measurements/exp/",
-#     summary="Perform a live  measurement",
-#     description="""
-# Perform a very complex NTP measurement
-# """,
-#     response_model=MeasurementResponse,
-#     responses={
-#         200: {"description": "Measurement successfully initiated"},
-#         400: {"description": "Invalid server address"},
-#     }
-# )
-# @limiter.limit(get_rate_limit_per_client_ip())
-# async def instantiate_full_measurement(payload: MeasurementRequest, request: Request, background_tasks: BackgroundTasks,
-#                                     session: Session = Depends(get_db)) -> JSONResponse:
-#     """
-#     work in progress
-#     """
-#     server = payload.server
-#     if len(server) == 0:
-#         raise HTTPException(status_code=400, detail="Either 'ip' or 'dn' must be provided.")
-#
-#     wanted_ip_type = 6 if payload.ipv6_measurement else 4
-#     # Override it if we received an IP, not a domain name:
-#     # In case the input is an IP and not a domain name, then "wanted_ip_type" will be ignored and the IP type of the IP will be used.
-#     wanted_ip_type = override_desired_ip_type_if_input_is_ip(server, wanted_ip_type)
-#
-#     # for IPv6 measurements, we need to communicate using IPv6. (we need to have the same protocol as the target)
-#     this_server_ip_strict = get_server_ip(wanted_ip_type)  # strict means we want exactly this type
-#     if this_server_ip_strict is None:  # which means we cannot perform this type of NTP measurements from our server
-#         raise HTTPException(status_code=422,
-#                             detail=f"Our server cannot perform IPv{wanted_ip_type} measurements currently. Try the other IP type.")
-#
-#     # get the client IP (the same type as wanted_ip_type)
-#     client_ip: Optional[str] = client_ip_fetch(request=request, wanted_ip_type=wanted_ip_type)
-#     # build the settings
-#     settings = AdvancedSettings()
-#     settings.wanted_ip_type = wanted_ip_type
-#     settings.analyse_all_ntp_versions = True
-#
-#     # create the measurement
-#     measurement = FullMeasurementIP(
-#         status="pending",
-#         measurement_type="ntpv4",  # or ntpv5, depending
-#         created_at_time=datetime.now(timezone.utc),
-#         settings=str({"wanted_ip_type": wanted_ip_type})  # can also be JSON
-#     )
-#     session.add(measurement)
-#     session.commit()
-#     session.refresh(measurement)
-#     # add content to this measurement
-#     background_tasks.add_task(complete_this_measurement, measurement.id_m_ip, settings)
-#     return JSONResponse(
-#         status_code=200,
-#         content={
-#             "id": measurement.id_m_ip,
-#             "status": measurement.status
-#         })
 @router.post(
     "/measurements/trigger/",
     summary="get measurement results",
@@ -306,17 +248,14 @@ async def trigger_full_measurement(payload: MeasurementRequest, request: Request
         request (Request): Request object for making the limiter work.
         background_tasks (BackgroundTasks): BackgroundTasks object for making the background task.
         session (Session): The currently active database session.
+    Returns:
+        JSONResponse: Response object.
+
     """
     server = sanitize_string(payload.server)
     if server is None or len(server) == 0:
         raise HTTPException(status_code=400, detail="Either an 'ip' or a 'dn' must be provided.")
 
-    # settings = AdvancedSettings()
-    # settings.wanted_ip_type = 4
-    # settings.analyse_all_ntp_versions = True
-    # settings.ntp_versions_analysis_on_each_ip = True
-    # settings.nts_analysis_on_each_ip = True
-    # server = "time.cloudflare.com"#"216.239.35.12"
     try:
         settings = check_and_get_settings(payload)
     except Exception as e:

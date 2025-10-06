@@ -13,9 +13,37 @@ CREATE TABLE nts_measurement (
     id_nts SERIAL PRIMARY KEY,
     succeeded BOOLEAN NOT NULL DEFAULT FALSE,
     analysis TEXT NOT NULL,
+
+    host TEXT NOT NULL,
+    measured_server_ip VARCHAR(45) NOT NULL,
+    measured_server_port SMALLINT NOT NULL DEFAULT 123,
+    offset DOUBLE PRECISION,
+    rtt DOUBLE PRECISION,
+    kiss_code VARCHAR(10),
+    stratum SMALLINT,
+    poll SMALLINT,
     measurement_type VARCHAR(10) NOT NULL,
-    nts_data JSON,
+
+    client_sent_time NUMERIC,
+    server_recv_time NUMERIC,
+    server_sent_time NUMERIC,
+    client_recv_time NUMERIC,
+    ref_time NUMERIC,
+
+    leap SMALLINT,
+    mode SMALLINT,
+    version SMALLINT,
+
+    min_error DOUBLE PRECISION,
+    precision DOUBLE PRECISION,
+    root_delay DOUBLE PRECISION,
+    root_disp DOUBLE PRECISION,
+    root_dist DOUBLE PRECISION,
+
+    ref_id VARCHAR(50),
+    ref_id_raw VARCHAR(50),
 );
+
 CREATE TABLE ntp_versions (
     id_vs SERIAL PRIMARY KEY,
 

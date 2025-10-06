@@ -400,6 +400,8 @@ def complete_this_measurement_dn(measurement_id: int, dn_ips: list[str], setting
             db.refresh(measurement_ip)
             complete_this_measurement_ip(measurement_ip.id_m_ip, settings, True, server)
             m.ip_measurements.append(measurement_ip)
+            # NTP servers may refuse to respond if you poll them very often
+            time.sleep(1.0)
             #db.commit()
         # NTS PART
         # no check because it is done by default
@@ -513,6 +515,7 @@ def complete_this_measurement_ip(measurement_id: int, settings: AdvancedSettings
                 m.status = "adding NTP versions analysis"
                 status = m.status
                 db.commit()
+                time.sleep(0.5) #to make sure the server would not blacklist us
                 add_ntp_versions_to_db_measurement(db, server_ip, settings, m, from_dn)
         # add settings
         m.settings = settings.model_dump()
