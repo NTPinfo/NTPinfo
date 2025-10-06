@@ -60,17 +60,6 @@ def parse_nts_response_to_dict(content: str) -> dict:
     except Exception as e:
         raise InputError(f"could not parse json {e}")
 
-# def perform_nts_measurement(server: str, settings: AdvancedSettings)\
-#         -> dict[str, str]:
-#     """
-#     Simply a method to combine both domain name and IP
-#     :param server:
-#     :param settings:
-#     :return:
-#     """
-#     if is_ip_address(server) is None: #domain name
-#         return perform_nts_measurement_domain_name(server, settings)
-#     return perform_nts_measurement_ip(server)
 
 def perform_nts_measurement_domain_name(server_domain_name: str, settings: AdvancedSettings)\
         -> dict[str, str]:
@@ -93,7 +82,8 @@ def perform_nts_measurement_domain_name(server_domain_name: str, settings: Advan
                 [str(binary_nts_tool), "nts", server_domain_name,
                  "-t", str(timeout)],
                 capture_output=True, text=True,
-                env=os.environ.copy()
+                env=os.environ.copy()#,
+               # cwd=str(binary_nts_tool.parent)
             )
         else: # if the user wants a specific IP type
             result = subprocess.run(
@@ -221,7 +211,10 @@ def did_ke_performed_on_different_ip(original_ip: str, nts_data: dict) -> Tuple[
         return False, original_ip
 
 # measure_nts_server("time.cloudflare.com")1.ntp.ubuntu.com
-# pprint.pprint(perform_nts_measurement_domain_name("time.cloudflare.com"))
+# s=AdvancedSettings()
+# s.wanted_ip_type=-1
+# s.analyse_all_ntp_versions=True
+# pprint.pprint(perform_nts_measurement_domain_name("time.cloudflare.com", s))
 # perform_nts_measurement_domain_name("1.ntp.ubuntu.com")
 # print(perform_nts_measurement_ip("ntppool1.time.nl"))
 

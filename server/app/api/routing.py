@@ -1,4 +1,4 @@
-from fastapi import HTTPException, APIRouter, Request, Depends
+from fastapi import HTTPException, APIRouter, Request, Depends, BackgroundTasks
 from fastapi.responses import HTMLResponse
 
 from datetime import datetime, timezone
@@ -8,6 +8,11 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from starlette.responses import HTMLResponse
 
+from server.app.utils.convert_measurement_to_format import full_measurement_dn_to_dict, full_measurement_ip_to_dict, \
+    partial_measurement_dn_to_dict, ntp_versions_to_dict, partial_measurement_ip_to_dict
+from server.app.utils.domain_name_to_ip import domain_name_to_ip_list
+from server.app.utils.validate import sanitize_string
+from server.app.dtos.full_ntp_measurement import FullMeasurementIP, FullMeasurementDN, NTPVersions
 from server.app.utils.validate import is_ip_address
 from server.app.dtos.AdvancedSettings import AdvancedSettings
 from server.app.utils.nts_check import perform_nts_measurement_domain_name, perform_nts_measurement_ip
@@ -22,7 +27,8 @@ from server.app.utils.ip_utils import ip_to_str
 from server.app.models.CustomError import InputError, RipeMeasurementError
 from server.app.db_config import get_db
 
-from server.app.services.api_services import fetch_ripe_data, override_desired_ip_type_if_input_is_ip
+from server.app.services.api_services import fetch_ripe_data, override_desired_ip_type_if_input_is_ip, \
+    complete_this_measurement_dn, complete_this_measurement_ip, check_and_get_settings
 from server.app.services.api_services import perform_ripe_measurement
 from server.app.rate_limiter import limiter
 from server.app.dtos.MeasurementRequest import MeasurementRequest
@@ -216,6 +222,275 @@ async def read_historic_data_time(server: str,
         raise HTTPException(status_code=500, detail=f"Sever error: {str(e)}.")
 
 
+@router.post(
+    "/measurements/trigger/",
+    summary="get measurement results",
+    description="",
+    response_model=MeasurementResponse,
+    responses={
+        200: {"description": "Measurement successfully initiated"},
+        400: {"description": "Invalid server address"},
+        422: {"description": "Domain name is invalid or cannot be resolved."},
+    }
+)
+@limiter.limit(get_rate_limit_per_client_ip())
+async def trigger_full_measurement(payload: MeasurementRequest, request: Request, background_tasks: BackgroundTasks,
+                                    session: Session = Depends(get_db)) -> JSONResponse:
+    """
+    This is the new method to trigger a full measurement. A full measurement consists of the main NTP measurement, an NTS
+    measurement, NTP versions analysis on each NTP version and a RIPE measurement. You can play with the settings.
+    The full measurements are grouped in 2 categories: domain name and IP. After triggering a full measurement, you
+    will receive and ID of the measurement like "dn324" or "ip442", the prefix is the type, the number is the database ID.
+    A domain name contains multiple IP measurements, and you can have full options on each IP of the domain name and
+    on the domain name itself.
+    Args:
+        payload (MeasurementRequest): The parameters/options that the client wants
+        request (Request): Request object for making the limiter work.
+        background_tasks (BackgroundTasks): BackgroundTasks object for making the background task.
+        session (Session): The currently active database session.
+    Returns:
+        JSONResponse: Response object.
+
+    """
+    server = sanitize_string(payload.server)
+    if server is None or len(server) == 0:
+        raise HTTPException(status_code=400, detail="Either an 'ip' or a 'dn' must be provided.")
+
+    try:
+        settings = check_and_get_settings(payload)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    # if the client wants to use its IP address
+    if settings.custom_client_ip == "":
+        # get the client IP (the same type as wanted_ip_type)
+        client_ip: Optional[str] = client_ip_fetch(request=request, wanted_ip_type=settings.wanted_ip_type)
+        # just in case
+        if client_ip is None:
+            raise HTTPException(status_code=503, detail="Could not retrieve the client IP address.")
+        settings.custom_client_ip = client_ip
+
+    # from now on, we would consider "settings.custom_client_ip" to be the client_ip
+
+    prefix_id = ""
+    id = ""
+    status = ""
+    # create empty measurement
+    if is_ip_address(server):
+        full_m_ip = FullMeasurementIP(
+            status="pending",
+            server_ip=server,
+            created_at_time=datetime.now(timezone.utc)#,
+            #settings=settings.model_dump()
+        )
+        prefix_id = "ip"
+        session.add(full_m_ip)
+        session.commit()
+        session.refresh(full_m_ip)
+        status = full_m_ip.status
+        id = str(full_m_ip.id_m_ip)
+        # add content to this measurement
+        background_tasks.add_task(complete_this_measurement_ip, full_m_ip.id_m_ip, settings)
+    else:
+        # firstly validate that the domain name exists
+        try:
+            dn_ips = domain_name_to_ip_list(server, None, settings.wanted_ip_type) # ADD CLIENT IP
+        except Exception as e:
+            raise HTTPException(status_code=422, detail="Domain name is invalid or cannot be resolved.")
+        # now we are sure the domain name has at least an IP address
+        full_m_dn = FullMeasurementDN(
+            status="pending",
+            server=server,
+            created_at_time=datetime.now(timezone.utc)#,
+            #settings=settings.model_dump()
+        )
+        prefix_id = "dn"
+        session.add(full_m_dn)
+        session.commit()
+        session.refresh(full_m_dn)
+        status = full_m_dn.status
+        id = str(full_m_dn.id_m_dn)
+        # add content to this measurement
+        background_tasks.add_task(complete_this_measurement_dn, full_m_dn.id_m_dn, dn_ips, settings)
+    return JSONResponse(
+        status_code=200,
+        content={
+            "id": prefix_id + str(id),
+            "status": status
+        })
+@router.get(
+    "/measurements/results/{m_id}",
+    summary="get measurement results",
+    description="""
+Query the server and get the whole measurement structure. It may be (very) large if you poll frequently especially on a domain name: 10Kb of JSON data.
+It is recommended to be used only on FullMeasurementIP, or only when the measurement has been finished.
+
+""",
+    response_model=MeasurementResponse,
+    responses={
+        200: {"description": "Measurement successfully initiated"},
+        400: {"description": "Invalid measurement ID"},
+        404: {"description": "Measurement not found"},
+    }
+)
+@limiter.limit(get_rate_limit_per_client_ip())
+async def poll_full_measurement(m_id: Optional[str], request: Request, background_tasks: BackgroundTasks,
+                                    session: Session = Depends(get_db)) -> JSONResponse:
+    """
+    This method polls the whole measurement.
+    Args:
+        m_id (Optional[str]): The id of the full ntp measurement on ip or dn.
+        request (Request): Request object for making the limiter work.
+        background_tasks (BackgroundTasks): BackgroundTasks object for making the background task.
+        session (Session): The currently active database session.
+    Returns:
+        JSONResponse: Response object.
+    """
+    result_dict: dict = {}
+    m_id = sanitize_string(m_id)
+    if m_id is None or len(m_id) == 0:
+        raise HTTPException(status_code=400, detail="Invalid measurement ID.")
+    if m_id.startswith("ip"):
+        m_ip: Optional[FullMeasurementIP] = session.query(FullMeasurementIP).filter_by(id_m_ip=m_id[2:]).first()
+        if not m_ip:
+            raise HTTPException(status_code=404, detail="Measurement not found")
+        result_dict = full_measurement_ip_to_dict(session, m_ip)
+    elif m_id.startswith("dn"):
+        m_dn: Optional[FullMeasurementDN] = session.query(FullMeasurementDN).filter_by(id_m_dn=m_id[2:]).first()
+        if not m_dn:
+            raise HTTPException(status_code=404, detail="Measurement not found")
+        result_dict = full_measurement_dn_to_dict(session, m_dn)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid measurement ID. It should start with \"ip\" or \"dn\"")
+
+    # if result_dict.get("status") != "finished":
+    #     print("measurement not ready yet...")
+    #    raise HTTPException(status_code=400, detail="Measurement not ready yet. Use polling on partial results until then")
+    return JSONResponse(
+        status_code=200,
+        content=result_dict)
+
+@router.get(
+    "/measurements/partial-results/{m_id}",
+    summary="get measurement results",
+    description="""
+Query the server and get the the IDs of the parts of the measurement structure. You need to poll again for more data. 
+""",
+    response_model=MeasurementResponse,
+    responses={
+        200: {"description": "The json data"},
+        400: {"description": "Invalid measurement ID"},
+        404: {"description": "Measurement not found"},
+    }
+)
+@limiter.limit(get_rate_limit_per_client_ip())
+async def poll_partial_measurement(m_id: Optional[str], request: Request, session: Session = Depends(get_db)) -> JSONResponse:
+    """
+    This method partially polls the measurement.
+    Args:
+        m_id (Optional[str]): The id of the full ntp measurement on ip or dn.
+        request (Request): Request object for making the limiter work.
+        session (Session): The currently active database session.
+    Returns:
+        JSONResponse: Response object.
+    """
+    m_id = sanitize_string(m_id)
+    if m_id is None or len(m_id) == 0:
+        raise HTTPException(status_code=400, detail="Invalid measurement ID.")
+
+    if m_id.startswith("ip"):
+        # ip case
+        m_ip: Optional[FullMeasurementIP] = session.query(FullMeasurementIP).filter_by(id_m_ip=m_id[2:]).first()
+        if not m_ip:
+            raise HTTPException(status_code=404, detail="Measurement not found")
+        result_dict = partial_measurement_ip_to_dict(session, m_ip)
+    elif m_id.startswith("dn"):
+        # domain name case
+        m_dn: Optional[FullMeasurementDN] = session.query(FullMeasurementDN).filter_by(id_m_dn=m_id[2:]).first()
+        if not m_dn:
+            raise HTTPException(status_code=404, detail="Measurement not found")
+        # return the partial measurement + IDs of what the client needs to poll. The IDs will have finished measurements.
+        result_dict = partial_measurement_dn_to_dict(session, m_dn)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid measurement ID. It should start with \"ip\" or \"dn\"")
+
+    return JSONResponse(
+        status_code=200,
+        content=result_dict)
+
+@router.get(
+    "/measurements/ntp_versions/{m_id}",
+    summary="get measurement results",
+    description="""
+Query the server and get the the IDs of the parts of the measurement structure. You need to poll again for more data. 
+""",
+    response_model=MeasurementResponse,
+    responses={
+        200: {"description": "The json data"},
+        400: {"description": "Invalid measurement ID"},
+        404: {"description": "Measurement not found"},
+    }
+)
+@limiter.limit(get_rate_limit_per_client_ip())
+async def poll_ntp_versions(m_id: Optional[int], request: Request, session: Session = Depends(get_db)) -> JSONResponse:
+    """
+    This API (method) polls the ntp versions part of the measurement.
+    Args:
+        m_id (Optional[int]): The ID of the ntp version part of the measurement.
+        request (Request): The Request object that gives you the IP of the client.
+        session (Session): The currently active database session.
+    Returns:
+        JSONResponse: The response object that gives you the details of this server.
+    """
+    if m_id is None:
+        raise HTTPException(status_code=400, detail="Invalid measurement ID.")
+    m_vs: Optional[NTPVersions] = session.query(NTPVersions).filter_by(id_vs=m_id).first()
+    if m_vs is None:
+        raise HTTPException(status_code=404, detail="NTP versions measurement not found")
+
+    return JSONResponse(
+        status_code=200,
+        content=ntp_versions_to_dict(session, m_vs))
+
+@router.get(
+    "/measurements/ntpinfo-server-details/{ip_type}",
+    summary="get measurement results",
+    description="""
+Query the server and get the the IDs of the parts of the measurement structure. You need to poll again for more data. 
+""",
+    response_model=MeasurementResponse,
+    responses={
+        200: {"description": "The json data regarding the details of the server"},
+    }
+)
+@limiter.limit(get_rate_limit_per_client_ip())
+async def get_this_server_details(ip_type: Optional[int], request: Request, session: Session = Depends(get_db)) -> JSONResponse:
+    """
+    This method would provide you the details of this server, the NTPinfo server. You will get the location
+    and the IP address, and you can use them into the website's map.
+    Args:
+        ip_type (int): The desired IP type of the server. If not available, you will get the other type.
+        request (Request): The Request object that gives you the IP of the client.
+        session (Session): The currently active database session.
+    Returns:
+        JSONResponse: The response object that gives you the details of this server.
+    """
+    if ip_type is None:
+        ip_type = 4
+    this_server_ip = get_server_ip_if_possible(ip_type)  # it should always return an IP address
+    return JSONResponse(
+        status_code=200,
+        content={
+            "vantage_point_ip": ip_to_str(this_server_ip),
+            "vantage_point_location": {
+                "country_code": get_country_for_ip(ip_to_str(this_server_ip)),
+                "coordinates": get_coordinates_for_ip(ip_to_str(this_server_ip))
+            },
+            "ripe_message": "You can fetch ripe results at /measurements/ripe/{measurement_id}",
+            "ntpv_message": "You can fetch ntp versions analysis results at /measurements/ntp_versions/{m_id}",
+            "full_ntp_message": "You can fetch full ntp results at /measurements/results/{id}"
+        }
+    )
 # NTS API
 @router.post(
     "/measurements/nts/",
