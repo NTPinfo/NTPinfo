@@ -62,6 +62,11 @@ export type RIPEResp = {
 }
 
 /**
+ * Data type for NTS measurement results
+ */
+export type NTSResult = Record<string, any>;
+
+/**
  * A single place to remember everything we want to preserve
  * when the user leaves and re-enters the Home tab.
  * (Feel free to add more fields later – e.g. `selOption` –
@@ -80,6 +85,7 @@ export interface HomeCacheState {
   ipv6Selected: boolean
   isLoading: boolean                    // Track when NTP measurement is loading
   measurementSessionActive: boolean     // Track when any measurement session is active
+  ntsResult: NTSResult | null
 }
 
 export type RipeStatus = "pending" | "partial_results" | "complete" | "timeout" | "error"
