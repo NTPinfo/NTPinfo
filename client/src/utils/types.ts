@@ -30,6 +30,7 @@ export type NTPData = {
   nr_measurements_jitter: number
   asn_ntp_server: string
   time: number
+  measurement_id: string | null
 }
 
 /**
@@ -52,6 +53,10 @@ export type RIPEData = {
   measurement_id: number
 }
 
+export type NTPResp = {
+  measurement_id: string | null
+}
+
 /**
  * Data type for the RIPE measurement trigger response
  */
@@ -61,6 +66,41 @@ export type RIPEResp = {
   coordinates: LatLngTuple | null
 }
 
+
+export type NTPVersionsData = {
+    id_vs: number
+
+    id_v4_1: number | null
+    id_v4_2: number | null
+    id_v4_3: number | null
+    id_v4_4: number | null
+    id_v5: number | null
+
+    ntpv1_response_version: string | null
+    ntpv2_response_version: string | null
+    ntpv3_response_version: string | null
+    ntpv4_response_version: string | null
+    ntpv5_response_version: string | null
+
+    ntpv1_supported_conf: number | null
+    ntpv2_supported_conf: number | null
+    ntpv3_supported_conf: number | null
+    ntpv4_supported_conf: number | null
+    ntpv5_supported_conf: number | null
+
+    ntpv1_analysis: string | null
+    ntpv2_analysis: string | null
+    ntpv3_analysis: string | null
+    ntpv4_analysis: string | null
+    ntpv5_analysis: string | null
+
+    // Optional embedded measurement data from the backend
+    ntpv4_1_measurement?: Record<string, any> | null
+    ntpv4_2_measurement?: Record<string, any> | null
+    ntpv4_3_measurement?: Record<string, any> | null
+    ntpv4_4_measurement?: Record<string, any> | null
+    ntpv5_measurement?: Record<string, any> | null
+}
 /**
  * A single place to remember everything we want to preserve
  * when the user leaves and re-enters the Home tab.
