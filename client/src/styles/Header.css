@@ -84,10 +84,11 @@ a {
 }
 
 .ntpinfo-logo {
-    height: 5rem;
+    height: 3rem;
     width: auto;
     object-fit: contain;
-    margin-right: -10%;
+    /* margin-right: -10%; */
+    margin-left: 5%;
 }
 
 /* Media Queries */
@@ -128,7 +129,7 @@ a {
     }
 
     .ntpinfo-logo {
-        height: 3rem;
+        height: 2rem;
     }
 
     .text-header {
