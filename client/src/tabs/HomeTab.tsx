@@ -90,7 +90,7 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
   const {fetchData: fetchMeasurementData, loading: apiDataLoading, error: apiErrorLoading, httpStatus: respStatus, errorMessage: apiErrDetail} = useFetchIPData()
   const {fetchData: fetchHistoricalData} = useFetchHistoricalIPData()
   const {triggerMeasurement, error: ripeTriggerErr} = useTriggerRipeMeasurement()
-  const { fetchNTS, data: ntsData, loading: ntsLoading, error: ntsError } = useFetchNTSData()
+  const { fetchNTS, loading: ntsLoading, error: ntsError } = useFetchNTSData()
   const {
     result: fetchedRIPEData,
     status: fetchedRIPEStatus,

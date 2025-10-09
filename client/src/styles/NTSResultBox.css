@@ -16,7 +16,7 @@
   max-width: 100%;
   margin-left: 1.75rem;
   margin-right: 1.75rem;
-  max-width: fit-content;
+  max-width: 600px;
 }
 
 .nts-label {
@@ -85,7 +85,8 @@
   font-weight: 500;
   color: var(--clr-font-white);
   opacity: 0.9;
-  padding-right: 2.4rem;
+  /* padding-right: 2.4rem; */
+  min-width: 85px;
 }
 
 .nts-value {
