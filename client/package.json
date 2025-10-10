@@ -21,6 +21,7 @@
     "chartjs-adapter-date-fns": "^3.0.0",
     "client": "file:",
     "leaflet": "^1.9.4",
+    "lucide-react": "^0.545.0",
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",

@@ -21,6 +21,7 @@ import 'leaflet/dist/leaflet.css'
 import { useTriggerRipeMeasurement } from '../hooks/useTriggerRipeMeasurement.ts'
 import ConsentPopup from '../components/ConsentPopup.tsx'
 import ripeLogo from '../assets/ripe_ncc_white.png'
+import { NtpVersionAnalysis } from '../components/NTPVersions.tsx'
 
 // interface HomeTabProps {
 //     onVisualizationDataChange: (data: Map<string, NTPData[]> | null) => void;
@@ -312,6 +313,8 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
         <DownloadButton name="Download JSON" onclick={() => downloadJSON(ripeMeasurementResp ? [ntpData, ripeMeasurementResp[0]] : [ntpData])} />
         <DownloadButton name="Download CSV" onclick={() => downloadCSV(ripeMeasurementResp ? [ntpData, ripeMeasurementResp[0]] : [ntpData])} />
       </div>)}
+
+      {ntpData && (<NtpVersionAnalysis measurement_id={2}/>)} 
       {/*Map compoment that shows the NTP servers, the vantage point, and the RIPE probes*/}
        {(ripeMeasurementStatus === "complete" || ripeMeasurementStatus === "partial_results" || ripeMeasurementStatus === "timeout") && (
         <div className='map-box'>

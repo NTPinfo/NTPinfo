@@ -94,7 +94,6 @@ export type NTPVersionsData = {
     ntpv4_analysis: string | null
     ntpv5_analysis: string | null
 
-    // Optional embedded measurement data from the backend
     ntpv4_1_measurement?: Record<string, any> | null
     ntpv4_2_measurement?: Record<string, any> | null
     ntpv4_3_measurement?: Record<string, any> | null
