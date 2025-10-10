@@ -117,6 +117,10 @@
   .download-buttons {
     padding-left: 1rem;
     padding-top: 0.5rem;
+    padding-right: 1rem;
+  }
+  .download-buttons button {
+    font-size: 0.8rem;
   }
 }
 

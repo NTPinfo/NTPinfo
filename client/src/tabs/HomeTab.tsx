@@ -19,7 +19,9 @@ import { NTPData} from '../utils/types.ts'
 
 import 'leaflet/dist/leaflet.css'
 import { useTriggerRipeMeasurement } from '../hooks/useTriggerRipeMeasurement.ts'
+import { useFetchNTSData } from '../hooks/useFetchNTSData.ts'
 import ConsentPopup from '../components/ConsentPopup.tsx'
+import NTSResultBox from '../components/NTSResultBox.tsx'
 import ripeLogo from '../assets/ripe_ncc_white.png'
 import { NtpVersionAnalysis } from '../components/NTPVersions.tsx'
 
@@ -56,7 +58,8 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
     ripeMeasurementResp,
     ripeMeasurementStatus,
     ipv6Selected,
-    measurementSessionActive
+    measurementSessionActive,
+    ntsResult
   } = cache;
 
   // still local UI state
@@ -88,6 +91,7 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
   const {fetchData: fetchMeasurementData, loading: apiDataLoading, error: apiErrorLoading, httpStatus: respStatus, errorMessage: apiErrDetail} = useFetchIPData()
   const {fetchData: fetchHistoricalData} = useFetchHistoricalIPData()
   const {triggerMeasurement, error: ripeTriggerErr} = useTriggerRipeMeasurement()
+  const { fetchNTS, loading: ntsLoading, error: ntsError } = useFetchNTSData()
   const {
     result: fetchedRIPEData,
     status: fetchedRIPEStatus,
@@ -145,6 +149,7 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
       ripeMeasurementResp: null,
       ripeMeasurementStatus: null,
       chartData: null,
+      ntsResult: null,
       measurementSessionActive: true  // Start measurement session
     })
 
@@ -161,7 +166,26 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
      * Get the response from the measurement data endpoint
      */
     const fullurlMeasurementData = `${import.meta.env.VITE_SERVER_HOST_ADDRESS}/measurements/`
-    const apiMeasurementResp = await fetchMeasurementData(fullurlMeasurementData, payload)
+
+    /**
+     * Get data from past day from historical data endpoint to chart in the graph.
+     */
+    const startDate = dateFormatConversion(Date.now()-86400000)
+    const endDate = dateFormatConversion(Date.now())
+    const fullurlHistoricalData = `${import.meta.env.VITE_SERVER_HOST_ADDRESS}/measurements/history/?server=${query}&start=${startDate}&end=${endDate}`
+
+    const ripePayload = {
+      server: query.trim(),
+      ipv6_measurement: useIPv6
+    }
+
+    // Run all four calls concurrently for better performance
+    const [apiMeasurementResp, apiHistoricalResp, ripeTriggerResp, ntsResp] = await Promise.all([
+      fetchMeasurementData(fullurlMeasurementData, payload),
+      fetchHistoricalData(fullurlHistoricalData),
+      triggerMeasurement(ripePayload),
+      fetchNTS(payload),
+    ])
 
     // If main measurement failed, end the session
     if (!apiMeasurementResp) {
@@ -178,26 +202,11 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
     }
 
     /**
-     * Get data from past day from historical data endpoint to chart in the graph.
-     */
-    const startDate = dateFormatConversion(Date.now()-86400000)
-    const endDate = dateFormatConversion(Date.now())
-    const fullurlHistoricalData = `${import.meta.env.VITE_SERVER_HOST_ADDRESS}/measurements/history/?server=${query}&start=${startDate}&end=${endDate}`
-    const apiHistoricalResp = await fetchHistoricalData(fullurlHistoricalData)
-
-    /**
      * Update the stored data and show it again
      */
-    // setMeasured(true)
-
-    
-
     const data = selectResult(apiMeasurementResp)
     const chartData = new Map<string, NTPData[]>()
     chartData.set(payload.server, apiHistoricalResp)
-    // setAllNtpMeasurements(apiMeasurementResp ?? null)
-    // setNtpData(data ?? null)
-    // setChartData(chartData)
     onVisualizationDataChange(chartData)
     updateCache({
       measured: true,
@@ -206,21 +215,9 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
       allNtpMeasurements: apiMeasurementResp ?? null,
       ripeMeasurementResp: null,          // clear old map
       ripeMeasurementStatus: undefined,        //  "     "
+      ntsResult: ntsResp ?? null,         // Store NTS result
       measurementSessionActive: true      // Keep session active for RIPE measurements
     })
-
-    /**
-     * Payload for the RIPE measurement call, containing only the ip of the server to be measured and whether to use IPv6.
-     */
-    const ripePayload = {
-      server: query.trim(),
-      ipv6_measurement: useIPv6
-    }
-
-    /**
-     * Get the data from the RIPE measurement endpoint and update it.
-     */
-    const ripeTriggerResp = await triggerMeasurement(ripePayload)
     // setVantagePointIp(ripeTriggerResp === null ? null : ripeTriggerResp.parsedData.vantage_point_ip)
     // setMeasurementId(ripeTriggerResp === null ? null : ripeTriggerResp.parsedData.measurementId)
 
@@ -306,12 +303,44 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
       <ResultSummary data={ntpData} err={apiErrorLoading} httpStatus={respStatus} errMessage={apiErrDetail}
       ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null} ripeErr={ripeTriggerErr ?? ripeMeasurementError} ripeStatus={ripeTriggerErr ? "error" :  ripeMeasurementStatus}/>)}
 
+      {/* NTS Results Box - shown when NTP data is available */}
+      {ntpData && !apiDataLoading && (
+        <NTSResultBox 
+          ntsResult={ntsResult} 
+          loading={ntsLoading} 
+          error={ntsError} 
+        />
+      )}
+
       {/*Buttons to download results in JSON and CSV format as well as open a popup displaying historical data*/}
       {/*The open popup button is commented out, because it is implemented as a separate tab*/}
       {ntpData && !apiDataLoading && (<div className="download-buttons">
-
-        <DownloadButton name="Download JSON" onclick={() => downloadJSON(ripeMeasurementResp ? [ntpData, ripeMeasurementResp[0]] : [ntpData])} />
-        <DownloadButton name="Download CSV" onclick={() => downloadCSV(ripeMeasurementResp ? [ntpData, ripeMeasurementResp[0]] : [ntpData])} />
+        <DownloadButton 
+          name="Download JSON" 
+          onclick={() => {
+            const bundle: any[] = [ntpData];
+            if (ripeMeasurementResp) bundle.push(ripeMeasurementResp[0]);
+            if (ntsResult) {
+              // Create a wrapper object for NTS data to match the expected format
+              const ntsWrapper = { type: 'NTS Data', ...ntsResult };
+              bundle.push(ntsWrapper as any);
+            }
+            downloadJSON(bundle);
+          }} 
+        />
+        <DownloadButton 
+          name="Download CSV" 
+          onclick={() => downloadCSV(ripeMeasurementResp ? [ntpData, ripeMeasurementResp[0]] : [ntpData])} 
+        />
+        {ntsResult && (
+          <DownloadButton 
+            name="Download NTS Result" 
+            onclick={() => {
+              const ntsWrapper = { type: 'NTS Data', ...ntsResult };
+              downloadJSON([ntsWrapper as any]);
+            }} 
+          />
+        )}
       </div>)}
 
       {ntpData && (<NtpVersionAnalysis measurement_id={2}/>)} 
