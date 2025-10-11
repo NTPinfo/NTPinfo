@@ -10,15 +10,163 @@ from server.app.models.Base import Base
 class NTPv4Measurement(Base):
     __tablename__ = "ntpv4_measurement"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    ntpv_data = Column(JSON, nullable=False)
+    analysis: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    host: Mapped[str] = mapped_column(Text, nullable=False)
+    measured_server_ip: Mapped[str] = mapped_column(String(45), nullable=False)
+
+    offset: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+    rtt: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+    stratum: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+    poll: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+
+    client_sent_time: Mapped[Optional[str]] = mapped_column(Numeric, nullable=True)
+    server_recv_time: Mapped[Optional[str]] = mapped_column(Numeric, nullable=True)
+    server_sent_time: Mapped[Optional[str]] = mapped_column(Numeric, nullable=True)
+    client_recv_time: Mapped[Optional[str]] = mapped_column(Numeric, nullable=True)
+    ref_time: Mapped[Optional[str]] = mapped_column(Numeric, nullable=True)
+
+    leap: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+    mode: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+    version: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+
+    precision: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+    root_delay: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+    root_disp: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+
+    ref_name: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+
+    extensions: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    @classmethod
+    def from_dict(cls, data: dict, analysis: Optional[str] = None, host: Optional[str] = None,
+                  ip: Optional[str] = None) -> "NTPv4Measurement":
+        """
+        It creates a new NTPv4Measurement object from the given JSON data. The optional fields are used
+        in case the dict does not contain them.
+        Args:
+            data (dict): JSON data
+            analysis (Optional[str]): The analysis of the results
+            host (Optional[str]): The host of the server (domain name, but can also be IP address)
+            ip (Optional[str]): The measured server ip
+        Returns:
+            NTPv4Measurement: NTPv4Measurement object
+        """
+        return cls(
+            analysis=data.get("analysis", analysis),
+            host=data.get("host", host),
+            measured_server_ip=data.get("measured_server_ip", ip),
+
+            offset=data.get("offset"),
+            rtt=data.get("rtt"),
+            stratum=data.get("stratum"),
+            poll=data.get("poll"),
+
+            client_sent_time=data.get("orig_timestamp"), # careful about the notations
+            server_recv_time=data.get("recv_timestamp"),
+            server_sent_time=data.get("tx_timestamp"),
+            client_recv_time=data.get("client_recv_time"),
+            ref_time=data.get("ref_timestamp"),
+
+            leap=data.get("leap"),
+            mode=data.get("mode"),
+            version=data.get("version"),
+
+            precision=data.get("precision"),
+            root_delay=data.get("root_delay"),
+            root_disp=data.get("root_disp"),
+            ref_name=data.get("ref_id"),
+
+            extensions=data.get("extensions")
+        )
 
 
 class NTPv5Measurement(Base):
     __tablename__ = "ntpv5_measurement"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     draft_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    ntpv5_data = Column(JSON, nullable=False)
     analysis: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    host: Mapped[str] = mapped_column(Text, nullable=False)
+    measured_server_ip: Mapped[str] = mapped_column(String(45), nullable=False)
+
+    offset: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+    rtt: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+    stratum: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+    poll: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+
+    client_sent_time: Mapped[Optional[str]] = mapped_column(Numeric, nullable=True)
+    server_recv_time: Mapped[Optional[str]] = mapped_column(Numeric, nullable=True)
+    server_sent_time: Mapped[Optional[str]] = mapped_column(Numeric, nullable=True)
+    client_recv_time: Mapped[Optional[str]] = mapped_column(Numeric, nullable=True)
+
+    client_cookie: Mapped[Optional[str]] = mapped_column(Numeric, nullable=True)
+    server_cookie: Mapped[Optional[str]] = mapped_column(Numeric, nullable=True)
+
+    leap: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+    mode: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+    version: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+
+    precision: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+    root_delay: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+    root_disp: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+
+    timescale: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+    era: Mapped[Optional[int]] = mapped_column(SmallInteger, nullable=True)
+    flags_raw: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    flags: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    extensions: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    @classmethod
+    def from_dict(cls, data: dict, analysis: Optional[str]=None, host: Optional[str]=None,
+                  ip: Optional[str]=None) -> "NTPv5Measurement":
+        """
+        It creates a new NTPv5Measurement object from the given JSON data. The optional fields are used
+        in case the dict does not contain them.
+        Args:
+            data (dict): JSON data
+            analysis (Optional[str]): The analysis of the results
+            host (Optional[str]): The host of the server (domain name, but can also be IP address)
+            ip (Optional[str]): The measured server ip
+        Returns:
+            NTPv5Measurement: NTPv5Measurement object
+        """
+        return cls(
+
+            draft_name=data.get("draft_name"),
+            analysis=data.get("analysis", analysis),
+            host=data.get("host", host),
+            measured_server_ip=data.get("measured_server_ip", ip),
+
+            offset=data.get("offset"),
+            rtt=data.get("rtt"),
+            stratum=data.get("stratum"),
+            poll=data.get("poll"),
+
+            client_sent_time=data.get("orig_timestamp"),
+            server_recv_time=data.get("recv_timestamp"),
+            server_sent_time=data.get("tx_timestamp"),
+            client_recv_time=data.get("client_recv_time"),
+
+            client_cookie=data.get("client_cookie"),
+            server_cookie=data.get("server_cookie"),
+
+            leap=data.get("leap"),
+            mode=data.get("mode"),
+            version=data.get("version"),
+
+            precision=data.get("precision"),
+            root_delay=data.get("root_delay"),
+            root_disp=data.get("root_disp"),
+
+            timescale=data.get("timescale"),
+            era=data.get("era"),
+            flags_raw=data.get("flags_raw"),
+            flags=data.get("flags_decoded"),  # here you could add a better logic in future
+
+            extensions=data.get("extensions")
+        )
 
 class NTSMeasurement(Base):
     __tablename__ = "nts_measurement"

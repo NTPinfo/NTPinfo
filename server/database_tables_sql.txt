@@ -1,14 +1,65 @@
 CREATE TABLE ntpv4_measurement (
     id SERIAL PRIMARY KEY,
-    ntpv_data JSONB NOT NULL
+    analysis TEXT
+    host TEXT NOT NULL,
+    measured_server_ip VARCHAR(45) NOT NULL,
+    offset DOUBLE PRECISION,
+    rtt DOUBLE PRECISION,
+    stratum SMALLINT,
+    poll SMALLINT,
+
+    client_sent_time NUMERIC,
+    server_recv_time NUMERIC,
+    server_sent_time NUMERIC,
+    client_recv_time NUMERIC,
+    ref_time NUMERIC,
+
+    leap SMALLINT,
+    mode SMALLINT,
+    version SMALLINT,
+
+    precision DOUBLE PRECISION,
+    root_delay DOUBLE PRECISION,
+    root_disp DOUBLE PRECISION,
+    ref_name VARCHAR(50),
+
+    extensions JSONB
 );
 
 CREATE TABLE ntpv5_measurement (
     id SERIAL PRIMARY KEY,
     draft_name TEXT,
-    ntpv5_data JSONB NOT NULL,
     analysis TEXT
+    host TEXT NOT NULL,
+    measured_server_ip VARCHAR(45) NOT NULL,
+    offset DOUBLE PRECISION,
+    rtt DOUBLE PRECISION,
+    stratum SMALLINT,
+    poll SMALLINT,
+
+    client_sent_time NUMERIC,
+    server_recv_time NUMERIC,
+    server_sent_time NUMERIC,
+    client_recv_time NUMERIC,
+
+    client_cookie NUMERIC,
+    server_cookie NUMERIC,
+
+    leap SMALLINT,
+    mode SMALLINT,
+    version SMALLINT,
+
+    precision DOUBLE PRECISION,
+    root_delay DOUBLE PRECISION,
+    root_disp DOUBLE PRECISION,
+    timescale SMALLINT,
+    era SMALLINT,
+    flags_raw BIGINT,
+    flags JSONB,
+
+    extensions JSONB
 );
+
 CREATE TABLE nts_measurement (
     id_nts SERIAL PRIMARY KEY,
     succeeded BOOLEAN NOT NULL DEFAULT FALSE,

@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from server.app.utils.validate import sanitize_string
 from server.app.dtos.MeasurementRequest import MeasurementRequest
 from server.app.utils.analyze_ntp_versions import run_tool_on_ntp_version
-from server.app.dtos.full_ntp_measurement import NTSMeasurement, FullMeasurementDN, NTPv4Measurement, NTPv5Measurement
+from server.app.dtos.full_ntp_measurement import NTSMeasurement, FullMeasurementDN, NTPv4Measurement, NTPv5Measurement, \
+    put_fields_ntpv4, put_fields_ntpv5
 from server.app.dtos.AdvancedSettings import AdvancedSettings
 from server.app.utils.nts_check import perform_nts_measurement_ip, perform_nts_measurement_domain_name
 from server.app.dtos.full_ntp_measurement import FullMeasurementIP, NTPVersions
@@ -392,7 +393,7 @@ def complete_this_measurement_dn(measurement_id: int, dn_ips: list[str], setting
             db.commit()
             measurement_ip = FullMeasurementIP(
                 status="pending",
-                server_ip=server,
+                server_ip=ip,
                 settings=settings.model_dump()
             )
             db.add(measurement_ip)
@@ -581,7 +582,9 @@ def add_custom_ntp_measurement_ip_to_db_measurement(db: Session, server_ip: str,
         # the client will see the results
         # as what class do we save it? ->
         # save as what the response version says
-
+        host = server_ip
+        if from_dn is not None:
+            host = from_dn
         # the decision was based on these statements:
         # it is ok if in NTPv5 class we have fake measurements that says their version is NTPv5
         #  which is the ntp server's problem, not ours-> we can easily detect them
@@ -596,13 +599,16 @@ def add_custom_ntp_measurement_ip_to_db_measurement(db: Session, server_ip: str,
         if response_version != "5" and response_version != "ntpv5": # I think this may help if someone is confused about notations.
             # then it is either NTPv1,v2,v3 or v4. But all of them are saved in the database in the NTPv4 format.
             # add the "from_dn" in case it exists.
-            measurement_v = NTPv4Measurement(ntpv_data=data)
+            measurement_v = NTPv4Measurement(ntpv_data=data, host=host, measured_server_ip=server_ip)
+            put_fields_ntpv4(measurement_v, data)
+
             db.add(measurement_v)
             db.flush()
             full_m.id_main_measurement = measurement_v.id
         else:
             # add the "from_dn" in case it exists.
             measurement_v5 = NTPv5Measurement(ntpv5_data=data, draft_name=settings.ntpv5_draft, analysis=analysis)
+            # put_fields_ntpv5(measurement_v5, data, analysis, settings.ntpv5_draft)
             db.add(measurement_v5)
             db.flush()
             full_m.id_main_measurement = measurement_v5.id
@@ -626,7 +632,13 @@ def add_ntp_versions_to_db_measurement(db: Session, server: str, settings: Advan
     Returns:
         None: nothing
     """
-
+    host = server
+    server_ip = None
+    if is_ip_address(server):
+        server_ip = server
+    if from_dn is not None:
+        host = from_dn
+    print(f"ntpv: host: {host}, ip: {server_ip}")
     try:
         ntpv_ans = analyze_supported_ntp_versions(server, settings)
         #if there is an error with our tool (not the results from our tool! Important difference)
@@ -654,25 +666,29 @@ def add_ntp_versions_to_db_measurement(db: Session, server: str, settings: Advan
         db.flush()  # assign ID without commit yet
 
         # insert measurements
-        ntpv1, resp1_vs = add_ntp_measurement(db, ntpv_ans.get("ntpv1_m_result"), settings)
-        ntpv2, resp2_vs = add_ntp_measurement(db, ntpv_ans.get("ntpv2_m_result"), settings)
-        ntpv3, resp3_vs = add_ntp_measurement(db, ntpv_ans.get("ntpv3_m_result"), settings)
-        ntpv4, resp4_vs = add_ntp_measurement(db, ntpv_ans.get("ntpv4_m_result"), settings)
-        ntpv5, resp5_vs = add_ntp_measurement(db, ntpv_ans.get("ntpv5_m_result"), settings)
+        ntpv1, resp1_vs = add_ntp_measurement(db, ntpv_ans.get("ntpv1_m_result"), settings, host, server_ip)
+        ntpv2, resp2_vs = add_ntp_measurement(db, ntpv_ans.get("ntpv2_m_result"), settings, host, server_ip)
+        ntpv3, resp3_vs = add_ntp_measurement(db, ntpv_ans.get("ntpv3_m_result"), settings, host, server_ip)
+        ntpv4, resp4_vs = add_ntp_measurement(db, ntpv_ans.get("ntpv4_m_result"), settings, host, server_ip)
+        ntpv5, resp5_vs = add_ntp_measurement(db, ntpv_ans.get("ntpv5_m_result"), settings, host, server_ip)
 
         # link them if they exist
         if ntpv1:
             ntp_vs.id_v4_1 = ntpv1.id
             ntp_vs.ntpv1_response_version = resp1_vs
+            put_fields_ntpv4(ntpv1, ntpv_ans.get("ntpv1_m_result"))
         if ntpv2:
             ntp_vs.id_v4_2 = ntpv2.id
             ntp_vs.ntpv2_response_version = resp2_vs
+            put_fields_ntpv4(ntpv2, ntpv_ans.get("ntpv2_m_result"))
         if ntpv3:
             ntp_vs.id_v4_3 = ntpv3.id
             ntp_vs.ntpv3_response_version = resp3_vs
+            put_fields_ntpv4(ntpv3, ntpv_ans.get("ntpv3_m_result"))
         if ntpv4:
             ntp_vs.id_v4_4 = ntpv4.id
             ntp_vs.ntpv4_response_version = resp4_vs
+            put_fields_ntpv4(ntpv4, ntpv_ans.get("ntpv4_m_result"))
         if ntpv5:
             ntp_vs.id_v5 = ntpv5.id
             ntp_vs.ntpv5_response_version = resp5_vs
@@ -684,7 +700,7 @@ def add_ntp_versions_to_db_measurement(db: Session, server: str, settings: Advan
     except Exception as e:
         print(f"error in adding ntp versions: {e}")
 
-def add_ntp_measurement(db: Session, result: Optional[dict], settings: AdvancedSettings, from_dn: Optional[str] = None) \
+def add_ntp_measurement(db: Session, result: Optional[dict], settings: AdvancedSettings, host: str, server_ip: Optional[str]) \
         -> Tuple[Optional[NTPv4Measurement | NTPv5Measurement], Optional[str]]:
     """
     This method adds the result (NTP measurement) into the database.
@@ -692,7 +708,8 @@ def add_ntp_measurement(db: Session, result: Optional[dict], settings: AdvancedS
         db (Session): A connection to the database.
         result (Optional[dict]): the result of the adding NTP measurement
         settings (AdvancedSettings): the settings to use
-        from_dn (Optional[str]): the domain name of this IP address, if available.
+        host (Optional[str]): the host to use (IP or domain name)
+        server_ip (Optional[str]): the IP
     Returns:
         Tuple[Optional[NTPv4Measurement | NTPv5Measurement], Optional[str]]: A pair of the measurement and its version.
     """
@@ -706,7 +723,7 @@ def add_ntp_measurement(db: Session, result: Optional[dict], settings: AdvancedS
             vs = "ntpv5"
         else:
             # TODO add from_dn
-            measurement_vs = NTPv4Measurement(ntpv_data=result)
+            measurement_vs = NTPv4Measurement(ntpv_data=result, host=host, measured_server_ip=server_ip)
             vs = "ntpv" + str(result.get("version"))
         db.add(measurement_vs)
         db.flush()
