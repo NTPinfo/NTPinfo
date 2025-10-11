@@ -3,7 +3,7 @@ import { useState } from "react"
 import { useNtpVersionAnalysis } from "../hooks/useNTPVersionAnalysis"
 import "../styles/NtpVersions.css"
 
-type VersionStatus = "supported" | "not-supported" | "partial"
+type VersionStatus = "supported" | "not-supported" | "partial" | "not-measured"
 
 const statusConfig = {
   supported: {
@@ -24,10 +24,16 @@ const statusConfig = {
     label: "Partial Support",
     iconColor: "text-amber-600",
   },
+  "not-measured": {
+    icon: null,
+    color: "border-amber-600 bg-amber-50 text-amber-700",
+    label: "Partial Support",
+    iconColor: "text-amber-600",
+  }
 }
 
 function getStatus(conf: number | null, analysis: string | null): VersionStatus {
-  if (conf === null && !analysis) return "not-supported"
+  if (conf == null) return "not-measured"
   if (conf === 0) return "not-supported"
   if (conf !== null && conf > 0 && conf < 100) return "partial"
   if (analysis?.toLowerCase().includes("partial")) return "partial"
@@ -50,7 +56,6 @@ export function NtpVersionAnalysis({ measurement_id }: { measurement_id: number 
   ) => {
     const status = getStatus(conf, analysis);
     const config = statusConfig[status];
-    const Icon = config.icon;
     const isHovered = hoveredVersion === version;
 
     return (
@@ -61,8 +66,8 @@ export function NtpVersionAnalysis({ measurement_id }: { measurement_id: number 
         onMouseLeave={() => setHoveredVersion(null)}
       >
         <button className={`ntp-version-button ${status}`}>
-          <Icon className={`ntp-icon ${status}`} />
-          {version}
+        {config.icon && (<config.icon className={`ntp-icon ${status}`} />)}
+         <span>{version}</span> 
         </button>
 
         {isHovered && (
@@ -99,9 +104,11 @@ export function NtpVersionAnalysis({ measurement_id }: { measurement_id: number 
 
       <div className="ntp-legend">
         {Object.entries(statusConfig).map(([key, config]) => {
+          if (config.label === "Not measured")
+            return null
           return (
             <div key={key} className="ntp-legend-item">
-              <config.icon className={`ntp-legend-icon ${key}`} />
+             {config.icon && ( <config.icon className={`ntp-legend-icon ${key}`} />)}
               <span className="ntp-legend-label">{config.label}</span>
             </div>
           )

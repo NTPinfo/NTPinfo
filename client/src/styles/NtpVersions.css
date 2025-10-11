@@ -22,7 +22,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 1rem;
+  gap: 3rem;
   margin-bottom: 2rem;
 }
 
@@ -48,19 +48,23 @@
 
 .ntp-version-button.supported {
   border-color: #16a34a;
-  background-color: #f0fdf4;
+  background-color: var(--clr-font-white);
   color: #15803d;
 }
 
 .ntp-version-button.not-supported {
   border-color: #dc2626;
-  background-color: #fef2f2;
+  background-color: var(--clr-font-white);
   color: #b91c1c;
 }
-
+.ntp-version-button.not-measured {
+  border-color: gray;
+  background-color: var(--clr-font-white);
+  color: gray;
+}
 .ntp-version-button.partial {
   border-color: #d97706;
-  background-color: #fffbeb;
+  background-color: var(--clr-font-white);
   color: #b45309;
 }
 
@@ -72,7 +76,9 @@
 .ntp-icon.supported {
   color: #16a34a;
 }
-
+.ntp-icon.not-measured {
+  color: gray;
+}
 .ntp-icon.not-supported {
   color: #dc2626;
 }
@@ -141,6 +147,9 @@
 
 .ntp-legend-icon.supported {
   color: #16a34a;
+}
+.ntp-legend-icon.not-measured {
+  color: gray;
 }
 
 .ntp-legend-icon.not-supported {

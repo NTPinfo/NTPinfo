@@ -19,13 +19,13 @@ const dummyData: NTPVersionsData = {
 
   ntpv1_supported_conf: 100,
   ntpv2_supported_conf: 0,
-  ntpv3_supported_conf: 100,
+  ntpv3_supported_conf: null,
   ntpv4_supported_conf: 100,
   ntpv5_supported_conf: 50,
 
   ntpv1_analysis: "NTPv1 responded successfully but lacks modern security features.",
   ntpv2_analysis: "NTPv2 is deprecated and not supported by this server.",
-  ntpv3_analysis: "NTPv3 supported with stable timing accuracy.",
+  ntpv3_analysis: "",
   ntpv4_analysis: "NTPv4 is fully supported — preferred version with best accuracy.",
   ntpv5_analysis: "NTPv5 partially supported; draft implementation detected.",
 
@@ -44,10 +44,13 @@ export function useNtpVersionAnalysis(measurementId: number) {
       try {
         const response = await axios.get(`/measurements/ntp_versions/${measurementId}`)
         const transformed = transformJSONDataToNTPVerData(response.data ? response.data : dummyData)
+
+        //MOMENTAN DA RETURN LA DUMMY DATA
+        //AICI SA MODIFICATI IN CAZ CA SE UITA CNV
         setData(dummyData)
         setLoading(false)
 
-        // Stop polling if all analyses are filled
+        //Cred ca asa se opreste poll-ul idk
         if (transformed) {
           const analyses = [
             transformed.ntpv1_analysis,
