@@ -1,9 +1,11 @@
 CREATE TABLE ntpv4_measurement (
     id SERIAL PRIMARY KEY,
-    analysis TEXT
-    host TEXT NOT NULL,
-    measured_server_ip VARCHAR(45) NOT NULL,
-    offset DOUBLE PRECISION,
+    analysis TEXT,
+
+    host TEXT,
+    measured_server_ip VARCHAR(45),
+
+    "offset" DOUBLE PRECISION,
     rtt DOUBLE PRECISION,
     stratum SMALLINT,
     poll SMALLINT,
@@ -17,11 +19,11 @@ CREATE TABLE ntpv4_measurement (
     leap SMALLINT,
     mode SMALLINT,
     version SMALLINT,
-
     precision DOUBLE PRECISION,
     root_delay DOUBLE PRECISION,
     root_disp DOUBLE PRECISION,
-    ref_name VARCHAR(50),
+
+    ref_id VARCHAR(50),
 
     extensions JSONB
 );
@@ -29,51 +31,50 @@ CREATE TABLE ntpv4_measurement (
 CREATE TABLE ntpv5_measurement (
     id SERIAL PRIMARY KEY,
     draft_name TEXT,
-    analysis TEXT
-    host TEXT NOT NULL,
-    measured_server_ip VARCHAR(45) NOT NULL,
-    offset DOUBLE PRECISION,
+    analysis TEXT,
+    host TEXT,
+    measured_server_ip VARCHAR(45),
+
+    "offset" DOUBLE PRECISION,
     rtt DOUBLE PRECISION,
     stratum SMALLINT,
     poll SMALLINT,
+
+    client_cookie NUMERIC,
+    server_cookie NUMERIC,
 
     client_sent_time NUMERIC,
     server_recv_time NUMERIC,
     server_sent_time NUMERIC,
     client_recv_time NUMERIC,
 
-    client_cookie NUMERIC,
-    server_cookie NUMERIC,
-
     leap SMALLINT,
     mode SMALLINT,
     version SMALLINT,
-
     precision DOUBLE PRECISION,
     root_delay DOUBLE PRECISION,
     root_disp DOUBLE PRECISION,
+
     timescale SMALLINT,
     era SMALLINT,
     flags_raw BIGINT,
-    flags JSONB,
-
+    flags_decoded JSONB,
     extensions JSONB
 );
-
 CREATE TABLE nts_measurement (
     id_nts SERIAL PRIMARY KEY,
     succeeded BOOLEAN NOT NULL DEFAULT FALSE,
     analysis TEXT NOT NULL,
 
     host TEXT NOT NULL,
-    measured_server_ip VARCHAR(45) NOT NULL,
-    measured_server_port SMALLINT NOT NULL DEFAULT 123,
-    offset DOUBLE PRECISION,
+    measured_server_ip VARCHAR(45),
+    measured_server_port SMALLINT,
+    "offset" DOUBLE PRECISION,
     rtt DOUBLE PRECISION,
     kiss_code VARCHAR(10),
     stratum SMALLINT,
     poll SMALLINT,
-    measurement_type VARCHAR(10) NOT NULL,
+    measurement_type VARCHAR(10),
 
     client_sent_time NUMERIC,
     server_recv_time NUMERIC,
@@ -92,17 +93,17 @@ CREATE TABLE nts_measurement (
     root_dist DOUBLE PRECISION,
 
     ref_id VARCHAR(50),
-    ref_id_raw VARCHAR(50),
+    ref_id_raw VARCHAR(50)
 );
 
 CREATE TABLE ntp_versions (
     id_vs SERIAL PRIMARY KEY,
 
-    id_v4_1 INT REFERENCES ntpv4_measurement(id),
-    id_v4_2 INT REFERENCES ntpv4_measurement(id),
-    id_v4_3 INT REFERENCES ntpv4_measurement(id),
-    id_v4_4 INT REFERENCES ntpv4_measurement(id),
-    id_v5   INT REFERENCES ntpv5_measurement(id),
+    id_v4_1 INT, --we do not reference it because it may be from either ntpv4 or ntpv5 table
+    id_v4_2 INT,
+    id_v4_3 INT,
+    id_v4_4 INT,
+    id_v5   INT,
     ntpv1_response_version VARCHAR(7),
     ntpv2_response_version VARCHAR(7),
     ntpv3_response_version VARCHAR(7),
@@ -128,6 +129,7 @@ CREATE TABLE full_ntp_measurement_ip (
     id_vs INT REFERENCES ntp_versions(id_vs),
     id_ripe INT,
     response_version VARCHAR(12),
+    ripe_error VARCHAR,
     response_error VARCHAR,
     id_main_measurement INT,
     settings JSONB
@@ -141,6 +143,7 @@ CREATE TABLE full_ntp_measurement_dn (
     id_nts INT REFERENCES nts_measurement(id_nts),
     id_vs INT REFERENCES ntp_versions(id_vs),
     id_ripe INT,
+    ripe_error VARCHAR,
     response_error VARCHAR,
     settings JSONB
 );
