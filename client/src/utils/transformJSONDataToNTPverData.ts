@@ -39,11 +39,6 @@ export const transformJSONDataToNTPVerData = (fetchedData: any): NTPVersionsData
         ntpv4_analysis: fetchedData.ntpv4_analysis,
         ntpv5_analysis: fetchedData.ntpv5_analysis,
 
-        // Optional embedded measurement objects if backend returns them
-        ntpv4_1_measurement: fetchedData.ntpv4_1_measurement ?? null,
-        ntpv4_2_measurement: fetchedData.ntpv4_2_measurement ?? null,
-        ntpv4_3_measurement: fetchedData.ntpv4_3_measurement ?? null,
-        ntpv4_4_measurement: fetchedData.ntpv4_4_measurement ?? null,
-        ntpv5_measurement: fetchedData.ntpv5_measurement ?? null
+        
     }
 }

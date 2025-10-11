@@ -99,10 +99,9 @@ export function NtpVersionAnalysis({ measurement_id }: { measurement_id: number 
 
       <div className="ntp-legend">
         {Object.entries(statusConfig).map(([key, config]) => {
-          const Icon = config.icon
           return (
             <div key={key} className="ntp-legend-item">
-              <Icon className={`ntp-legend-icon ${key}`} />
+              <config.icon className={`ntp-legend-icon ${key}`} />
               <span className="ntp-legend-label">{config.label}</span>
             </div>
           )

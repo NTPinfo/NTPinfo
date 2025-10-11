@@ -29,63 +29,7 @@ const dummyData: NTPVersionsData = {
   ntpv4_analysis: "NTPv4 is fully supported — preferred version with best accuracy.",
   ntpv5_analysis: "NTPv5 partially supported; draft implementation detected.",
 
-  ntpv4_1_measurement: {
-    id: 101,
-    ntpv_data: {
-      server_name: "time.apple.com",
-      offset: 0.134,
-      rtt: 12.3,
-      stratum: 1,
-      country: "US",
-      ip: "216.239.35.0",
-    },
-  },
-  ntpv4_2_measurement: {
-    id: 102,
-    ntpv_data: {
-      server_name: "time.apple.com",
-      offset: 0.225,
-      rtt: 10.1,
-      stratum: 2,
-      country: "NL",
-      ip: "17.253.34.125",
-    },
-  },
-  ntpv4_3_measurement: {
-    id: 103,
-    ntpv_data: {
-      server_name: "time.apple.com",
-      offset: 0.324,
-      rtt: 15.7,
-      stratum: 2,
-      country: "DE",
-      ip: "138.201.140.44",
-    },
-  },
-  ntpv4_4_measurement: {
-    id: 104,
-    ntpv_data: {
-      server_name: "time.apple.com",
-      offset: 0.118,
-      rtt: 8.9,
-      stratum: 1,
-      country: "US",
-      ip: "162.159.200.1",
-    },
-  },
-  ntpv5_measurement: {
-    id: 201,
-    draft_name: "draft-mlichvar-ntp-version-5-03",
-    ntpv5_data: {
-      server_name: "time.cloudflare.com",
-      offset: 0.110,
-      rtt: 7.5,
-      stratum: 1,
-      country: "US",
-      ip: "162.159.200.1",
-    },
-    analysis: "Partial NTPv5 support detected; using experimental implementation.",
-  },
+  
 };
 export function useNtpVersionAnalysis(measurementId: number) {
   const [data, setData] = useState<NTPVersionsData | null>(null)

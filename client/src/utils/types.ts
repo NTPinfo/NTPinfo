@@ -94,11 +94,6 @@ export type NTPVersionsData = {
     ntpv4_analysis: string | null
     ntpv5_analysis: string | null
 
-    ntpv4_1_measurement?: Record<string, any> | null
-    ntpv4_2_measurement?: Record<string, any> | null
-    ntpv4_3_measurement?: Record<string, any> | null
-    ntpv4_4_measurement?: Record<string, any> | null
-    ntpv5_measurement?: Record<string, any> | null
 }
 /**
  * Data type for NTS measurement results
