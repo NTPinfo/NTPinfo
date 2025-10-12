@@ -103,7 +103,7 @@ export const usePollFullMeasurement = (measurementId: string | null,  interval =
                     )
                     aggregated.ntpVersions = vsRes.data
                 } catch (err) {
-                    console.warn("NTP versions fetch failed", err)
+                    console.warn("NTP versions f failed", err)
                 }
             }
 
@@ -135,4 +135,4 @@ export const usePollFullMeasurement = (measurementId: string | null,  interval =
   }, [measurementId, interval]);
 
   return { result, loading, error};
-};
+}
