@@ -6,7 +6,7 @@ from server.app.dtos.full_ntp_measurement import FullMeasurementIP, NTSMeasureme
 
 
 # methods to convert to JSON (dict)
-def ntpv4_or_v5_measurement_to_dict(db: Session, m_id: Optional[int], m_version: Optional[str]) -> Optional[dict]:
+def ntpv4_or_v5_measurement_to_dict(db: Session, m_id: Optional[int], m_version: Optional[str], from_ntp_versions: bool = False) -> Optional[dict]:
     """
     This method converts an NTPVersions object to a dict/JSON. We need to choose in which format is the measurement.
     NTPv1, NTPv2, NTPv3, NTPv4 are in NTPv4 format, but NTPv5 has its own format.
@@ -14,6 +14,7 @@ def ntpv4_or_v5_measurement_to_dict(db: Session, m_id: Optional[int], m_version:
         db (Session): A connection to the database (we need to query some IDs)
         m_id (Optional[int]): The ID of the NTP measurement
         m_version (Optional[str]): The version of the NTP measurement
+        from_ntp_versions (bool): if true, do not send again the analysis
     Returns:
         Optional[dict]: The dict/JSON version or None
     """
@@ -21,43 +22,104 @@ def ntpv4_or_v5_measurement_to_dict(db: Session, m_id: Optional[int], m_version:
         return None
     if m_version == "ntpv5":
         m_v: Optional[NTPv5Measurement] = db.query(NTPv5Measurement).filter_by(id=m_id).first()
-        return ntpv5_measurement_to_dict(m_v)
+        return ntpv5_measurement_to_dict(m_v, from_ntp_versions)
     else: # other versions will be saved in NTPv4 format
         m_v5: Optional[NTPv4Measurement] = db.query(NTPv4Measurement).filter_by(id=m_id).first()
-        return ntpv4_measurement_to_dict(m_v5)
+        return ntpv4_measurement_to_dict(m_v5, from_ntp_versions)
 
-def ntpv4_measurement_to_dict(m: Optional[NTPv4Measurement]) -> Optional[dict]:
+def ntpv4_measurement_to_dict(m: Optional[NTPv4Measurement], from_ntp_versions: bool = False) -> Optional[dict]:
     """
     This method converts an NTPv4Measurement object to a dict/JSON. It is important to note that NTPv1 ... NTPv3 are also
     in this NTPv4Measurement format.
     Args:
         m (Optional[NTPv4Measurement]): The measurement object to convert.
+        from_ntp_versions (bool): if true, do not send again the analysis
     Returns:
         Optional[dict]: The dict/JSON version or None
     """
     if m is None:
         return None
-    return {
+    ans: dict = {
         "id": m.id,
-        "ntp_data": m.ntpv_data,
-    }
+        # "analysis": m.analysis,
+        "host": m.host,
+        "measured_server_ip": m.measured_server_ip,
+        "offset": m.offset,
+        "rtt": m.rtt,
+        "stratum": m.stratum,
+        "poll": m.poll,
 
-def ntpv5_measurement_to_dict(m: Optional[NTPv5Measurement]) -> Optional[dict]:
+        "client_sent_time": int(m.client_sent_time) if m.client_sent_time is not None else None,
+        "server_recv_time": int(m.server_recv_time) if m.server_recv_time is not None else None,
+        "server_sent_time": int(m.server_sent_time) if m.server_sent_time is not None else None,
+        "client_recv_time": int(m.client_recv_time) if m.client_recv_time is not None else None,
+        "ref_time": int(m.ref_time) if m.ref_time is not None else None,
+
+        "leap": m.leap,
+        "mode": m.mode,
+        "version": m.version,
+        "precision": m.precision,
+        "root_delay": m.root_delay,
+        "root_disp": m.root_disp,
+
+        "ref_id": m.ref_id,
+
+        "extensions": m.extensions,
+    }
+    if not from_ntp_versions:
+        ans["analysis"] = m.analysis
+    return ans
+
+def ntpv5_measurement_to_dict(m: Optional[NTPv5Measurement], from_ntp_versions: bool = False) -> Optional[dict]:
     """
     This method converts an NTPv5Measurement object to a dict/JSON (only for NTPv5).
     Args:
         m (Optional[NTPv5Measurement]): The measurement object to convert.
+        from_ntp_versions (bool): if true, do not send again the analysis
     Returns:
         Optional[dict]: The dict/JSON version or None
     """
     if m is None:
         return None
-    return {
+    ans: dict = {
         "id": m.id,
         "draft_name": m.draft_name,
-        "ntpv5_analysis": m.analysis,
-        "ntpv5_data": m.ntpv5_data,
+        # "analysis": m.analysis,
+
+        "host": m.host,
+        "measured_server_ip": m.measured_server_ip,
+
+        "offset": m.offset,
+        "rtt": m.rtt,
+        "stratum": m.stratum,
+        "poll": m.poll,
+
+        "client_cookie": int(m.client_cookie) if m.client_cookie is not None else None,
+        "server_cookie": int(m.server_cookie) if m.server_cookie is not None else None,
+
+        "client_sent_time": int(m.client_sent_time) if m.client_sent_time is not None else None,
+        "server_recv_time": int(m.server_recv_time) if m.server_recv_time is not None else None,
+        "server_sent_time": int(m.server_sent_time) if m.server_sent_time is not None else None,
+        "client_recv_time": int(m.client_recv_time) if m.client_recv_time is not None else None,
+
+        "leap": m.leap,
+        "mode": m.mode,
+        "version": m.version,
+        "precision": m.precision,
+        "root_delay": m.root_delay,
+        "root_disp": m.root_disp,
+
+        "timescale": m.timescale,
+        "era": m.era,
+        "flags_raw": m.flags_raw,
+        "flags_decoded": m.flags_decoded,
+        "extensions": m.extensions,
+
+        # "ntpv5_data": m.ntpv5_data,
     }
+    if not from_ntp_versions:
+        ans["analysis"] = m.analysis
+    return ans
 
 def nts_measurement_to_dict(m: Optional[NTSMeasurement]) -> Optional[dict]:
     """
@@ -69,6 +131,12 @@ def nts_measurement_to_dict(m: Optional[NTSMeasurement]) -> Optional[dict]:
     """
     if m is None:
         return None
+    if not m.succeeded:
+        return {
+            "nts_id": m.id_nts,
+            "nts_succeeded": m.succeeded,
+            "nts_analysis": m.analysis,
+        }
     return {
         "nts_id": m.id_nts,
         "nts_succeeded": m.succeeded,
@@ -117,27 +185,27 @@ def ntp_versions_to_dict(db: Session, m: Optional[NTPVersions]) -> Optional[dict
         "ntpv1_supported_conf": m.ntpv1_supported_conf,
         "ntpv1_analysis": m.ntpv1_analysis,
         "ntpv1_response_version": m.ntpv1_response_version,
-        "ntpv1_data": ntpv4_or_v5_measurement_to_dict(db, m.id_v4_1, m.ntpv1_response_version),
+        "ntpv1_data": ntpv4_or_v5_measurement_to_dict(db, m.id_v4_1, m.ntpv1_response_version, True),
 
         "ntpv2_supported_conf": m.ntpv2_supported_conf,
         "ntpv2_analysis": m.ntpv2_analysis,
         "ntpv2_response_version": m.ntpv2_response_version,
-        "ntpv2_data": ntpv4_or_v5_measurement_to_dict(db, m.id_v4_2, m.ntpv2_response_version),
+        "ntpv2_data": ntpv4_or_v5_measurement_to_dict(db, m.id_v4_2, m.ntpv2_response_version, True),
 
         "ntpv3_supported_conf": m.ntpv3_supported_conf,
         "ntpv3_analysis": m.ntpv3_analysis,
         "ntpv3_response_version": m.ntpv3_response_version,
-        "ntpv3_data": ntpv4_or_v5_measurement_to_dict(db, m.id_v4_3, m.ntpv3_response_version),
+        "ntpv3_data": ntpv4_or_v5_measurement_to_dict(db, m.id_v4_3, m.ntpv3_response_version, True),
 
         "ntpv4_supported_conf": m.ntpv4_supported_conf,
         "ntpv4_analysis": m.ntpv4_analysis,
         "ntpv4_response_version": m.ntpv4_response_version,
-        "ntpv4_data": ntpv4_or_v5_measurement_to_dict(db, m.id_v4_4, m.ntpv4_response_version),
+        "ntpv4_data": ntpv4_or_v5_measurement_to_dict(db, m.id_v4_4, m.ntpv4_response_version, True),
 
         "ntpv5_supported_conf": m.ntpv5_supported_conf,
         "ntpv5_analysis": m.ntpv5_analysis,
         "ntpv5_response_version": m.ntpv5_response_version,
-        "ntpv5_data": ntpv4_or_v5_measurement_to_dict(db, m.id_v5, m.ntpv5_response_version),
+        "ntpv5_data": ntpv4_or_v5_measurement_to_dict(db, m.id_v5, m.ntpv5_response_version, True),
     }
     return ans
 
@@ -160,11 +228,11 @@ def full_measurement_ip_to_dict(db: Session, m: FullMeasurementIP, part_of_dn_me
         "status": m.status,
         "server": m.server_ip,
         "created_at_time": m.created_at_time.isoformat() if m.created_at_time else None,
+        "response_version": m.response_version,
         "main_measurement": ntpv4_or_v5_measurement_to_dict(db, m.id_main_measurement, m.response_version),
         "nts": nts_measurement_to_dict(m_nts),
         "ntp_versions": ntp_versions_to_dict(db, m_vs),
         # "id_ripe": m.id_ripe, # this ID does not exist (it is null) if it was part of a domain name measurement
-        "response_version": m.response_version,
         "ripe_error": m.ripe_error,
         "response_error": m.response_error,
     }
