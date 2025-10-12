@@ -1,8 +1,11 @@
+from datetime import datetime
 from ipaddress import IPv4Address, IPv6Address, ip_address
 
 from sqlalchemy import Row
 from sqlalchemy.orm import Session
 
+from server.app.utils.convert_measurement_to_format import full_measurement_dn_to_dict, full_measurement_ip_to_dict
+from server.app.dtos.full_ntp_measurement import FullMeasurementDN, FullMeasurementIP
 from server.app.utils.validate import sanitize_string
 from server.app.dtos.ProbeData import ServerLocation
 from server.app.utils.location_resolver import get_country_for_ip, get_coordinates_for_ip
@@ -18,7 +21,7 @@ from server.app.dtos.NtpMeasurement import NtpMeasurement
 from server.app.models.CustomError import InvalidMeasurementDataError
 from server.app.models.CustomError import DatabaseInsertError
 from server.app.models.CustomError import MeasurementQueryError
-from typing import Any
+from typing import Any, List
 
 
 def row_to_dict(m: Measurement, t: Time) -> dict[str, Any]:
@@ -318,3 +321,74 @@ def get_measurements_for_jitter_ip(session: Session, ip: IPv4Address | IPv6Addre
         return rows_to_measurements(query.all())
     except Exception as e:
         raise MeasurementQueryError(f"Failed to fetch measurements for jitter for IP {ip}: {e}")
+
+
+def get_historical_domain_measurements(
+        db: Session,
+        domain: str,
+        start_time: datetime,
+        end_time: datetime
+) -> List[dict]:
+    """
+    Retrieve historical domain-based NTP measurements between two timestamps.
+    Returns full JSON representations for performance.
+    """
+    measurements = (
+        db.query(FullMeasurementDN)
+        .filter(
+            FullMeasurementDN.server == domain,
+            FullMeasurementDN.created_at_time >= start_time,
+            FullMeasurementDN.created_at_time <= end_time,
+        )
+        .order_by(FullMeasurementDN.created_at_time.desc())
+        .all()
+    )
+
+    return [
+        full_measurement_dn_to_dict(db, m)
+        for m in measurements
+    ]
+
+
+def get_historical_ip_measurements(
+        db: Session,
+        ip: str,
+        start_time: datetime,
+        end_time: datetime
+) -> List[dict]:
+    """
+    Retrieve historical IP-based NTP measurements between two timestamps.
+    Returns full JSON representations for performance.
+    """
+    measurements = (
+        db.query(FullMeasurementIP)
+        .filter(
+            FullMeasurementIP.server_ip == ip,
+            FullMeasurementIP.created_at_time >= start_time,
+            FullMeasurementIP.created_at_time <= end_time,
+        )
+        .order_by(FullMeasurementIP.created_at_time.desc())
+        .all()
+    )
+
+    return [
+        full_measurement_ip_to_dict(db, m, part_of_dn_measurement=False)
+        for m in measurements
+    ]
+
+
+def get_historical_measurements(
+        db: Session,
+        target: str,
+        start_time: datetime,
+        end_time: datetime
+) -> List[dict]:
+    """
+    Automatically determines if target is an IP or domain name.
+    """
+    import ipaddress
+    try:
+        ipaddress.ip_address(target)
+        return get_historical_ip_measurements(db, target, start_time, end_time)
+    except ValueError:
+        return get_historical_domain_measurements(db, target, start_time, end_time)
