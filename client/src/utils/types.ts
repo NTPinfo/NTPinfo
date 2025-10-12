@@ -123,3 +123,29 @@ export interface HomeCacheState {
 }
 
 export type RipeStatus = "pending" | "partial_results" | "complete" | "timeout" | "error"
+
+export type MeasurementRequest = {
+  server: string;
+  ipv6_measurement?: boolean;
+  wanted_ip_type?: number;
+  measurement_type?: string;
+  ntp_versions_to_analyze?: string[] | null;
+  analyse_all_ntp_versions?: boolean;
+  ntp_versions_analysis_on_each_ip?: boolean;
+  nts_analysis_on_each_ip?: boolean;
+  ntpv5_draft?: string;
+  custom_probes_asn?: string;
+  custom_probes_country?: string;
+  custom_client_ip?: string;
+}
+
+export type MeasurementStatus = "pending" | "RIPE" | "NTP" | "NTS" | "NTPver" | "finished" | "failed";
+export type FullMeasurementResult = {
+  status: MeasurementStatus;
+  mainMeasurement: any; 
+  ipMeasurements?: any[]; // only for DN
+  ripeData?: any;
+  ntsData?: any; // optional
+  ntpVersions?: any;
+  error?: Error;
+}
