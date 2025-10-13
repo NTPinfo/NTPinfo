@@ -1,42 +1,44 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { transformJSONDataToNTPData } from "../utils/transformJSONDataToNTPData.ts";
-import { transformJSONDataToRIPEData } from "../utils/transformJSONDataToRIPEData.ts";
-import { NTPData } from "../utils/types.ts";
-
-interface AggregatedDNMeasurement {
-  status: string;
-  ripeData?: any;
-  nts?: any; // DN-level NTS
-  ipMeasurements?: {
-    search_id: string;
-    status: string;
-    mainMeasurement: NTPData;
-    nts?: any;
-    ntpVersions?: any;
-    responseError?: string | null;
-  }[];
-  responseError?: string | null;
-  mainMeasurement?: NTPData | null;
-  ntpVersions?: any;
-}
-
-export const usePollFullMeasurement = (measurementId: string | null,  interval = 3000
+import { transformJSONDataToNTPVerData } from "../utils/transformJSONDataToNTPverData.ts";
+import { NTPData, RipeStatus } from "../utils/types.ts";
+import { useFetchRIPEData } from "./useFetchRipeData.ts";
+// interface AggregatedDNMeasurement {
+//   status: string;
+//   ripeData?: any;
+//   nts?: any; // DN-level NTS
+//   ipMeasurements?: {
+//     search_id: string;
+//     status: string;
+//     mainMeasurement: NTPData;
+//     nts?: any;
+//     ntpVersions?: any;
+//     responseError?: string | null;
+//   }[];
+//   responseError?: string | null;
+//   mainMeasurement?: NTPData | null;
+//   ntpVersions?: any;
+// }
+const SERVER = import.meta.env.VITE_SERVER_HOST_ADDRESS;
+export const usePollFullMeasurement = (measurementId: string | null,  partialData: any, interval = 3000
 ) => {
-  const [result, setResult] = useState<AggregatedDNMeasurement| null>(null);
-
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
+  const [ntpData, setNtpData] = useState<NTPData | null>(null);
+  const [ntsData, setNtsData] = useState<any>(null);
+  const [ripeData, setRipeData] = useState<any>(null);
+  const [versionData, setVersionData] = useState<any>(null);
+  const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [ripeStatus, setRipeStatus] = useState<RipeStatus | null>(null);
+  const [ripeError, setRipeError] = useState<string | null>(null);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevMeasurementId = useRef<string | null>(null);
 
   useEffect(() => {
-    //astea sunt asa ca era la fel si la ripe
 
-    if (!measurementId) {
-      setResult(null);
+    if (!measurementId || !partialData) {
       return;
     }
 
@@ -52,74 +54,67 @@ export const usePollFullMeasurement = (measurementId: string | null,  interval =
       clearTimeout(retryTimeoutRef.current);
       retryTimeoutRef.current = null;
     }
-
-    
-
     const controller = new AbortController();
     
-    setLoading(true)
     setError(null)
 
     const pollFullMeasurement = async () => {
       try {
             const res = await axios.get(
-                `${import.meta.env.VITE_SERVER_HOST_ADDRESS}/measurements/results/${measurementId}`,
+                `${SERVER}/measurements/results/${measurementId}`,
                  { signal: controller.signal }
             )
 
-            const respData = res.data
-            const aggregated: AggregatedDNMeasurement = { status: respData.status }
+            const respData = res.data;
+            setStatus(respData.status);
 
             //RIPE
             if (respData.id_ripe) {
-                try {
-                    const ripeRes = await axios.get(
-                        `${import.meta.env.VITE_SERVER_HOST_ADDRESS}/measurements/ripe/${respData.id_ripe}`
-                    )
-                    aggregated.ripeData = ripeRes.data?.results?.map(transformJSONDataToRIPEData)
-                } catch (err) {
-                    console.warn("RIPE fetch failed", err)
-                }
+                const { result: ripeResult, status: ripeStatus, error: ripeError } = useFetchRIPEData(respData.id_ripe);
+
+                setRipeData(ripeResult)
+                setRipeStatus(ripeStatus)
+                setRipeError(ripeError?.message ?? "unknown error")
             }
 
             //Main measurement
-            if (respData.ip_measurements && respData.ip_measurements.length > 0) {
+            if (respData.ip_measurements && respData.ip_measurements?.length > 0) {
                 const firstIP = respData.ip_measurements[0]
-                aggregated.ipMeasurements = respData.ip_measurements || []
-                aggregated.responseError = firstIP.response_error
+               setNtpData(transformJSONDataToNTPData(firstIP.main_measurement))
+               setError(firstIP.response_error)
             } else if (respData.main_measurement) {
-                aggregated.mainMeasurement = transformJSONDataToNTPData(respData.main_measurement)
-                aggregated.responseError = respData.response_error
+                setNtpData(transformJSONDataToNTPData(respData.main_measurement))
+                setError(respData.response_error)
             }
 
             //NTS
-            if (respData.nts) aggregated.nts = respData.nts
+            if (respData.nts) setNtsData(respData.nts ?? null)
 
             //NTP versions
             if (respData.id_vs) {
                 try {
                     const vsRes = await axios.get(
-                        `${import.meta.env.VITE_SERVER_HOST_ADDRESS}/measurements/ntp_versions/${respData.id_vs}`
+                        `${SERVER}/measurements/ntp_versions/${respData.id_vs}`
                     )
-                    aggregated.ntpVersions = vsRes.data
+                    setVersionData(transformJSONDataToNTPVerData(vsRes.data))
                 } catch (err) {
-                    console.warn("NTP versions f failed", err)
+                    console.warn("NTP versions failed", err)
                 }
             }
 
             //Error
-            if (respData.response_error) aggregated.responseError = respData.response_error
+            if (respData.response_error) setError(respData.response_error)
 
-            setResult(aggregated)
+        
 
             // stop polling if finished or failed
             if (respData.status === "finished" || respData.status === "failed") {
-                if (intervalRef.current) clearInterval(intervalRef.current)
-                setLoading(false)
+                clearInterval(interval)
+              
             }
         } catch (err: any) {
             setError(err)
-            setLoading(false)
+            
             if (intervalRef.current) clearInterval(intervalRef.current)
         }
     }
@@ -132,7 +127,7 @@ export const usePollFullMeasurement = (measurementId: string | null,  interval =
       if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
       controller.abort();
     };
-  }, [measurementId, interval]);
+  }, [measurementId, partialData, interval]);
 
-  return { result, loading, error};
+  return { ntpData, ntsData, ripeData, versionData, status, error, ripeStatus, ripeError};
 }

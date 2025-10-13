@@ -149,3 +149,12 @@ export type FullMeasurementResult = {
   ntpVersions?: any;
   error?: Error;
 }
+
+export type PartialMeasurementResult = {
+  id: string; 
+  status: MeasurementStatus; 
+  id_ripe?: number | null;   
+  id_nts?: number | null;    
+  ip_measurements_ids?: { search_id: string }[]; //only for DN
+ 
+};
