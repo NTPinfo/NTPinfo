@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { transformJSONDataToNTPData } from "../utils/transformJSONDataToNTPData.ts";
 import { transformJSONDataToNTPVerData } from "../utils/transformJSONDataToNTPverData.ts";
-import { NTPData, RipeStatus } from "../utils/types.ts";
+import { NTPData } from "../utils/types.ts";
 import { useFetchRIPEData } from "./useFetchRipeData.ts";
 // interface AggregatedDNMeasurement {
 //   status: string;
@@ -25,16 +25,16 @@ export const usePollFullMeasurement = (measurementId: string | null,  partialDat
 ) => {
   const [ntpData, setNtpData] = useState<NTPData | null>(null);
   const [ntsData, setNtsData] = useState<any>(null);
-  const [ripeData, setRipeData] = useState<any>(null);
+  const [ripeId, setRipeId] = useState<string | null>(null);
   const [versionData, setVersionData] = useState<any>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [ripeStatus, setRipeStatus] = useState<RipeStatus | null>(null);
-  const [ripeError, setRipeError] = useState<string | null>(null);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevMeasurementId = useRef<string | null>(null);
+
+  const { result: ripeData, status: ripeStatus, error: ripeError } = useFetchRIPEData(ripeId);
 
   useEffect(() => {
 
@@ -69,12 +69,8 @@ export const usePollFullMeasurement = (measurementId: string | null,  partialDat
             setStatus(respData.status);
 
             //RIPE
-            if (respData.id_ripe) {
-                const { result: ripeResult, status: ripeStatus, error: ripeError } = useFetchRIPEData(respData.id_ripe);
-
-                setRipeData(ripeResult)
-                setRipeStatus(ripeStatus)
-                setRipeError(ripeError?.message ?? "unknown error")
+            if (respData.id_ripe && respData.id_ripe !== ripeId) {
+              setRipeId(respData.id_ripe);
             }
 
             //Main measurement
@@ -127,7 +123,7 @@ export const usePollFullMeasurement = (measurementId: string | null,  partialDat
       if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
       controller.abort();
     };
-  }, [measurementId, partialData, interval]);
+  }, [measurementId, partialData, interval, ripeId]);
 
   return { ntpData, ntsData, ripeData, versionData, status, error, ripeStatus, ripeError};
 }

@@ -158,3 +158,36 @@ export type PartialMeasurementResult = {
   ip_measurements_ids?: { search_id: string }[]; //only for DN
  
 };
+
+
+
+//DELETE THIS ONCE NTP VERSION ANALYSIS BEHAVIOUR IS FINISHED
+export const dummyData: NTPVersionsData = {
+  id_vs: 1,
+
+  id_v4_1: 101,
+  id_v4_2: 102,
+  id_v4_3: 103,
+  id_v4_4: 104,
+  id_v5: 201,
+
+  ntpv1_response_version: "ntpv1",
+  ntpv2_response_version: null,
+  ntpv3_response_version: "ntpv3",
+  ntpv4_response_version: "ntpv4",
+  ntpv5_response_version: "ntpv5",
+
+  ntpv1_supported_conf: 100,
+  ntpv2_supported_conf: 0,
+  ntpv3_supported_conf: null,
+  ntpv4_supported_conf: 100,
+  ntpv5_supported_conf: 50,
+
+  ntpv1_analysis: "NTPv1 responded successfully but lacks modern security features.",
+  ntpv2_analysis: "NTPv2 is deprecated and not supported by this server.",
+  ntpv3_analysis: "",
+  ntpv4_analysis: "NTPv4 is fully supported — preferred version with best accuracy.",
+  ntpv5_analysis: "NTPv5 partially supported; draft implementation detected.",
+
+  
+};

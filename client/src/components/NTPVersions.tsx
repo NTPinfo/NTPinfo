@@ -1,6 +1,6 @@
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react"
 import { useState } from "react"
-import { useNtpVersionAnalysis } from "../hooks/useNTPVersionAnalysis"
+import { NTPVersionsData } from "../utils/types"
 import "../styles/NtpVersions.css"
 
 type VersionStatus = "supported" | "not-supported" | "partial" | "not-measured"
@@ -40,12 +40,9 @@ function getStatus(conf: number | null, analysis: string | null): VersionStatus 
   if (conf === 100 || analysis?.toLowerCase().includes("support")) return "supported"
   return "not-supported"
 }
-export function NtpVersionAnalysis({ measurement_id }: { measurement_id: number }) {
-  const { data, loading, error } = useNtpVersionAnalysis(measurement_id)
-  const [hoveredVersion, setHoveredVersion] = useState<string | null>(null);
+export function NtpVersionAnalysis({ data }: { data: NTPVersionsData | null }) {
+  const [hoveredVersion, setHoveredVersion] = useState<string | null>(null)
 
-  if (loading) return <p className="text-gray-600">Loading NTP version analysis...</p>
-  if (error) return <p className="text-red-600">{error}</p>
   if (!data) return <p className="text-gray-600">No version data available.</p>
 
   const renderVersion = (
@@ -54,9 +51,9 @@ export function NtpVersionAnalysis({ measurement_id }: { measurement_id: number 
     conf: number | null,
     responseVersion: string | null
   ) => {
-    const status = getStatus(conf, analysis);
-    const config = statusConfig[status];
-    const isHovered = hoveredVersion === version;
+    const status = getStatus(conf, analysis)
+    const config = statusConfig[status]
+    const isHovered = hoveredVersion === version
 
     return (
       <div
@@ -66,14 +63,16 @@ export function NtpVersionAnalysis({ measurement_id }: { measurement_id: number 
         onMouseLeave={() => setHoveredVersion(null)}
       >
         <button className={`ntp-version-button ${status}`}>
-        {config.icon && (<config.icon className={`ntp-icon ${status}`} />)}
-         <span>{version}</span> 
+          {config.icon && <config.icon className={`ntp-icon ${status}`} />}
+          <span>{version}</span>
         </button>
 
         {isHovered && (
           <div className="ntp-tooltip">
             <h3 className="ntp-tooltip-title">{version} Analysis</h3>
-            <p className="ntp-tooltip-description">{analysis || "No analysis available."}</p>
+            <p className="ntp-tooltip-description">
+              {analysis || "No analysis available."}
+            </p>
             {responseVersion && (
               <p className="ntp-tooltip-extra">
                 <b>Response Version:</b> {responseVersion}
@@ -87,8 +86,8 @@ export function NtpVersionAnalysis({ measurement_id }: { measurement_id: number 
           </div>
         )}
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <div className="ntp-container">
@@ -103,16 +102,12 @@ export function NtpVersionAnalysis({ measurement_id }: { measurement_id: number 
       </div>
 
       <div className="ntp-legend">
-        {Object.entries(statusConfig).map(([key, config]) => {
-          if (config.label === "Not measured")
-            return null
-          return (
-            <div key={key} className="ntp-legend-item">
-             {config.icon && ( <config.icon className={`ntp-legend-icon ${key}`} />)}
-              <span className="ntp-legend-label">{config.label}</span>
-            </div>
-          )
-        })}
+        {Object.entries(statusConfig).map(([key, config]) => (
+          <div key={key} className="ntp-legend-item">
+            {config.icon && <config.icon className={`ntp-legend-icon ${key}`} />}
+            <span className="ntp-legend-label">{config.label}</span>
+          </div>
+        ))}
       </div>
     </div>
   )

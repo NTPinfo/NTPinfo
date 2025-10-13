@@ -36,7 +36,7 @@ export const useFullMeasurementFlow = (server: string, payload : MeasurementRequ
             if (res?.id) setStarted(true);
         };
         start();
-    }, [payload]);
+    }, [payload, server, triggerMeasurement]);
 
     const status = fullStatus || partialStatus || triggerStatus;
     const error = triggerError || partialError || fullError;
