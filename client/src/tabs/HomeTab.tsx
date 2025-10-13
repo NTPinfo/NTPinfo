@@ -23,6 +23,7 @@ import { useFetchNTSData } from '../hooks/useFetchNTSData.ts'
 import ConsentPopup from '../components/ConsentPopup.tsx'
 import NTSResultBox from '../components/NTSResultBox.tsx'
 import ripeLogo from '../assets/ripe_ncc_white.png'
+import sidnLogo from '../assets/sidnlabs-log.svg';
 
 // interface HomeTabProps {
 //     onVisualizationDataChange: (data: Map<string, NTPData[]> | null) => void;
@@ -354,13 +355,45 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
         )}
     </div>
     <footer className="home-footer">
-      <div className="footer-content">
-        <span className="powered-by">Powered by</span>
-        <a href="https://ripe.net" target="_blank" rel="noopener noreferrer" aria-label="RIPE NCC">
-          <img src={ripeLogo} alt="RIPE NCC" className="ripe-logo" />
-        </a>
-      </div>
-    </footer>
+  <div className="footer-content">
+    {/* Hosted by SIDN Labs (logo only) */}
+    <div className="hosted-by-section">
+      <span className="footer-label">Hosted by</span>
+      <a
+        href="https://sidnlabs.nl"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="SIDN Labs"
+      >
+        <img src={sidnLogo} alt="SIDN Labs" className="footer-logo" />
+      </a>
+    </div>
+
+    {/* Powered by TIME.nl (text) and RIPE Atlas (logo) */}
+    <div className="powered-by-section">
+      <span className="footer-label">Powered by</span>
+      <a
+        href="https://time.nl"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="footer-text-link"
+      >
+        TIME.nl
+      </a>
+
+      <span className="footer-and">and</span>
+
+      <a
+        href="https://atlas.ripe.net"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="RIPE Atlas"
+      >
+        <img src={ripeLogo} alt="RIPE Atlas" className="footer-logo-ripe" />
+      </a>
+    </div>
+  </div>
+</footer>
     </div>
     );
 }

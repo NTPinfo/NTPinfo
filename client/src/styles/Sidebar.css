@@ -5,13 +5,10 @@
   top: 0;
   left: 0;
   z-index: 1000;
-  background: linear-gradient(to bottom,
-    rgba(15, 23, 42, 0.9),  /* Darker version of --bg-primary with 90% opacity */
-    rgba(30, 41, 59, 0.9)   /* Darker version of --bg-secondary with 90% opacity */
-  );
+  background: var(--bg-clr-secondary);
   -webkit-backdrop-filter: blur(2px);
   backdrop-filter: blur(2px);
-  color: var(--clr-font-white);
+  color: var(--text-dark);
   display: flex;
   flex-direction: column;
   padding: 0.5rem 0;
@@ -95,6 +92,7 @@
 .sidebar__icon {
   width: 24px;
   height: 24px;
+  filter: var(--img-invert);
 }
 
 .sidebar__label {

@@ -20,8 +20,8 @@
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    background: #1e293b;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--clr-btn-not-sel);
+    border: 1px solid var(--clr-btn-border);
     border-radius: var(--radius);
     padding: 2px;
     box-shadow: var(--shadow);
@@ -47,16 +47,16 @@
     font-size: 0.95rem;
     cursor: pointer;
     user-select: none;
-    color: var(--text-white, #9fa4b9);
+    color: var(--text-dark);
     border-radius: 8px;
     /* transition: all 0.3s ease; */
     white-space: nowrap;
 }
 
 .measurement-toggle input[type="radio"]:checked + label {
-    background: var(--bg-primary, #020718);
-    color: var(--text-white, #fff);
-    border-radius: 6px;
+    background: var(--clr-btn-sel);
+    color: var(--text-white);
+    border-radius: var(--radius);
 }
 
 .measurement-toggle input[type="radio"]:focus + label {
@@ -92,12 +92,12 @@
     height: 100%;
     min-height: 300px;
     gap: 1rem;
-    color: var(--text-white);
+    color: var(--text-dark);
     align-self: center;
 }
 
 .loading-div p {
-    color: var(--text-white);
+    color: var(--text-dark);
     font-size: 1.1rem;
     margin: 0;
 }
@@ -110,13 +110,13 @@
     height: 100%;
     min-height: 300px;
     gap: 1rem;
-    color: var(--text-white);
+    color: var(--text-dark);
     text-align: center;
     padding: 2rem;
 }
 
 .error-div p {
-    color: var(--text-white);
+    color: var(--text-dark);
     font-size: 1.1rem;
     margin: 0;
     opacity: 0.9;

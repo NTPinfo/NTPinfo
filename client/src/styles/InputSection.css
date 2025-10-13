@@ -32,13 +32,14 @@
 }
 
 .input-bar button {
-  background-color: var(--clr-red-2);
-  color: var(--text-white);
-  border: none;
+  background-color: var(--clr-btn-not-sel);
+  color: var(--text-dark);
+  border: 1px solid var(--clr-btn-border);
   border-radius: 0 var(--radius) var(--radius) 0;
   /* padding: 0.5rem 0.8rem; */
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 400;
+  font-style: normal;
   position: relative;
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -46,17 +47,22 @@
 }
 
 .input-bar button:disabled {
-  background-color: #ed7f84;
+  background-color: var(--clr-btn-not-sel);
   cursor: auto;
+  color: var(--text-dark);
+  border: 1px solid var(--clr-btn-border);
 }
 
 .input-bar button:disabled:hover {
-  background-color: var(--clr-red-2);
+  background-color: var(--clr-btn-not-sel);
   cursor: auto;
+  color: var(--text-dark);
+  border: 1px solid var(--clr-btn-border);
 }
 
 .input-bar button:hover {
-  background-color: var(--clr-red-3);
+  background-color: var(--clr-btn-hover);
+  color: var(--text-white);
 }
 
 .input-section {
@@ -79,7 +85,7 @@
 .input-bar-text {
   font-size: 1.3rem;
   font-weight: 500;
-  color: var(--clr-font-white);
+  color: var(--text-dark);
   margin-bottom: 0.5rem;
   text-align: left;
   /* border: 1px solid red; */
@@ -97,21 +103,39 @@
 .measure-text {
   font-weight: 600;
   font-size: 1.1rem;
-  color: var(--text-white);
+  color: var(--text-dark);
   white-space: nowrap;
   margin: 0 0.5rem;
   margin-left: 1rem;
 }
 
-.ip-options {
-  display: inline-flex;
-  background: var(--bg-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.measurement-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  background: var(--clr-btn-not-sel);
+  border: 1px solid var(--clr-btn-border);
   border-radius: var(--radius);
   padding: 2px;
-  gap: 0;
-  margin-right: 2rem;
   box-shadow: var(--shadow);
+  min-width: 200px;
+  align-self: center;
+}
+
+.ip-options {
+  display: inline-flex;
+  background: var(--clr-btn-not-sel);
+  border: 1px solid var(--clr-btn-border);
+  /*padding: 2px;*/
+  gap: 0;
+  box-shadow: var(--shadow);
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--radius);
+  padding: 2px;
+  box-shadow: var(--shadow);
+  align-self: center;
 }
 
 .ip-options input[type="radio"] {
@@ -131,19 +155,21 @@
   font-size: 0.95rem;
   cursor: pointer;
   user-select: none;
-  color: var(--text-white, #9fa4b9);
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  color: var(--text-dark);
+  border-radius: 8px;
+  white-space: nowrap;
+  margin-left: 1px;
 }
 
 .ip-options input[type="radio"]:checked + label {
-  background: var(--bg-primary, #020718);
-  color: var(--text-white, #fff);
+  background: var(--clr-btn-sel);
+  color: var(--text-white);
+  border-radius: var(--radius);
 }
 
 .ip-options input[type="radio"]:focus + label {
   outline: 0.5px solid var(--text-white);
-    outline-offset: 2px;
+  outline-offset: 2px;
 }
 
 @supports selector(:focus-visible) {

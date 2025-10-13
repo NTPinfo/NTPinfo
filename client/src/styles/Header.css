@@ -18,7 +18,7 @@ a {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background-color: rgba(15, 23, 42, 0.8); /* var(--bg-primary) with 80% opacity */
+    background-color: var(--bg-clr-secondary);
     /* background: var(--bg-clr-header); */
     -webkit-backdrop-filter: blur(2px);
     backdrop-filter: blur(2px);
@@ -39,7 +39,7 @@ a {
 
 .text-header > h1 {
     /* color: var(--clr-font-dark); */
-    color: var(--text-white);
+    color: var(--text-dark);
     font-size: clamp(1.5rem, 2.3vw, 2.0rem);
     /* font-size: 2.5rem; */
     line-height: 1.2;
@@ -47,7 +47,7 @@ a {
 
 .text-header > p {
     /* color: var(--clr-font-dark); */
-    color: var(--text-white);
+    color: var(--text-dark);
     font-weight: 200;
     font-size: clamp(0.8rem, 1.2vw, 1.2rem);
     text-align: left;
@@ -63,7 +63,7 @@ a {
     font-size: clamp(0.9rem, 1.5vw, 1.2rem);
     font-weight: bold;
     /* color: var(--clr-font-dark); */
-    color: var(--text-white);
+    color: var(--text-dark);
     display: flex;
     align-items: center;
 }
@@ -81,6 +81,15 @@ a {
     width: auto;
     object-fit: contain;
     align-self: center;
+    filter: var(--img-invert);
+}
+
+.navbar .img-and-text img:hover {
+    height: clamp(1.5rem, 2.5vw, 2rem);
+    width: auto;
+    object-fit: contain;
+    align-self: center;
+    filter: invert(.8);
 }
 
 .ntpinfo-logo {
@@ -89,6 +98,11 @@ a {
     object-fit: contain;
     /* margin-right: -10%; */
     margin-left: 5%;
+    filter: var(--img-invert);
+}
+
+.sidn-logo {
+    filter: none !important;
 }
 
 /* Media Queries */
@@ -101,7 +115,7 @@ a {
         gap: 2rem;
     }
 
-    .navbar a:not(.img-and-text a:last-child) {
+    .navbar a:not(.img-and-text a:last-child):not(.img-and-text a:first-child) {
         display: none;
     }
 

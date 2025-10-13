@@ -1,16 +1,16 @@
 @import "../index.css";
 
 .nts-result-box {
-  background-color: var(--bg-secondary);
+  background-color: var(--bg-clr-secondary);
   color: var(--clr-font-white);
   font-weight: 500;
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 0.6rem;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   box-sizing: border-box;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--clr-btn-border);
   box-shadow: var(--shadow);
   margin: 0.5rem 0;
   max-width: 100%;
@@ -20,7 +20,7 @@
 }
 
 .nts-label {
-  color: var(--clr-font-white);
+  color: var(--text-dark);
   font-weight: 600;
   padding-inline: 0.25rem;
   white-space: nowrap;
@@ -49,7 +49,7 @@
 
 .nts-status-success {
   background-color: var(--clr-green);
-  color: var(--bg-primary);
+  color: var(--clr-font-white);
 }
 
 .nts-status-warning {
@@ -79,11 +79,12 @@
   font-size: 0.85rem;
   overflow: hidden;
   text-align: left;
+  /* background-color: var(--bg-clr-secondary); */
 }
 
 .nts-key {
   font-weight: 500;
-  color: var(--clr-font-white);
+  color: var(--text-dark);
   opacity: 0.9;
   /* padding-right: 2.4rem; */
   min-width: 85px;
@@ -94,7 +95,7 @@
   font-feature-settings: "tnum";
   font-variant-numeric: tabular-nums;
   margin-left: 1rem;
-  color: var(--clr-font-white);
+  color: var(--text-dark);
   opacity: 0.8;
   word-break: break-word;
   text-align: right;
@@ -122,18 +123,18 @@
 .nts-other-details summary {
   cursor: pointer;
   padding: 4px 8px;
-  background: var(--bg-primary);
+  background: var(--border-color);
   border: 1px solid var(--border-color);
   border-radius: 4px;
   font-weight: 500;
-  color: var(--clr-font-white);
+  color: var(--clr-font-dark);
   user-select: none;
   font-size: 0.8rem;
   text-align: center;
 }
 
 .nts-other-details summary:hover {
-  background: var(--bg-secondary);
+  background: var(--clr-input-placeholder);
 }
 
 .nts-other-details[open] summary {
@@ -147,7 +148,7 @@
   border-top: none;
   border-radius: 0 0 4px 4px;
   padding: 0.4rem;
-  background: var(--bg-primary);
+  background: var(--border-color);
 }
 
 /* Responsive design */

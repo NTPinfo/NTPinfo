@@ -9,8 +9,8 @@ import yellowProbeImg from '../assets/yellow-probe.png'
 import redProbeImg from '../assets/red-probe.png'
 import darkRedProbeImg from '../assets/dark-red-probe.png'
 import grayProbeImg from '../assets/gray-probe.png'
-import ntpServerImg from '../assets/ntp-server-icon.png'
-import vantagePointImg from '../assets/vantage-point-logo.png'
+import ntpServerImg from '../assets/ntp-server-icon-black.png'
+import vantagePointImg from '../assets/vantage-point-logo-black.png'
 import unavailableNtpImg from '../assets/unavailable-ntp-server-icon.png'
 
 import '../styles/WorldMap.css'
@@ -195,17 +195,17 @@ const DrawConnectingLines = ({probes, measurementNtpServers, intersectionNtpServ
 
   useEffect(() => {
     measurementNtpServers.map(x => {
-      L.polyline([x,vantagePoint], {color:'blue', opacity: 0.8, weight: 1}).addTo(map)
+      L.polyline([x,vantagePoint], {color:'#1961ac', opacity: 0.8, weight: 1}).addTo(map)
     })
     intersectionNtpServers.map(x => {
-      L.polyline([x,vantagePoint], {color:'blue', opacity: 0.8, weight: 1}).addTo(map)
+      L.polyline([x,vantagePoint], {color:'#1961ac', opacity: 0.8, weight: 1}).addTo(map)
     })
     unavailableNtpServers.map(x => {
-      L.polyline([x,vantagePoint], {color:'gray', opacity: 0.8, weight: 1}).addTo(map)
+      L.polyline([x,vantagePoint], {color:'#1961ac', opacity: 0.8, weight: 1}).addTo(map)
     })
     if (!vantagePoint || !probes|| probes.length === 0) return
     probes.map(x => {
-      L.polyline([x.probe_location,x.measurementData.coordinates], {color: 'blue', opacity: 0.8, weight: 1}).addTo(map)
+      L.polyline([x.probe_location,x.measurementData.coordinates], {color: '#1961ac', opacity: 0.8, weight: 1}).addTo(map)
     })
   },[map, probes, measurementNtpServers, intersectionNtpServers, unavailableNtpServers, vantagePoint])
 
@@ -484,7 +484,7 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
         {isAnycast && <h2>This server uses Anycast. Server Geolocation might be inaccurate</h2>}
         <MapContainer style={{height: '100%', width: '100%'}}>
             <TileLayer
-                url = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                url = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
                 attribution= '&copy; <a href="https://carto.com/">CARTO</a>'
                 subdomains={['a', 'b', 'c', 'd']}
                 maxZoom={19}
