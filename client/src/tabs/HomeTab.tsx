@@ -15,7 +15,7 @@ import {downloadJSON, downloadCSV} from '../utils/downloadFormats.ts'
 import WorldMap from '../components/WorldMap.tsx'
 import Header from '../components/Header.tsx';
 
-import { NTPData} from '../utils/types.ts'
+import { NTPData, dummyData} from '../utils/types.ts'
 
 import 'leaflet/dist/leaflet.css'
 import { useTriggerRipeMeasurement } from '../hooks/useTriggerRipeMeasurement.ts'
@@ -23,6 +23,7 @@ import { useFetchNTSData } from '../hooks/useFetchNTSData.ts'
 import ConsentPopup from '../components/ConsentPopup.tsx'
 import NTSResultBox from '../components/NTSResultBox.tsx'
 import ripeLogo from '../assets/ripe_ncc_white.png'
+import { NtpVersionAnalysis } from '../components/NTPVersions.tsx'
 
 // interface HomeTabProps {
 //     onVisualizationDataChange: (data: Map<string, NTPData[]> | null) => void;
@@ -341,6 +342,8 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
           />
         )}
       </div>)}
+
+      {ntpData && (<NtpVersionAnalysis data={dummyData}/>)} 
       {/*Map compoment that shows the NTP servers, the vantage point, and the RIPE probes*/}
        {(ripeMeasurementStatus === "complete" || ripeMeasurementStatus === "partial_results" || ripeMeasurementStatus === "timeout") && (
         <div className='map-box'>
