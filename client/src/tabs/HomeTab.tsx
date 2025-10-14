@@ -102,7 +102,7 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
   // } = useFetchRIPEData(measurementId)
 
 const { triggerMeasurement, loading: triggerLoading, measurementId: fullMeasurementId, error: triggerError, httpStatus: respStatus } = useTriggerMeasurement();
-const { ntpData: fullNTP, ntsData, ripeData, versionData: fullVersionData, /* status: fullStatus, */ ripeStatus: fetchedRIPEStatus, ripeError: ripeMeasurementError } = usePollFullMeasurement(fullMeasurementId);
+const { ntpData: fullNTP, ntsData, ripeData, versionData: fullVersionData, /* status: fullStatus, */ ripeStatus: fetchedRIPEStatus, ripeError: ripeMeasurementError, ripeId: fullRipeId } = usePollFullMeasurement(fullMeasurementId);
 const apiDataLoading = triggerLoading;
 const apiErrorLoading = null;
 const apiErrDetail = (triggerError as unknown as string) || null;
@@ -168,6 +168,13 @@ const ripeTriggerErr = null;
     }
   }, [fullVersionData, updateCache]);
 
+  // Store RIPE measurement ID when received
+  useEffect(() => {
+    if (fullRipeId) {
+      updateCache({ ripeMeasurementId: fullRipeId });
+    }
+  }, [fullRipeId, updateCache]);
+
  
   //functions for handling state changes
   //
@@ -192,6 +199,7 @@ const ripeTriggerErr = null;
     // Reset cached values for a fresh run and start measurement session
     updateCache({
       measurementId: null,
+      ripeMeasurementId: null,
       measured: false,
       ntpData: null,
       versionData: null,
