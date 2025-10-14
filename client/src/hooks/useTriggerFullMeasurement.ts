@@ -15,7 +15,7 @@ export const useTriggerMeasurement = () => {
     setError(null);
 
     try {
-      const resp = await axios.post(`${server}/measuremets/trigger`, payload, {
+      const resp = await axios.post(`${server}/measurements/trigger/`, payload, {
         headers: { "Content-Type": "application/json" },
       });
 
