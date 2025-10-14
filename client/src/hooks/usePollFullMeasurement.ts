@@ -21,9 +21,9 @@ import { useFetchRIPEData } from "./useFetchRipeData.ts";
 //   ntpVersions?: any;
 // }
 const SERVER = import.meta.env.VITE_SERVER_HOST_ADDRESS;
-export const usePollFullMeasurement = (measurementId: string | null,  partialData: any, interval = 3000
+export const usePollFullMeasurement = (measurementId: string | null,  partialData: any, interval = 10000
 ) => {
-  const [ntpData, setNtpData] = useState<NTPData | null>(null);
+  const [ntpData, setNtpData] = useState<NTPData[] | null>(null);
   const [ntsData, setNtsData] = useState<any>(null);
   const [ripeId, setRipeId] = useState<string | null>(null);
   const [versionData, setVersionData] = useState<any>(null);
@@ -75,11 +75,12 @@ export const usePollFullMeasurement = (measurementId: string | null,  partialDat
 
             //Main measurement
             if (respData.ip_measurements && respData.ip_measurements?.length > 0) {
-                const firstIP = respData.ip_measurements[0]
-               setNtpData(transformJSONDataToNTPData(firstIP.main_measurement))
-               setError(firstIP.response_error)
+                const ipMeasurements = respData.ip_measurements
+                setNtpData(ipMeasurements.map((ip: any) => transformJSONDataToNTPData(ip.main_measurement)))
+                setError(respData.response_error)
             } else if (respData.main_measurement) {
-                setNtpData(transformJSONDataToNTPData(respData.main_measurement))
+                const dataAsArray = transformJSONDataToNTPData(respData.main_measurement) ?? null
+                setNtpData(dataAsArray ? [dataAsArray] : null)
                 setError(respData.response_error)
             }
 

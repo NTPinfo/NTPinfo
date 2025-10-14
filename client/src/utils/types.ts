@@ -108,18 +108,23 @@ export type NTSResult = Record<string, any>;
  */
 export interface HomeCacheState {
   ntpData: NTPData | null
+  ntsResult: NTSResult | null 
+  ripeMeasurementResp: RIPEData[] | null
+  versionData: NTPVersionsData | null
+
   chartData: Map<string, NTPData[]> | null
   measured: boolean
   selMeasurement: Measurement          // 'offset' | 'RTT'
   measurementId: string | null
   vantagePointInfo: [LatLngTuple,string] | null
   allNtpMeasurements: NTPData[] | null
-  ripeMeasurementResp: RIPEData[] | null
+  
   ripeMeasurementStatus: RipeStatus | null    // 'pending' | 'complete' | ...
   ipv6Selected: boolean
   isLoading: boolean                    // Track when NTP measurement is loading
   measurementSessionActive: boolean     // Track when any measurement session is active
-  ntsResult: NTSResult | null
+  error: any
+
 }
 
 export type RipeStatus = "pending" | "partial_results" | "complete" | "timeout" | "error"

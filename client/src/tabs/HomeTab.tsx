@@ -1,5 +1,5 @@
 import {useEffect, useCallback } from 'react'
-import { HomeCacheState } from '../utils/types' // new import for caching result
+import { HomeCacheState, MeasurementRequest } from '../utils/types' // new import for caching result
 import '../styles/HomeTab.css'
 import InputSection from '../components/InputSection.tsx'
 import ResultSummary from '../components/ResultSummary'
@@ -25,9 +25,10 @@ import NTSResultBox from '../components/NTSResultBox.tsx'
 import ripeLogo from '../assets/ripe_ncc_white.png'
 import { NtpVersionAnalysis } from '../components/NTPVersions.tsx'
 
-// interface HomeTabProps {
-//     onVisualizationDataChange: (data: Map<string, NTPData[]> | null) => void;
-// }
+import { useTriggerMeasurement } from "../hooks/useTriggerFullMeasurement";
+import { usePollPartialMeasurement } from "../hooks/usePollPartialMeasurement";
+import { usePollFullMeasurement } from "../hooks/usePollFullMeasurement";
+
 interface HomeTabProps {
   cache: HomeCacheState;
   setCache: React.Dispatch<React.SetStateAction<HomeCacheState>>;
@@ -48,18 +49,22 @@ const selectResult = (ntpData: NTPData[] | null): NTPData | null => {
 function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
 
   const {
+    //
     ntpData,
+    ntsResult,
+    ripeMeasurementResp,
+    versionData,
+    //
     chartData,
     measured,
     selMeasurement,
     measurementId,
     vantagePointInfo,
     allNtpMeasurements,
-    ripeMeasurementResp,
     ripeMeasurementStatus,
     ipv6Selected,
     measurementSessionActive,
-    ntsResult
+    error
   } = cache;
 
   // still local UI state
@@ -88,20 +93,23 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
   // const [allNtpMeasurements, setAllNtpMeasurements] = useState<NTPData[] | null>(null)
 
   //Varaibles to log and use API hooks
-  const {fetchData: fetchMeasurementData, loading: apiDataLoading, error: apiErrorLoading, httpStatus: respStatus, errorMessage: apiErrDetail} = useFetchIPData()
+  //const {fetchData: fetchMeasurementData, loading: apiDataLoading, error: apiErrorLoading, httpStatus: respStatus, errorMessage: apiErrDetail} = useFetchIPData()
   const {fetchData: fetchHistoricalData} = useFetchHistoricalIPData()
-  const {triggerMeasurement, error: ripeTriggerErr} = useTriggerRipeMeasurement()
-  const { fetchNTS, loading: ntsLoading, error: ntsError } = useFetchNTSData()
+  //const {triggerMeasurement, error: ripeTriggerErr} = useTriggerRipeMeasurement()
+  //const { fetchNTS, loading: ntsLoading, error: ntsError } = useFetchNTSData()
   const {
-    result: fetchedRIPEData,
+   result: fetchedRIPEData,
     status: fetchedRIPEStatus,
     error: ripeMeasurementError
   } = useFetchRIPEData(measurementId)
 
+const { triggerMeasurement, loading: triggerLoading, measurementId: fullMeasurementId } = useTriggerMeasurement();
+const { data: partialData, status: partialStatus } = usePollPartialMeasurement(fullMeasurementId );
+const { ntpData: fullNTP, ntsData, ripeData, versionData: fullVersionData, status: fullStatus } = usePollFullMeasurement(measurementId, partialData);
   // Update cache when loading state changes
   useEffect(() => {
-    updateCache({ isLoading: apiDataLoading });
-  }, [apiDataLoading, updateCache]);
+    updateCache({ isLoading: triggerLoading });
+  }, [triggerLoading, updateCache]);
 
   // End measurement session when RIPE measurements complete or fail
   useEffect(() => {
@@ -122,7 +130,8 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
     });
   }, [ripeMeasurementResp, ripeMeasurementStatus, updateCache, fetchedRIPEData, fetchedRIPEStatus]);
 
-  //
+
+ 
   //functions for handling state changes
   //
 
@@ -132,7 +141,9 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
    * @param query The input given by the user
    */
   const handleInput = async (query: string, useIPv6: boolean) => {
-    if (query.length == 0)
+    if (!query.trim())
+       return
+    if (query.trim().length == 0)
       return
 
     //Reset the hook
@@ -146,17 +157,18 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
       measurementId: null,
       measured: false,
       ntpData: null,
+      versionData: null,
       ripeMeasurementResp: null,
       ripeMeasurementStatus: null,
       chartData: null,
       ntsResult: null,
-      measurementSessionActive: true  // Start measurement session
-    })
+      measurementSessionActive: true,  // Start measurement session
+    });
 
     /**
      * The payload for the measurement call, containing the server and the choice of using IPv6 or not
      */
-    const payload = {
+    const payload: MeasurementRequest = {
       server: query.trim(),
       ipv6_measurement: useIPv6
 
@@ -165,81 +177,103 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
     /**
      * Get the response from the measurement data endpoint
      */
-    const fullurlMeasurementData = `${import.meta.env.VITE_SERVER_HOST_ADDRESS}/measurements/`
+    //const fullurlMeasurementData = `${import.meta.env.VITE_SERVER_HOST_ADDRESS}/measurements/`
+    const serverUrl = `${import.meta.env.VITE_SERVER_HOST_ADDRESS}`
+    
 
-    /**
-     * Get data from past day from historical data endpoint to chart in the graph.
-     */
-    const startDate = dateFormatConversion(Date.now()-86400000)
-    const endDate = dateFormatConversion(Date.now())
-    const fullurlHistoricalData = `${import.meta.env.VITE_SERVER_HOST_ADDRESS}/measurements/history/?server=${query}&start=${startDate}&end=${endDate}`
+    // // Run all four calls concurrently for better performance
+    // const [apiMeasurementResp, apiHistoricalResp, ripeTriggerResp, ntsResp] = await Promise.all([
+    //   triggerMeasurement(serverUrl, payload),
+    //   fetchMeasurementData(serverUrl, payload),
+    //   fetchHistoricalData(fullurlHistoricalData),
+    //   fetchNTS(payload),
+    // ])
+    
+    try {
+      const measurementId  = await triggerMeasurement(serverUrl, payload);
+    
+      // If triggering failed, end the session
+      if (!measurementId) {
+  
+        updateCache({
+          measured: true,
+          ntpData: null,
+          ntsResult: null,
+          versionData: null,
+          chartData: null,
+          allNtpMeasurements: null,
+          ripeMeasurementResp: null,
+          measurementSessionActive: false,
+          ripeMeasurementStatus: "error",
+          //error: "Measurement trigger failed",
+        });
+        return;
+      } 
 
-    const ripePayload = {
-      server: query.trim(),
-      ipv6_measurement: useIPv6
-    }
+      updateCache({
+        measurementId,
+        measurementSessionActive: true,
+        ripeMeasurementStatus: "pending",
+      });
 
-    // Run all four calls concurrently for better performance
-    const [apiMeasurementResp, apiHistoricalResp, ripeTriggerResp, ntsResp] = await Promise.all([
-      fetchMeasurementData(fullurlMeasurementData, payload),
-      fetchHistoricalData(fullurlHistoricalData),
-      triggerMeasurement(ripePayload),
-      fetchNTS(payload),
-    ])
+      //HISTORICAL DATA
+      /**
+      * Get data from past day from historical data endpoint to chart in the graph.
+      */
+      const startDate = dateFormatConversion(Date.now()-86400000)
+      const endDate = dateFormatConversion(Date.now())
+      const fullurlHistoricalData = `${import.meta.env.VITE_SERVER_HOST_ADDRESS}/measurements/history/?server=${query}&start=${startDate}&end=${endDate}`
+      
+      const apiHistoricalResp = await fetchHistoricalData(fullurlHistoricalData);
+      const chartData = new Map<string, NTPData[]>();
+      chartData.set(payload.server, apiHistoricalResp);
+      onVisualizationDataChange(chartData);
+      updateCache({ chartData });
 
-    // If main measurement failed, end the session
-    if (!apiMeasurementResp) {
+      /**
+      * Update the stored data and show it again
+      */
+      const data = selectResult(fullNTP)
+      const chartData = new Map<string, NTPData[]>()
+      chartData.set(payload.server, apiHistoricalResp)
+      onVisualizationDataChange(chartData)
       updateCache({
         measured: true,
-        ntpData: null,
-        chartData: null,
-        allNtpMeasurements: null,
-        ripeMeasurementResp: null,
-        ripeMeasurementStatus: 'error',
-        measurementSessionActive: false  // End session
+        ntpData: data ?? null,
+        chartData,
+        allNtpMeasurements: fullNTP ?? null,
+        ripeMeasurementResp: null,          // clear old map
+        ripeMeasurementStatus: undefined,        //  "     "
+        ntsResult: ntsResult ?? null,         // Store NTS result
+        measurementSessionActive: true      // Keep session active for RIPE measurements
       })
-      return
+    } catch (err: any) {
+
     }
-
-    /**
-     * Update the stored data and show it again
-     */
-    const data = selectResult(apiMeasurementResp)
-    const chartData = new Map<string, NTPData[]>()
-    chartData.set(payload.server, apiHistoricalResp)
-    onVisualizationDataChange(chartData)
-    updateCache({
-      measured: true,
-      ntpData: data ?? null,
-      chartData,
-      allNtpMeasurements: apiMeasurementResp ?? null,
-      ripeMeasurementResp: null,          // clear old map
-      ripeMeasurementStatus: undefined,        //  "     "
-      ntsResult: ntsResp ?? null,         // Store NTS result
-      measurementSessionActive: true      // Keep session active for RIPE measurements
-    })
-    // setVantagePointIp(ripeTriggerResp === null ? null : ripeTriggerResp.parsedData.vantage_point_ip)
-    // setMeasurementId(ripeTriggerResp === null ? null : ripeTriggerResp.parsedData.measurementId)
-
+    
+    ///
+    ///
+    ///THIS WILL NOT COMPILE RIGHT NOW, AS RIPE TRIGGER NO LONGER HAPPENS DIRECTLY HERE
+    ///
+    //
+    ///
     if (ripeTriggerResp === null) {
-      // If RIPE measurement trigger failed, end the session
       updateCache({
         vantagePointInfo: null,
         measurementId: null,
         ripeMeasurementResp: null,
         ripeMeasurementStatus: 'error',
-        measurementSessionActive: false  // End session
-      })
-    } else {
-      updateCache({
-        //vantagePointInfo: ripeTriggerResp?.parsedData.coordinates && ripeTriggerResp?.parsedData.vantage_point_ip ? [ripeTriggerResp.parsedData.coordinates, ripeTriggerResp.parsedData.vantage_point_ip] : null,
-        vantagePointInfo: [ripeTriggerResp?.parsedData.coordinates, ripeTriggerResp?.parsedData.vantage_point_ip],
-        measurementId: ripeTriggerResp?.parsedData.measurementId ?? null,
-        ripeMeasurementResp: null,          // will be filled by hook
-        ripeMeasurementStatus: 'pending',
-        measurementSessionActive: true      // Keep session active
-      })
-    }
+        measurementSessionActive: false
+    })
+  } else {
+    updateCache({
+      vantagePointInfo: [ripeMeasurementResp, ripeTriggerResp?.parsedData.vantage_point_ip],
+      measurementId: ripeTriggerResp?.parsedData.measurementId ?? null,
+      ripeMeasurementResp: null,
+      ripeMeasurementStatus: 'pending',
+      measurementSessionActive: true
+    })
+}
   }
 
   /**
@@ -260,7 +294,7 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
       <div className="input-wrapper">
         <InputSection
           onClick={handleInput}
-          loading={apiDataLoading}
+          loading={triggerLoading || (!partialData)}
           ipv6Selected={ipv6Selected}
           onIPv6Toggle={handleIPv6Toggle}
           ripeMeasurementStatus={ripeMeasurementStatus}
@@ -277,10 +311,10 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
                         )}
         </div>
         {/* The main page shown after the main measurement is done */}
-      {(ntpData && !apiDataLoading && (<div className="results-and-graph">
+      {(ntpData && !triggerLoading && (<div className="results-and-graph">
         <ResultSummary data={ntpData}
                        ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null}
-                       err={apiErrorLoading}
+                       err={error}
                        errMessage={apiErrDetail}
                        httpStatus={respStatus}
                        ripeErr={ripeTriggerErr ?? ripeMeasurementError}

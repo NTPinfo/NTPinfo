@@ -3,7 +3,7 @@ import axios from "axios";
 import { PartialMeasurementResult } from "../utils/types";
 
 const SERVER = import.meta.env.VITE_SERVER_HOST_ADDRESS;
-export const usePollPartialMeasurement = (measurementId: string | null, interval = 3000) => {
+export const usePollPartialMeasurement = (measurementId: string | null, interval = 10000) => {
 
   const [data, setData] = useState<PartialMeasurementResult | null>(null);
   const [status, setStatus] = useState<string | null>(null);

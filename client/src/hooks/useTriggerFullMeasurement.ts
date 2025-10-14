@@ -26,7 +26,7 @@ export const useTriggerMeasurement = () => {
       setStatus(status);
       setHttpStatus(resp.status);
 
-      return { id, status };
+      return id;
     } catch (err: any) {
       console.warn(err);
       setError(err.response?.data?.detail || "Unknown error");
