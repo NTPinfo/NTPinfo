@@ -14,7 +14,7 @@ import {downloadJSON, downloadCSV} from '../utils/downloadFormats.ts'
 import WorldMap from '../components/WorldMap.tsx'
 import Header from '../components/Header.tsx';
 
-import { NTPData, dummyData} from '../utils/types.ts'
+import { NTPData } from '../utils/types.ts'
 
 import 'leaflet/dist/leaflet.css'
 // import { useTriggerRipeMeasurement } from '../hooks/useTriggerRipeMeasurement.ts'

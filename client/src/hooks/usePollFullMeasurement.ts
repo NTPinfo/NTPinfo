@@ -38,15 +38,16 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
   const { result: ripeData, status: ripeStatus, error: ripeError } = useFetchRIPEData(ripeId);
 
   useEffect(() => {
-
     // Start polling as soon as we have a measurement ID. Do not gate on partialData.
     if (!measurementId) {
       return;
     }
 
+    // Only start new polling if this is a different measurement ID
     if (prevMeasurementId.current === measurementId) return;
     prevMeasurementId.current = measurementId;
 
+    // Clean up any existing polling
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -56,9 +57,16 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
       clearTimeout(retryTimeoutRef.current);
       retryTimeoutRef.current = null;
     }
+    
     const controller = new AbortController();
     
-    setError(null)
+    // Reset all data when starting a new measurement
+    setError(null);
+    setNtpData(null);
+    setNtsData(null);
+    setVersionData(null);
+    setRipeId(null);
+    setStatus(null);
 
     const pollFullMeasurement = async () => {
       try {
@@ -90,7 +98,7 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
             }
 
             //NTS
-            if (respData.nts) setNtsData(respData.nts ?? null)
+            setNtsData(respData.nts ?? null)
 
             //NTP versions
             if (respData.id_vs) {
@@ -108,8 +116,6 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
 
             //Error
             if (respData.response_error) setError(respData.response_error)
-
-        
 
             // stop polling if finished or failed
             if (respData.status === "finished" || respData.status === "failed") {
@@ -135,7 +141,7 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
       if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
       controller.abort();
     };
-  }, [measurementId, interval, ripeId]);
+  }, [measurementId, interval]);
 
   return { ntpData, ntsData, ripeData, versionData, status, error, ripeStatus, ripeError};
 }
