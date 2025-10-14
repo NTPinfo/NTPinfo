@@ -199,6 +199,8 @@ const ripeTriggerErr = null;
       ripeMeasurementStatus: null,
       chartData: null,
       ntsResult: null,
+      allNtpMeasurements: null,
+      vantagePointInfo: null,
       measurementSessionActive: true,  // Start measurement session
     });
 
@@ -281,7 +283,7 @@ const ripeTriggerErr = null;
         allNtpMeasurements: fullNTP ?? null,
         ripeMeasurementResp: null,          // clear old map
         ripeMeasurementStatus: undefined,        //  "     "
-        ntsResult: ntsResult ?? null,         // Store NTS result
+        ntsResult: null,                    // Keep NTS result reset until new data arrives
         measurementSessionActive: true      // Keep session active for RIPE measurements
       })
     } catch (err: any) {
@@ -326,7 +328,7 @@ const ripeTriggerErr = null;
                         )}
         </div>
         {/* The main page shown after the main measurement is done */}
-      {(ntpData && !triggerLoading && (<div className="results-and-graph">
+      {(ntpData && !triggerLoading && !measurementSessionActive && (<div className="results-and-graph">
         <ResultSummary data={ntpData}
                        ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null}
                        err={error}
@@ -348,7 +350,18 @@ const ripeTriggerErr = null;
             />
           </div>
         </div>
-      </div>)) || (!ntpData && !apiDataLoading && measured &&
+      </div>)) || 
+      /* Show loading spinner for main-details when measurement is in progress */
+      (triggerLoading || measurementSessionActive) && (
+        <div className="main-details-loading">
+          <div className="loading-div">
+            <p>Loading measurement results...</p>
+            <LoadingSpinner size="medium"/>
+          </div>
+        </div>
+      ) ||
+      /* Show error state when measurement failed */
+      (!ntpData && !apiDataLoading && measured &&
       <ResultSummary data={ntpData} err={apiErrorLoading} httpStatus={respStatus} errMessage={apiErrDetail}
       ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null} ripeErr={ripeTriggerErr ?? ripeMeasurementError} ripeStatus={ripeTriggerErr ? "error" :  ripeMeasurementStatus}/>) }
 
