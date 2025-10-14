@@ -31,8 +31,8 @@ function ResultSummary({data, ripeData, err, httpStatus, ripeErr, ripeStatus, er
             setServerStatus(null)
     }, [data, ripeData, ripeErr, ripeStatus])
 
-    if (data == null)
-        return <h2 id="not-found">{err && errMessage ? `Error ${httpStatus}: ${statusMessage}` : `Unknown error occurred`}</h2>
+    // if (data == null)
+    //     return <h2 id="not-found">{err && errMessage ? `Error ${httpStatus}: ${statusMessage}` : `Unknown error occurred`}</h2>
 
 
 

@@ -40,7 +40,10 @@ export const usePollPartialMeasurement = (measurementId: string | null, interval
 
             if (res.data.status === "finished" || res.data.status === "failed") {
                 setLoading(false);
-                clearInterval(interval);
+                if (intervalRef.current) {
+                  clearInterval(intervalRef.current);
+                  intervalRef.current = null;
+                }
             }
                 
 
@@ -50,10 +53,13 @@ export const usePollPartialMeasurement = (measurementId: string | null, interval
         }
     }
 
-    const pollInterval = setInterval(pollPartialResults, interval);
+    intervalRef.current = setInterval(pollPartialResults, interval);
     pollPartialResults();
 
-    return () => clearInterval(pollInterval);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (abortRef.current) abortRef.current.abort();
+    };
   }, [measurementId, interval])
 
   return {data, status, loading, error}
