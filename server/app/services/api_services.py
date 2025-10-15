@@ -3,11 +3,12 @@ import time
 
 from sqlalchemy.orm import Session
 
+from server.app.utils.location_resolver import get_country_for_ip, get_coordinates_for_ip
 from server.app.utils.validate import sanitize_string
 from server.app.dtos.MeasurementRequest import MeasurementRequest
 from server.app.utils.analyze_ntp_versions import run_tool_on_ntp_version
 from server.app.dtos.full_ntp_measurement import NTSMeasurement, FullMeasurementDN, NTPv4Measurement, NTPv5Measurement, \
-    put_fields_ntpv4, put_fields_ntpv5, put_fields_4_or_5
+    put_fields_ntpv4, put_fields_ntpv5, put_fields_4_or_5, NTPv4ServerInfo, NTPv5ServerInfo
 from server.app.dtos.AdvancedSettings import AdvancedSettings
 from server.app.utils.nts_check import perform_nts_measurement_ip, perform_nts_measurement_domain_name
 from server.app.dtos.full_ntp_measurement import FullMeasurementIP, NTPVersions
@@ -603,6 +604,8 @@ def add_custom_ntp_measurement_ip_to_db_measurement(db: Session, server_ip: str,
 
             db.add(measurement_v)
             db.flush()
+            # add the server info
+            get_server_info_objectv4(db, measurement_v.id, server_ip)
             full_m.id_main_measurement = measurement_v.id
         else:
 
@@ -610,11 +613,51 @@ def add_custom_ntp_measurement_ip_to_db_measurement(db: Session, server_ip: str,
             put_fields_ntpv5(measurement_v5, data, analysis, settings.ntpv5_draft)
             db.add(measurement_v5)
             db.flush()
+            # add the server info
+            get_server_info_objectv5(db, measurement_v5.id, server_ip)
             full_m.id_main_measurement = measurement_v5.id
         full_m.response_version = "ntpv" + response_version
         db.commit()
     except Exception as e: # we arrive here iff run_tool_on_ntp_version throws an error
         print("error in adding custom ntp measurement:", e)
+
+def get_server_info_objectv4(db: Session, m_id: int, server_ip: str) -> None:
+    """
+    Creates the server info object fot this measurement.
+    Args:
+        db (Session): A connection to the database (we need to query some IDs).
+        m_id (int): The measurement (NTPv4 class) id.
+        server_ip (Optional[str]): The IP address of the server.
+    Returns:
+         None: nothing
+    """
+    msi = NTPv4ServerInfo(m_id=m_id, ip_is_anycast=is_this_ip_anycast(server_ip),
+                        asn_ntp_server=get_asn_for_ip(server_ip), country_code=get_country_for_ip(server_ip))
+    c: Optional[Tuple[float, float]] = get_coordinates_for_ip(server_ip)
+    if c is not None:
+        msi.coordinates_x = c[0]
+        msi.coordinates_y = c[1]
+    db.add(msi)
+    db.flush()
+
+def get_server_info_objectv5(db: Session, m_id: int, server_ip: str) -> None:
+    """
+    Creates the server info object fot this measurement.
+    Args:
+        db (Session): A connection to the database (we need to query some IDs).
+        m_id (int): The measurement (NTPv5 class) id.
+        server_ip (Optional[str]): The IP address of the server.
+    Returns:
+         None: nothing
+    """
+    msi = NTPv5ServerInfo(m_id=m_id, ip_is_anycast=is_this_ip_anycast(server_ip),
+                        asn_ntp_server=get_asn_for_ip(server_ip), country_code=get_country_for_ip(server_ip))
+    c: Optional[Tuple[float, float]] = get_coordinates_for_ip(server_ip)
+    if c is not None:
+        msi.coordinates_x = c[0]
+        msi.coordinates_y = c[1]
+    db.add(msi)
+    db.flush()
 
 def get_host_and_server_ip(server: str, from_dn: Optional[str] = None) -> Tuple[str, Optional[str]]:
     """

@@ -172,6 +172,26 @@ def put_fields_ntpv5(m: NTPv5Measurement, data: dict, analysis: Optional[str], d
     m.flags_decoded = data.get("flags_decoded")
     m.extensions = data.get("extensions")
 
+class NTPv4ServerInfo(Base):
+    __tablename__ = "ntpv4_server_info"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    m_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True) # the id of the NTPv4Measurement object
+    ip_is_anycast: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    asn_ntp_server: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    country_code: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    coordinates_x: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+    coordinates_y: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+
+class NTPv5ServerInfo(Base):
+    __tablename__ = "ntpv5_server_info"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    m_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True) # the id of the NTPv4Measurement object
+    ip_is_anycast: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    asn_ntp_server: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    country_code: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    coordinates_x: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+    coordinates_y: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+
 class NTSMeasurement(Base):
     __tablename__ = "nts_measurement"
 

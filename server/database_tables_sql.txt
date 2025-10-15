@@ -61,6 +61,24 @@ CREATE TABLE ntpv5_measurement (
     flags_decoded JSONB,
     extensions JSONB
 );
+CREATE TABLE ntpv4_server_info (
+    id SERIAL PRIMARY KEY,
+    m_id INT,
+    ip_is_anycast BOOLEAN NOT NULL DEFAULT FALSE,
+    asn_ntp_server VARCHAR(10),
+    country_code VARCHAR(4),
+    coordinates_x DOUBLE PRECISION,
+    coordinates_y DOUBLE PRECISION
+);
+CREATE TABLE ntpv5_server_info (
+    id SERIAL PRIMARY KEY,
+    m_id INT,
+    ip_is_anycast BOOLEAN NOT NULL DEFAULT FALSE,
+    asn_ntp_server VARCHAR(10),
+    country_code VARCHAR(4),
+    coordinates_x DOUBLE PRECISION,
+    coordinates_y DOUBLE PRECISION
+);
 CREATE TABLE nts_measurement (
     id_nts SERIAL PRIMARY KEY,
     succeeded BOOLEAN NOT NULL DEFAULT FALSE,
