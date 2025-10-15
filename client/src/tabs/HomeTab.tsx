@@ -56,7 +56,7 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
     chartData,
     measured,
     selMeasurement,
-    // measurementId, // unused here
+    measurementId, // now used for ResultSummary display
     vantagePointInfo,
     allNtpMeasurements,
     ripeMeasurementStatus,
@@ -337,7 +337,8 @@ const ripeTriggerErr = null;
         <ResultSummary data={ntpData}
                        ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null}
                        ripeErr={ripeTriggerErr ?? ripeMeasurementError}
-                       ripeStatus={ripeTriggerErr ? "error" : ripeMeasurementStatus}/>
+                       ripeStatus={ripeTriggerErr ? "error" : ripeMeasurementStatus}
+                       measurementId={measurementId || null}/>
 
         {/* Div for the visualization graph, and the radios for setting the what measurement to show */}
         <div className="graphs">
@@ -365,7 +366,7 @@ const ripeTriggerErr = null;
       /* Show error state when measurement failed */
       (!ntpData && !apiDataLoading && measured &&
       <ResultSummary data={ntpData}
-      ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null} ripeErr={ripeTriggerErr ?? ripeMeasurementError} ripeStatus={ripeTriggerErr ? "error" :  ripeMeasurementStatus}/>) }
+      ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null} ripeErr={ripeTriggerErr ?? ripeMeasurementError} ripeStatus={ripeTriggerErr ? "error" :  ripeMeasurementStatus} measurementId={measurementId || null}/>) }
 
       {/* NTS Results Box - shown when NTP data is available */}
       {ntpData && !apiDataLoading && (

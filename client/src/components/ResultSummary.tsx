@@ -8,8 +8,8 @@ import LoadingSpinner from './LoadingSpinner.tsx'
 import { calculateStatus } from '../utils/calculateStatus.ts'
 
 
-function ResultSummary({data, ripeData, ripeErr, ripeStatus} :
-    {data : NTPData | null, ripeData: RIPEData | null, ripeErr: Error | null, ripeStatus: RipeStatus | null}) {
+function ResultSummary({data, ripeData, ripeErr, ripeStatus, measurementId} :
+    {data : NTPData | null, ripeData: RIPEData | null, ripeErr: Error | null, ripeStatus: RipeStatus | null, measurementId: string | null}) {
 
     const [serverStatus, setServerStatus] = useState<string | null>(null)
 
@@ -108,7 +108,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus} :
                     <div className="result-and-title">
                         <div className="res-label">From our NTP Client (Netherlands)
                             <div className="tooltip-container">
-                            <span className="tooltip-icon">?</span>
+                            <span className="tooltip-icon">?</span>fullMeasurementId
                             <div className="tooltip-text">
                                Our NTP Client is based in the Netherlands.
                             </div>
@@ -128,6 +128,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus} :
                             <div className="metric"><span title='The poll interval used by the probe during the measurement'>Poll interval</span><span>{data?.poll !== undefined ? `${Math.pow(2, data.poll)} s` : 'N/A'}</span></div>
                             <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span>{data?.root_dispersion !== undefined ? `${(data.root_dispersion).toFixed(10)} s` : 'N/A'} {rootDispIconNTP && <img src={rootDispIconNTP} alt="root dispersion performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                             <div className="metric"><span>ASN</span><span>{data?.asn_ntp_server !== undefined ? data.asn_ntp_server : "N/A"}</span></div>
+                            <div className="metric"><span>Measurement ID</span><span>{measurementId ?? 'N/A'}</span></div>
                         </div>
                     </div>
                     <div className="result-and-title" id="ripe-result">
