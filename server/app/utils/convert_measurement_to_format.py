@@ -2,7 +2,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from server.app.dtos.full_ntp_measurement import FullMeasurementIP, NTSMeasurement, NTPVersions, NTPv5Measurement, \
-    FullMeasurementDN, NTPv4Measurement
+    FullMeasurementDN, NTPv4Measurement, NTPv4ServerInfo, NTPv5ServerInfo
 
 
 # methods to convert to JSON (dict)
@@ -21,18 +21,22 @@ def ntpv4_or_v5_measurement_to_dict(db: Session, m_id: Optional[int], m_version:
     if m_id is None or m_version is None:
         return None
     if m_version == "ntpv5":
-        m_v: Optional[NTPv5Measurement] = db.query(NTPv5Measurement).filter_by(id=m_id).first()
-        return ntpv5_measurement_to_dict(m_v, from_ntp_versions)
+        m_v5: Optional[NTPv5Measurement] = db.query(NTPv5Measurement).filter_by(id=m_id).first()
+        m_server_info_v5: Optional[NTPv5ServerInfo] = db.query(NTPv5ServerInfo).filter_by(m_id=m_id).first()
+        return ntpv5_measurement_to_dict(m_v5, m_server_info_v5, from_ntp_versions)
     else: # other versions will be saved in NTPv4 format
-        m_v5: Optional[NTPv4Measurement] = db.query(NTPv4Measurement).filter_by(id=m_id).first()
-        return ntpv4_measurement_to_dict(m_v5, from_ntp_versions)
+        m_v: Optional[NTPv4Measurement] = db.query(NTPv4Measurement).filter_by(id=m_id).first()
+        m_server_info: Optional[NTPv4ServerInfo] = db.query(NTPv4ServerInfo).filter_by(m_id=m_id).first()
+        return ntpv4_measurement_to_dict(m_v, m_server_info, from_ntp_versions)
 
-def ntpv4_measurement_to_dict(m: Optional[NTPv4Measurement], from_ntp_versions: bool = False) -> Optional[dict]:
+def ntpv4_measurement_to_dict(m: Optional[NTPv4Measurement], m_server_info: Optional[NTPv4ServerInfo],
+                              from_ntp_versions: bool = False) -> Optional[dict]:
     """
     This method converts an NTPv4Measurement object to a dict/JSON. It is important to note that NTPv1 ... NTPv3 are also
     in this NTPv4Measurement format.
     Args:
         m (Optional[NTPv4Measurement]): The measurement object to convert.
+        m_server_info (Optional[NTPv4ServerInfo]): The server information.
         from_ntp_versions (bool): if true, do not send again the analysis
     Returns:
         Optional[dict]: The dict/JSON version or None
@@ -66,15 +70,26 @@ def ntpv4_measurement_to_dict(m: Optional[NTPv4Measurement], from_ntp_versions: 
 
         "extensions": m.extensions,
     }
+    if m_server_info is not None:
+        ans["ntp_server_location"] = {
+            "ip_is_anycast": m_server_info.ip_is_anycast,
+            "country_code": m_server_info.country_code,
+            "asn_ntp_server": m_server_info.asn_ntp_server,
+            "coordinates_x": m_server_info.coordinates_x,
+            "coordinates_y": m_server_info.coordinates_y
+        }
+
     if not from_ntp_versions:
         ans["analysis"] = m.analysis
     return ans
 
-def ntpv5_measurement_to_dict(m: Optional[NTPv5Measurement], from_ntp_versions: bool = False) -> Optional[dict]:
+def ntpv5_measurement_to_dict(m: Optional[NTPv5Measurement], m_server_info: Optional[NTPv5ServerInfo],
+                              from_ntp_versions: bool = False) -> Optional[dict]:
     """
     This method converts an NTPv5Measurement object to a dict/JSON (only for NTPv5).
     Args:
         m (Optional[NTPv5Measurement]): The measurement object to convert.
+        m_server_info (Optional[NTPv5ServerInfo]): The server information.
         from_ntp_versions (bool): if true, do not send again the analysis
     Returns:
         Optional[dict]: The dict/JSON version or None
@@ -117,6 +132,14 @@ def ntpv5_measurement_to_dict(m: Optional[NTPv5Measurement], from_ntp_versions: 
 
         # "ntpv5_data": m.ntpv5_data,
     }
+    if m_server_info is not None:
+        ans["ntp_server_location"] = {
+            "ip_is_anycast": m_server_info.ip_is_anycast,
+            "country_code": m_server_info.country_code,
+            "asn_ntp_server": m_server_info.asn_ntp_server,
+            "coordinates_x": m_server_info.coordinates_x,
+            "coordinates_y": m_server_info.coordinates_y
+        }
     if not from_ntp_versions:
         ans["analysis"] = m.analysis
     return ans
