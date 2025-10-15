@@ -8,17 +8,10 @@ import LoadingSpinner from './LoadingSpinner.tsx'
 import { calculateStatus } from '../utils/calculateStatus.ts'
 
 
-function ResultSummary({data, ripeData, err, httpStatus, ripeErr, ripeStatus, errMessage} :
-    {data : NTPData | null, ripeData: RIPEData | null, err : Error | null, httpStatus: number, ripeErr: Error | null, ripeStatus: RipeStatus | null, errMessage: string | null}) {
+function ResultSummary({data, ripeData, ripeErr, ripeStatus} :
+    {data : NTPData | null, ripeData: RIPEData | null, ripeErr: Error | null, ripeStatus: RipeStatus | null}) {
 
     const [serverStatus, setServerStatus] = useState<string | null>(null)
-
-    const [statusMessage, setStatusMessage] = useState<string | null>("")
-    useEffect(() => {
-    if (data == null) {
-        setStatusMessage(errMessage)
-        }
-    }, [data, errMessage])
 
     useEffect(() => {
         if((ripeStatus === "complete") && ripeData && data){

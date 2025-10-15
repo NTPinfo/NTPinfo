@@ -141,6 +141,7 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
       if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
       controller.abort();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [measurementId, interval]);
 
   return { ntpData, ntsData, ripeData, versionData, status, error, ripeStatus, ripeError, ripeId};
