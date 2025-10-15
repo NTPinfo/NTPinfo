@@ -108,7 +108,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, measurementId} :
                     <div className="result-and-title">
                         <div className="res-label">From our NTP Client (Netherlands)
                             <div className="tooltip-container">
-                            <span className="tooltip-icon">?</span>fullMeasurementId
+                            <span className="tooltip-icon">?</span>
                             <div className="tooltip-text">
                                Our NTP Client is based in the Netherlands.
                             </div>
