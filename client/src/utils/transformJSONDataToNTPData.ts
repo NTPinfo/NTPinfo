@@ -18,7 +18,7 @@ export const transformJSONDataToNTPData = (fetchedData: any): NTPData | null => 
         server_name: fetchedData.ntp_server_name,
         is_anycast: fetchedData.ntp_server_location.ip_is_anycast,
         country_code: fetchedData.ntp_server_location.country_code,
-        coordinates: [fetchedData.ntp_server_location.coordinates[0],fetchedData.ntp_server_location.coordinates[1]],
+        coordinates: [fetchedData.ntp_server_location.coordinates_x,fetchedData.ntp_server_location.coordinates_y],
         ntp_server_ref_parent_ip: fetchedData.ntp_server_ref_parent_ip,
         ref_id: fetchedData.ref_name ?? fetchedData.ntp_server_ref_parent_ip,
         client_sent_time: [fetchedData.client_sent_time.seconds, fetchedData.client_sent_time.fraction],
