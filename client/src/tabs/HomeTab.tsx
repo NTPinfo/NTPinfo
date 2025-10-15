@@ -8,7 +8,6 @@ import DownloadButton from '../components/DownloadButton'
 import LoadingSpinner from '../components/LoadingSpinner'
 import DynamicGraph from '../components/DynamicGraph.tsx'
 import { useFetchHistoricalIPData } from '../hooks/useFetchHistoricalIPData.ts'
-// import { useFetchRipeData } from '../hooks/useFetchRipeData.ts'
 import { dateFormatConversion } from '../utils/dateFormatConversion.ts'
 import {downloadJSON, downloadCSV} from '../utils/downloadFormats.ts'
 import WorldMap from '../components/WorldMap.tsx'
@@ -17,8 +16,6 @@ import Header from '../components/Header.tsx';
 import { NTPData } from '../utils/types.ts'
 
 import 'leaflet/dist/leaflet.css'
-// import { useTriggerRipeMeasurement } from '../hooks/useTriggerRipeMeasurement.ts'
-// import { useFetchNTSData } from '../hooks/useFetchNTSData.ts'
 import ConsentPopup from '../components/ConsentPopup.tsx'
 import NTSResultBox from '../components/NTSResultBox.tsx'
 import ripeLogo from '../assets/ripe_ncc_white.png'
@@ -76,29 +73,12 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
   const handleIPv6Toggle = (value: boolean) => {
   updateCache({ ipv6Selected: value });
   };
-  //
-  // states we need to define
-  //
-  // const [ntpData, setNtpData] = useState<NTPData | null>(null)
-  // const [chartData, setChartData] = useState<Map<string, NTPData[]> | null>(null)
-  // const [measured, setMeasured] = useState(false)
-  // const [popupOpen, setPopupOpen] = useState(false)
-  // const [selOption, setOption] = useState("Last Hour")
-  // const [selMeasurement, setSelMeasurement] = useState<Measurement>("offset")
-  // const [measurementId, setMeasurementId] = useState<string | null>(null)
-  // const [vantagePointIp, setVantagePointIp] = useState<string | null>(null)
-  // const [allNtpMeasurements, setAllNtpMeasurements] = useState<NTPData[] | null>(null)
+
 
   //Varaibles to log and use API hooks
-  //const {fetchData: fetchMeasurementData, loading: apiDataLoading, error: apiErrorLoading, httpStatus: respStatus, errorMessage: apiErrDetail} = useFetchIPData()
+  
   const {fetchData: fetchHistoricalData} = useFetchHistoricalIPData()
-  //const {triggerMeasurement, error: ripeTriggerErr} = useTriggerRipeMeasurement()
-  //const { fetchNTS, loading: ntsLoading, error: ntsError } = useFetchNTSData()
-  // const {
-  //  result: fetchedRIPEData,
-  //   status: fetchedRIPEStatus,
-  //   error: ripeMeasurementError
-  // } = useFetchRIPEData(measurementId)
+ 
 
 const { triggerMeasurement, loading: triggerLoading, measurementId: fullMeasurementId } = useTriggerMeasurement();
 const { ntpData: fullNTP, ntsData, ripeData, versionData: fullVersionData, /* status: fullStatus, */ ripeStatus: fetchedRIPEStatus, ripeError: ripeMeasurementError, ripeId: fullRipeId } = usePollFullMeasurement(fullMeasurementId);
@@ -172,7 +152,17 @@ const ripeTriggerErr = null;
     }
   }, [fullRipeId, updateCache]);
 
- 
+  useEffect(() => {
+  console.log("📡 measurementId:", fullMeasurementId);
+  }, [fullMeasurementId]);
+
+  //just for debugging
+  useEffect(() => {
+    console.log("NTP:", fullNTP);
+    console.log("NTS:", ntsData);
+    console.log("RIPE:", ripeData);
+    console.log("Versions:", fullVersionData);
+  }, [fullNTP, ntsData, ripeData, fullVersionData]);
   //functions for handling state changes
   //
 
@@ -187,11 +177,6 @@ const ripeTriggerErr = null;
     if (query.trim().length == 0)
       return
 
-    //Reset the hook
-    // setMeasurementId(null)
-    // setMeasured(false)
-    // setNtpData(null)
-    // setChartData(null)
 
     // Reset cached values for a fresh run and start measurement session
     updateCache({
@@ -214,7 +199,9 @@ const ripeTriggerErr = null;
      */
     const payload: MeasurementRequest = {
       server: query.trim(),
-      ipv6_measurement: useIPv6
+      ipv6_measurement: useIPv6,
+      ntp_versions_to_analyze: ["ntpv1", "ntpv2", "ntpv4", "ntpv5"], 
+      analyse_all_ntp_versions: false
 
     }
 
@@ -224,18 +211,10 @@ const ripeTriggerErr = null;
     //const fullurlMeasurementData = `${import.meta.env.VITE_SERVER_HOST_ADDRESS}/measurements/`
     const serverUrl = `${import.meta.env.VITE_SERVER_HOST_ADDRESS}`
     
-
-    // // Run all four calls concurrently for better performance
-    // const [apiMeasurementResp, apiHistoricalResp, ripeTriggerResp, ntsResp] = await Promise.all([
-    //   triggerMeasurement(serverUrl, payload),
-    //   fetchMeasurementData(serverUrl, payload),
-    //   fetchHistoricalData(fullurlHistoricalData),
-    //   fetchNTS(payload),
-    // ])
     
     try {
       const measurementId  = await triggerMeasurement(serverUrl, payload);
-    
+  
       // If triggering failed, end the session
       if (!measurementId) {
   
@@ -274,23 +253,23 @@ const ripeTriggerErr = null;
       onVisualizationDataChange(chartData);
       updateCache({ chartData });
 
-      /**
-      * Update the stored data and show it again
-      */
-      const data = selectResult(fullNTP)
-      const chartData2 = new Map<string, NTPData[]>()
-      chartData2.set(payload.server, apiHistoricalResp)
-      onVisualizationDataChange(chartData2)
-      updateCache({
-        measured: true,
-        ntpData: data ?? null,
-        chartData: chartData2,
-        allNtpMeasurements: fullNTP ?? null,
-        ripeMeasurementResp: null,          // clear old map
-        ripeMeasurementStatus: undefined,        //  "     "
-        ntsResult: null,                    // Keep NTS result reset until new data arrives
-        measurementSessionActive: true      // Keep session active for RIPE measurements
-      })
+    //   /**
+    //   * Update the stored data and show it again
+    //   */
+        const data = selectResult(fullNTP)
+        const chartData2 = new Map<string, NTPData[]>()
+        chartData2.set(payload.server, apiHistoricalResp)
+        onVisualizationDataChange(chartData2)
+        updateCache({
+            measured: true,
+            ntpData: data ?? null,
+            chartData: chartData2,
+            allNtpMeasurements: fullNTP ?? null,
+            ripeMeasurementResp: null,          // clear old map
+            ripeMeasurementStatus: undefined,        //  "     "
+            ntsResult: null,                    // Keep NTS result reset until new data arrives
+            measurementSessionActive: true      // Keep session active for RIPE measurements
+        })
     } catch {
       // Error handling is done by the triggerMeasurement hook
     }
@@ -333,7 +312,7 @@ const ripeTriggerErr = null;
                         )}
         </div>
         {/* The main page shown after the main measurement is done */}
-      {(ntpData && !triggerLoading && !measurementSessionActive && (<div className="results-and-graph">
+      {((ntpData || ripeData) && !triggerLoading && !measurementSessionActive && (<div className="results-and-graph">
         <ResultSummary data={ntpData}
                        ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null}
                        ripeErr={ripeTriggerErr ?? ripeMeasurementError}

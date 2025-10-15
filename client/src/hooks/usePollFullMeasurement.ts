@@ -5,6 +5,7 @@ import { transformFullMeasurementMainToNTPData } from "../utils/transformFullMea
 import { transformJSONDataToNTPVerData } from "../utils/transformJSONDataToNTPverData.ts";
 import { NTPData } from "../utils/types.ts";
 import { useFetchRIPEData } from "./useFetchRipeData.ts";
+import { usePollPartialMeasurement } from "./usePollPartialMeasurement.ts";
 // interface AggregatedDNMeasurement {
 //   status: string;
 //   ripeData?: any;
@@ -34,11 +35,13 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevMeasurementId = useRef<string | null>(null);
+  const fetchedVersionIdRef = useRef<string | null>(null);
 
   const { result: ripeData, status: ripeStatus, error: ripeError } = useFetchRIPEData(ripeId);
+  const { ntpVersionsId } = usePollPartialMeasurement(measurementId);
 
   useEffect(() => {
-    // Start polling as soon as we have a measurement ID. Do not gate on partialData.
+    // Start polling as soon as we have a measurement ID. 
     if (!measurementId) {
       return;
     }
@@ -67,6 +70,7 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
     setVersionData(null);
     setRipeId(null);
     setStatus(null);
+    fetchedVersionIdRef.current = null;
 
     const pollFullMeasurement = async () => {
       try {
@@ -100,22 +104,6 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
             //NTS
             setNtsData(respData.nts ?? null)
 
-            //NTP versions
-            if (respData.id_vs) {
-                try {
-                    const vsRes = await axios.get(
-                        `${SERVER}/measurements/ntp_versions/${respData.id_vs}`
-                    )
-                    setVersionData(transformJSONDataToNTPVerData(vsRes.data))
-                } catch (err) {
-                    console.warn("NTP versions failed", err)
-                }
-            }
-
-            console.log("versionData", versionData)
-
-            //Error
-            if (respData.response_error) setError(respData.response_error)
 
             // stop polling if finished or failed
             if (respData.status === "finished" || respData.status === "failed") {
@@ -141,8 +129,28 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
       if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
       controller.abort();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   }, [measurementId, interval]);
+
+  //Get NTP Versions ID from partial results and poll specific endpoint
+  useEffect(() => {
+  if (!ntpVersionsId) return;
+  if (fetchedVersionIdRef.current === ntpVersionsId) return;
+
+  fetchedVersionIdRef.current = ntpVersionsId;
+
+  const fetchVersions = async () => {
+    try {
+
+      const vsRes = await axios.get(`${SERVER}/measurements/ntp_versions/${ntpVersionsId}`);
+      setVersionData(transformJSONDataToNTPVerData(vsRes.data));
+    } catch (err) {
+      console.warn("NTP versions fetch failed:", err);
+    }
+  };
+
+  fetchVersions();
+}, [ntpVersionsId]);
 
   return { ntpData, ntsData, ripeData, versionData, status, error, ripeStatus, ripeError, ripeId};
 }
