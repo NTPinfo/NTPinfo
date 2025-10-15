@@ -14,7 +14,7 @@ import {downloadJSON, downloadCSV} from '../utils/downloadFormats.ts'
 import WorldMap from '../components/WorldMap.tsx'
 import Header from '../components/Header.tsx';
 
-import { NTPData, dummyData} from '../utils/types.ts'
+import { NTPData } from '../utils/types.ts'
 
 import 'leaflet/dist/leaflet.css'
 // import { useTriggerRipeMeasurement } from '../hooks/useTriggerRipeMeasurement.ts'
@@ -61,8 +61,7 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
     allNtpMeasurements,
     ripeMeasurementStatus,
     ipv6Selected,
-    measurementSessionActive,
-    error
+    measurementSessionActive
   } = cache;
 
   // still local UI state
@@ -101,11 +100,9 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
   //   error: ripeMeasurementError
   // } = useFetchRIPEData(measurementId)
 
-const { triggerMeasurement, loading: triggerLoading, measurementId: fullMeasurementId, error: triggerError, httpStatus: respStatus } = useTriggerMeasurement();
-const { ntpData: fullNTP, ntsData, ripeData, versionData: fullVersionData, /* status: fullStatus, */ ripeStatus: fetchedRIPEStatus, ripeError: ripeMeasurementError } = usePollFullMeasurement(fullMeasurementId);
+const { triggerMeasurement, loading: triggerLoading, measurementId: fullMeasurementId } = useTriggerMeasurement();
+const { ntpData: fullNTP, ntsData, ripeData, versionData: fullVersionData, /* status: fullStatus, */ ripeStatus: fetchedRIPEStatus, ripeError: ripeMeasurementError, ripeId: fullRipeId } = usePollFullMeasurement(fullMeasurementId);
 const apiDataLoading = triggerLoading;
-const apiErrorLoading = null;
-const apiErrDetail = (triggerError as unknown as string) || null;
 const ripeTriggerErr = null;
 // const ntsLoading = false;
 // const ntsError = null;
@@ -168,6 +165,13 @@ const ripeTriggerErr = null;
     }
   }, [fullVersionData, updateCache]);
 
+  // Store RIPE measurement ID when received
+  useEffect(() => {
+    if (fullRipeId) {
+      updateCache({ ripeMeasurementId: fullRipeId });
+    }
+  }, [fullRipeId, updateCache]);
+
  
   //functions for handling state changes
   //
@@ -192,6 +196,7 @@ const ripeTriggerErr = null;
     // Reset cached values for a fresh run and start measurement session
     updateCache({
       measurementId: null,
+      ripeMeasurementId: null,
       measured: false,
       ntpData: null,
       versionData: null,
@@ -199,6 +204,8 @@ const ripeTriggerErr = null;
       ripeMeasurementStatus: null,
       chartData: null,
       ntsResult: null,
+      allNtpMeasurements: null,
+      vantagePointInfo: null,
       measurementSessionActive: true,  // Start measurement session
     });
 
@@ -281,11 +288,11 @@ const ripeTriggerErr = null;
         allNtpMeasurements: fullNTP ?? null,
         ripeMeasurementResp: null,          // clear old map
         ripeMeasurementStatus: undefined,        //  "     "
-        ntsResult: ntsResult ?? null,         // Store NTS result
+        ntsResult: null,                    // Keep NTS result reset until new data arrives
         measurementSessionActive: true      // Keep session active for RIPE measurements
       })
-    } catch (err: any) {
-
+    } catch {
+      // Error handling is done by the triggerMeasurement hook
     }
     
     // RIPE trigger is handled via the new polling flow
@@ -326,12 +333,9 @@ const ripeTriggerErr = null;
                         )}
         </div>
         {/* The main page shown after the main measurement is done */}
-      {(ntpData && !triggerLoading && (<div className="results-and-graph">
+      {(ntpData && !triggerLoading && !measurementSessionActive && (<div className="results-and-graph">
         <ResultSummary data={ntpData}
                        ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null}
-                       err={error}
-                       errMessage={apiErrDetail}
-                       httpStatus={respStatus}
                        ripeErr={ripeTriggerErr ?? ripeMeasurementError}
                        ripeStatus={ripeTriggerErr ? "error" : ripeMeasurementStatus}/>
 
@@ -348,8 +352,19 @@ const ripeTriggerErr = null;
             />
           </div>
         </div>
-      </div>)) || (!ntpData && !apiDataLoading && measured &&
-      <ResultSummary data={ntpData} err={apiErrorLoading} httpStatus={respStatus} errMessage={apiErrDetail}
+      </div>)) || 
+      /* Show loading spinner for main-details when measurement is in progress */
+      (triggerLoading || measurementSessionActive) && (
+        <div className="main-details-loading">
+          <div className="loading-div">
+            <p>Loading measurement results...</p>
+            <LoadingSpinner size="medium"/>
+          </div>
+        </div>
+      ) ||
+      /* Show error state when measurement failed */
+      (!ntpData && !apiDataLoading && measured &&
+      <ResultSummary data={ntpData}
       ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null} ripeErr={ripeTriggerErr ?? ripeMeasurementError} ripeStatus={ripeTriggerErr ? "error" :  ripeMeasurementStatus}/>) }
 
       {/* NTS Results Box - shown when NTP data is available */}
