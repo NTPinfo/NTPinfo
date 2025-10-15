@@ -23,7 +23,7 @@ import { NtpVersionAnalysis } from '../components/NTPVersions.tsx'
 
 import { useTriggerMeasurement } from "../hooks/useTriggerFullMeasurement";
 import { usePollFullMeasurement } from "../hooks/usePollFullMeasurement";
-
+import { useFetchServerDetails } from '../hooks/useFetchServerDetails.ts'
 interface HomeTabProps {
   cache: HomeCacheState;
   setCache: React.Dispatch<React.SetStateAction<HomeCacheState>>;
@@ -77,9 +77,9 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
 
   //Varaibles to log and use API hooks
   
-  const {fetchData: fetchHistoricalData} = useFetchHistoricalIPData()
- 
-
+const {fetchData: fetchHistoricalData} = useFetchHistoricalIPData()
+  
+const {fetchServerDetails} = useFetchServerDetails()
 const { triggerMeasurement, loading: triggerLoading, measurementId: fullMeasurementId } = useTriggerMeasurement();
 const { ntpData: fullNTP, ntsData, ripeData, versionData: fullVersionData, /* status: fullStatus, */ ripeStatus: fetchedRIPEStatus, ripeError: ripeMeasurementError, ripeId: fullRipeId } = usePollFullMeasurement(fullMeasurementId);
 const apiDataLoading = triggerLoading;
@@ -177,7 +177,7 @@ const ripeTriggerErr = null;
     if (query.trim().length == 0)
       return
 
-
+    
     // Reset cached values for a fresh run and start measurement session
     updateCache({
       measurementId: null,
@@ -200,6 +200,7 @@ const ripeTriggerErr = null;
     const payload: MeasurementRequest = {
       server: query.trim(),
       ipv6_measurement: useIPv6,
+      wanted_ip_type: useIPv6 ? 6 : 4,
       ntp_versions_to_analyze: ["ntpv1", "ntpv2", "ntpv4", "ntpv5"], 
       analyse_all_ntp_versions: false
 
@@ -213,6 +214,21 @@ const ripeTriggerErr = null;
     
     
     try {
+      const serverDetails = await fetchServerDetails(payload.wanted_ip_type);
+      if (!serverDetails) {
+        updateCache({
+          measurementSessionActive: false,
+          ripeMeasurementStatus: "error",
+        });
+        return;
+        }
+      
+        updateCache({
+          vantagePointInfo:[serverDetails.coordinates, serverDetails.vantage_point_ip],
+          measurementSessionActive: true,
+           ripeMeasurementStatus: "pending",
+        });
+
       const measurementId  = await triggerMeasurement(serverUrl, payload);
   
       // If triggering failed, end the session
