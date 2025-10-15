@@ -76,11 +76,12 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.location_resolver</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_country_for_ip</span><span class="p">,</span> <span class="n">get_coordinates_for_ip</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.validate</span><span class="w"> </span><span class="kn">import</span> <span class="n">sanitize_string</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.MeasurementRequest</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeasurementRequest</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.analyze_ntp_versions</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_tool_on_ntp_version</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.full_ntp_measurement</span><span class="w"> </span><span class="kn">import</span> <span class="n">NTSMeasurement</span><span class="p">,</span> <span class="n">FullMeasurementDN</span><span class="p">,</span> <span class="n">NTPv4Measurement</span><span class="p">,</span> <span class="n">NTPv5Measurement</span><span class="p">,</span> \
-    <span class="n">put_fields_ntpv4</span><span class="p">,</span> <span class="n">put_fields_ntpv5</span><span class="p">,</span> <span class="n">put_fields_4_or_5</span>
+    <span class="n">put_fields_ntpv4</span><span class="p">,</span> <span class="n">put_fields_ntpv5</span><span class="p">,</span> <span class="n">put_fields_4_or_5</span><span class="p">,</span> <span class="n">NTPv4ServerInfo</span><span class="p">,</span> <span class="n">NTPv5ServerInfo</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.AdvancedSettings</span><span class="w"> </span><span class="kn">import</span> <span class="n">AdvancedSettings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.nts_check</span><span class="w"> </span><span class="kn">import</span> <span class="n">perform_nts_measurement_ip</span><span class="p">,</span> <span class="n">perform_nts_measurement_domain_name</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.dtos.full_ntp_measurement</span><span class="w"> </span><span class="kn">import</span> <span class="n">FullMeasurementIP</span><span class="p">,</span> <span class="n">NTPVersions</span>
@@ -705,6 +706,8 @@
 
             <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">measurement_v</span><span class="p">)</span>
             <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+            <span class="c1"># add the server info</span>
+            <span class="n">get_server_info_objectv4</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">measurement_v</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">server_ip</span><span class="p">)</span>
             <span class="n">full_m</span><span class="o">.</span><span class="n">id_main_measurement</span> <span class="o">=</span> <span class="n">measurement_v</span><span class="o">.</span><span class="n">id</span>
         <span class="k">else</span><span class="p">:</span>
 
@@ -712,11 +715,57 @@
             <span class="n">put_fields_ntpv5</span><span class="p">(</span><span class="n">measurement_v5</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">analysis</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">ntpv5_draft</span><span class="p">)</span>
             <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">measurement_v5</span><span class="p">)</span>
             <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+            <span class="c1"># add the server info</span>
+            <span class="n">get_server_info_objectv5</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">measurement_v5</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">server_ip</span><span class="p">)</span>
             <span class="n">full_m</span><span class="o">.</span><span class="n">id_main_measurement</span> <span class="o">=</span> <span class="n">measurement_v5</span><span class="o">.</span><span class="n">id</span>
         <span class="n">full_m</span><span class="o">.</span><span class="n">response_version</span> <span class="o">=</span> <span class="s2">&quot;ntpv&quot;</span> <span class="o">+</span> <span class="n">response_version</span>
         <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span> <span class="c1"># we arrive here iff run_tool_on_ntp_version throws an error</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;error in adding custom ntp measurement:&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_server_info_objectv4">
+<a class="viewcode-back" href="../../../../server.services.html#server.app.services.api_services.get_server_info_objectv4">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_server_info_objectv4</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">m_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">server_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates the server info object fot this measurement.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        db (Session): A connection to the database (we need to query some IDs).</span>
+<span class="sd">        m_id (int): The measurement (NTPv4 class) id.</span>
+<span class="sd">        server_ip (Optional[str]): The IP address of the server.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">         None: nothing</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msi</span> <span class="o">=</span> <span class="n">NTPv4ServerInfo</span><span class="p">(</span><span class="n">m_id</span><span class="o">=</span><span class="n">m_id</span><span class="p">,</span> <span class="n">ip_is_anycast</span><span class="o">=</span><span class="n">is_this_ip_anycast</span><span class="p">(</span><span class="n">server_ip</span><span class="p">),</span>
+                        <span class="n">asn_ntp_server</span><span class="o">=</span><span class="n">get_asn_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">),</span> <span class="n">country_code</span><span class="o">=</span><span class="n">get_country_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">))</span>
+    <span class="n">c</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">get_coordinates_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">msi</span><span class="o">.</span><span class="n">coordinates_x</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">msi</span><span class="o">.</span><span class="n">coordinates_y</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">msi</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="get_server_info_objectv5">
+<a class="viewcode-back" href="../../../../server.services.html#server.app.services.api_services.get_server_info_objectv5">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_server_info_objectv5</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">m_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">server_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates the server info object fot this measurement.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        db (Session): A connection to the database (we need to query some IDs).</span>
+<span class="sd">        m_id (int): The measurement (NTPv5 class) id.</span>
+<span class="sd">        server_ip (Optional[str]): The IP address of the server.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">         None: nothing</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msi</span> <span class="o">=</span> <span class="n">NTPv5ServerInfo</span><span class="p">(</span><span class="n">m_id</span><span class="o">=</span><span class="n">m_id</span><span class="p">,</span> <span class="n">ip_is_anycast</span><span class="o">=</span><span class="n">is_this_ip_anycast</span><span class="p">(</span><span class="n">server_ip</span><span class="p">),</span>
+                        <span class="n">asn_ntp_server</span><span class="o">=</span><span class="n">get_asn_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">),</span> <span class="n">country_code</span><span class="o">=</span><span class="n">get_country_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">))</span>
+    <span class="n">c</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">get_coordinates_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">msi</span><span class="o">.</span><span class="n">coordinates_x</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">msi</span><span class="o">.</span><span class="n">coordinates_y</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">msi</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="get_host_and_server_ip">

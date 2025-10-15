@@ -425,6 +425,52 @@ results—and formats it as a plain dictionary.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.get_server_info_objectv4">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">get_server_info_objectv4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_ip</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#get_server_info_objectv4"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.get_server_info_objectv4" title="Link to this definition"></a></dt>
+<dd><p>Creates the server info object fot this measurement.
+:type db: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code></span>
+:param db: A connection to the database (we need to query some IDs).
+:type db: Session
+:type m_id: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
+:param m_id: The measurement (NTPv4 class) id.
+:type m_id: int
+:type server_ip: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
+:param server_ip: The IP address of the server.
+:type server_ip: Optional[str]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nothing</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.get_server_info_objectv5">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">get_server_info_objectv5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">server_ip</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#get_server_info_objectv5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.get_server_info_objectv5" title="Link to this definition"></a></dt>
+<dd><p>Creates the server info object fot this measurement.
+:type db: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code></span>
+:param db: A connection to the database (we need to query some IDs).
+:type db: Session
+:type m_id: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
+:param m_id: The measurement (NTPv5 class) id.
+:type m_id: int
+:type server_ip: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
+:param server_ip: The IP address of the server.
+:type server_ip: Optional[str]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nothing</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="server.app.services.api_services.measure">
 <span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">measure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_ip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measurement_no</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#measure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.measure" title="Link to this definition"></a></dt>
 <dd><p>Performs an NTP measurement for a given server (IP or domain name) and stores the result in the database.</p>
