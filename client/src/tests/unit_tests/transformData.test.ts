@@ -26,12 +26,14 @@ describe("transform JSON Data to NTP Data", () => {
         leap: 0,
         vantage_point_ip: "203.0.113.42",
         ntp_server_location: {
-            coordinates: [48.8566, 2.3522],
+            coordinates_x: 48.8566,
+            coordinates_y: 2.3522,
             country_code: "FR",
+            asn_ntp_server: "6185",
             ip_is_anycast: false
         },
         nr_measurements_jitter: 16,
-        asn_ntp_server: "6185",
+        id: "dn1"
     }
 
     const res = transformJSONDataToNTPData(fetchedData)
@@ -58,11 +60,11 @@ describe("transform JSON Data to NTP Data", () => {
     expect(res?.ip).toBe(fetchedData.ntp_server_ip)
     expect(res?.server_name).toBe(fetchedData.ntp_server_name)
     expect(res?.vantage_point_ip).toBe(fetchedData.vantage_point_ip)
-    expect(res?.coordinates[0]).toBe(fetchedData.ntp_server_location.coordinates[0])
-    expect(res?.coordinates[1]).toBe(fetchedData.ntp_server_location.coordinates[1])
+    expect(res?.coordinates[0]).toBe(fetchedData.ntp_server_location.coordinates_x)
+    expect(res?.coordinates[1]).toBe(fetchedData.ntp_server_location.coordinates_y)
     expect(res?.country_code).toBe(fetchedData.ntp_server_location.country_code)
     expect(res?.is_anycast).toBe(fetchedData.ntp_server_location.ip_is_anycast)
-    expect(res?.asn_ntp_server).toBe(fetchedData.asn_ntp_server)
+    expect(res?.asn_ntp_server).toBe(fetchedData.ntp_server_location.asn_ntp_server)
 })
 
     test("Return null on null input", () => {

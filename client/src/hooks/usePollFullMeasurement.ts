@@ -133,7 +133,7 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
       controller.abort();
     };
   
-  }, [measurementId, interval]);
+  }, [measurementId, interval, ripeId]);
 
   //Get NTP Versions ID from partial results and poll specific endpoint
   useEffect(() => {
@@ -154,7 +154,7 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
   };
 
   fetchVersions();
-}, [ntpVersionsId, ripeId]);
+}, [ntpVersionsId]);
 
   return { ntpData, ntsData, ripeData, versionData, status, error, ripeStatus, ripeError, ripeId, ntpVerLoading};
 }
