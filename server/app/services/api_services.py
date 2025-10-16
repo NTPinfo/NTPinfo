@@ -633,6 +633,7 @@ def get_server_info_objectv4(db: Session, m_id: int, server_ip: str) -> None:
     """
     msi = NTPv4ServerInfo(m_id=m_id, ip_is_anycast=is_this_ip_anycast(server_ip),
                         asn_ntp_server=get_asn_for_ip(server_ip), country_code=get_country_for_ip(server_ip))
+    msi.vantage_point_ip = ip_to_str(get_server_ip(4))
     c: Optional[Tuple[float, float]] = get_coordinates_for_ip(server_ip)
     if c is not None:
         msi.coordinates_x = c[0]
@@ -652,6 +653,7 @@ def get_server_info_objectv5(db: Session, m_id: int, server_ip: str) -> None:
     """
     msi = NTPv5ServerInfo(m_id=m_id, ip_is_anycast=is_this_ip_anycast(server_ip),
                         asn_ntp_server=get_asn_for_ip(server_ip), country_code=get_country_for_ip(server_ip))
+    msi.vantage_point_ip = ip_to_str(get_server_ip(4))
     c: Optional[Tuple[float, float]] = get_coordinates_for_ip(server_ip)
     if c is not None:
         msi.coordinates_x = c[0]
