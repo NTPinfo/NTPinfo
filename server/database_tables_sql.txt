@@ -68,7 +68,8 @@ CREATE TABLE ntpv4_server_info (
     asn_ntp_server VARCHAR(10),
     country_code VARCHAR(4),
     coordinates_x DOUBLE PRECISION,
-    coordinates_y DOUBLE PRECISION
+    coordinates_y DOUBLE PRECISION,
+    vantage_point_ip VARCHAR(45)
 );
 CREATE TABLE ntpv5_server_info (
     id SERIAL PRIMARY KEY,
@@ -77,7 +78,8 @@ CREATE TABLE ntpv5_server_info (
     asn_ntp_server VARCHAR(10),
     country_code VARCHAR(4),
     coordinates_x DOUBLE PRECISION,
-    coordinates_y DOUBLE PRECISION
+    coordinates_y DOUBLE PRECISION,
+    vantage_point_ip VARCHAR(45)
 );
 CREATE TABLE nts_measurement (
     id_nts SERIAL PRIMARY KEY,

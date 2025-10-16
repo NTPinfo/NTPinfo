@@ -181,6 +181,7 @@ class NTPv4ServerInfo(Base):
     country_code: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     coordinates_x: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
     coordinates_y: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+    vantage_point_ip: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
 
 class NTPv5ServerInfo(Base):
     __tablename__ = "ntpv5_server_info"
@@ -191,6 +192,7 @@ class NTPv5ServerInfo(Base):
     country_code: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     coordinates_x: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
     coordinates_y: Mapped[Optional[float]] = mapped_column(Double, nullable=True)
+    vantage_point_ip: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
 
 class NTSMeasurement(Base):
     __tablename__ = "nts_measurement"

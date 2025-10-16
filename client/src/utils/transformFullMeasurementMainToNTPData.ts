@@ -15,7 +15,7 @@ export const transformFullMeasurementMainToNTPData = (m: any): NTPData | null =>
 
   return {
     ntp_version: m.version,
-    vantage_point_ip: "",
+    vantage_point_ip: m.ntp_server_location.vantage_point_ip ?? "",
     ip: m.measured_server_ip ?? m.host ?? "",
     server_name: m.host ?? "",
     is_anycast: m.ntp_server_location.ip_is_anycast,

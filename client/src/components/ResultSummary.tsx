@@ -129,7 +129,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                             <div className="metric" style = {{height: '22.8px'}}><span title='The smallest time unit that the NTP server can measure or represent'>Precision</span><span>2<sup>{data?.precision !== undefined ? data.precision : 'N/A'}</sup> {precisionIconNTP && <img src={precisionIconNTP} alt="precision performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                             <div className="metric"><span title='A hierarchical level number indicating the distance from the reference clock'>Stratum</span><span>{data?.stratum !== undefined ? data.stratum : 'N/A'}</span></div>
                             <div className="metric"><span title='The IP address of the NTP server'>IP address</span><span>{data?.ip ? data.ip : 'N/A'}</span></div>
-                            <div className="metric"><span>Vantage point IP</span><span>{}</span></div>
+                            <div className="metric"><span>Vantage point IP</span><span>{data?.vantage_point_ip}</span></div>
                             <div className="metric"><span>Country</span><span>{data?.country_code ? data.country_code : 'N/A'}</span></div>
                             <div className="metric"><span>Reference ID</span><span>{data?.ref_id}</span></div>
                             <div className="metric"><span title='The total round-trip delay to the primary reference source'>Root delay</span><span>{data?.root_delay !== undefined ? data.root_delay : 'N/A'}</span></div>

@@ -76,7 +76,8 @@ def ntpv4_measurement_to_dict(m: Optional[NTPv4Measurement], m_server_info: Opti
             "country_code": m_server_info.country_code,
             "asn_ntp_server": m_server_info.asn_ntp_server,
             "coordinates_x": m_server_info.coordinates_x,
-            "coordinates_y": m_server_info.coordinates_y
+            "coordinates_y": m_server_info.coordinates_y,
+            "vantage_point_ip": m_server_info.vantage_point_ip
         }
 
     if not from_ntp_versions:
@@ -138,7 +139,8 @@ def ntpv5_measurement_to_dict(m: Optional[NTPv5Measurement], m_server_info: Opti
             "country_code": m_server_info.country_code,
             "asn_ntp_server": m_server_info.asn_ntp_server,
             "coordinates_x": m_server_info.coordinates_x,
-            "coordinates_y": m_server_info.coordinates_y
+            "coordinates_y": m_server_info.coordinates_y,
+            "vantage_point_ip": m_server_info.vantage_point_ip
         }
     if not from_ntp_versions:
         ans["analysis"] = m.analysis
