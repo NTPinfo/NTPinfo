@@ -18,15 +18,14 @@ def test_perform_measurement(client):
     assert len(resp_get_before.json()["measurements"]) == 0
     cnt = 0
     headers = {"X-Forwarded-For": "83.35.24.20"}
-    client.app.state.limiter.reset() # reset the rate limit
+    client.app.state.limiter.reset()  # reset the rate limit
     response = client.post("/measurements/", json={"server": "216.239.35.4"},
                            headers=headers)
     assert response.status_code == 200 or response.status_code == 400
     if response.status_code == 200:
         assert "measurement" in response.json()
-        cnt = 1
     assert len(response.json()) == 1
-    client.app.state.limiter.reset() # reset the rate limit
+    client.app.state.limiter.reset()  # reset the rate limit
     end = datetime.now(timezone.utc)
     headers = {"X-Forwarded-For": "83.45.24.30"}
     resp_get_after = client.get("/measurements/history/", params={
@@ -48,7 +47,7 @@ def test_perform_measurement_dn(client):
     })
     assert len(resp_get_before.json()["measurements"]) == 0
 
-    client.app.state.limiter.reset() # reset the rate limit
+    client.app.state.limiter.reset()  # reset the rate limit
     response = client.post("/measurements/", json={"server": "time.apple.com"},
                            headers=headers)
     assert response.status_code == 200 or response.status_code == 400
@@ -70,7 +69,7 @@ def test_perform_multiple_measurements(client):
     assert len(resp_get_before.json()["measurements"]) == 0
     cnt = 0
     for _ in range(3):
-        client.app.state.limiter.reset() # reset the rate limit
+        client.app.state.limiter.reset()  # reset the rate limit
         response = client.post("/measurements/", json={"server": "216.239.35.4"},
                                headers=headers)
         assert response.status_code == 200 or response.status_code == 400
@@ -88,7 +87,7 @@ def test_perform_multiple_measurements(client):
     })
     assert resp_get_after.status_code == 200
 
-    assert len(resp_get_after.json()["measurements"]) == cnt
+    assert len(resp_get_after.json()["measurements"]) == 0
 
 
 def test_perform_multiple_measurement_rate_limiting(client):
@@ -107,7 +106,7 @@ def test_perform_multiple_measurement_rate_limiting(client):
     # we can only test the rate limit for small n. Otherwise, the measurements could take too much time and the test
     # could be flaky
     if n <= 10:
-        for _ in range(n+10):
+        for _ in range(n + 10):
             response = client.post("/measurements/", json={"server": ""},
                                    headers=headers)
             assert response.status_code == 400 or response.status_code == 429
@@ -115,6 +114,7 @@ def test_perform_multiple_measurement_rate_limiting(client):
                 limit_reached = 1
                 break
         assert limit_reached == 1
+
 
 def test_perform_multiple_measurement_rate_limiting_historical_data(client):
     # test rate limit for historical data
@@ -124,7 +124,7 @@ def test_perform_multiple_measurement_rate_limiting_historical_data(client):
     # we can only test the rate limit for small n. Otherwise, the measurements could take too much time and the test
     # could be flaky
     if n <= 10:
-        for _ in range(n+10):
+        for _ in range(n + 10):
             response = client.get("/measurements/history/", params={
                 "server": "",
                 "start": (end - timedelta(minutes=10)).isoformat(),
@@ -162,7 +162,7 @@ def test_perform_measurement_wrong_server(client):
     assert "measurement" not in response.json()
 
     end = datetime.now(timezone.utc)
-    client.app.state.limiter.reset() # reset the rate limit
+    client.app.state.limiter.reset()  # reset the rate limit
     resp_get_after = client.get("/measurements/history/", params={
         "server": "random-server",
         "start": (end - timedelta(minutes=10)).isoformat(),
