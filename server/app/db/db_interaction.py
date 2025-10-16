@@ -429,7 +429,7 @@ def get_ntp_v4_historical_measurements_ip(
 
     result = []
     for m in measurements:
-        d = ntpv4_measurement_to_dict(m, from_ntp_versions=False)
+        d = ntpv4_or_v5_measurement_to_dict(db, m.id, "ntpv4", from_ntp_versions=False)
         if d is not None:
             result.append(d)
     return result
@@ -457,7 +457,7 @@ def get_ntp_v4_historical_measurements_dn(
 
     result = []
     for m in measurements:
-        d = ntpv4_measurement_to_dict(m, from_ntp_versions=False)
+        d = ntpv4_or_v5_measurement_to_dict(db, m.id, "ntpv4", from_ntp_versions=False)
         if d is not None:
             result.append(d)
     return result
