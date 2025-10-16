@@ -8,6 +8,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from starlette.responses import HTMLResponse
 
+from server.app.db.db_interaction import get_ntp_v4_historical_measurements
+# from server.app.db.db_interaction import get_historical_measurements
 from server.app.utils.convert_measurement_to_format import full_measurement_dn_to_dict, full_measurement_ip_to_dict, \
     partial_measurement_dn_to_dict, ntp_versions_to_dict, partial_measurement_ip_to_dict
 from server.app.utils.domain_name_to_ip import domain_name_to_ip_list
@@ -208,12 +210,13 @@ async def read_historic_data_time(server: str,
         raise HTTPException(status_code=400, detail="'end' cannot be in the future")
 
     try:
-        result = fetch_historic_data_with_timestamps(server, start, end, session)
-        formatted_results = [get_format(entry, nr_jitter_measurements=0) for entry in result]
+        # result = fetch_historic_data_with_timestamps(server, start, end, session)
+        # formatted_results = [get_format(entry, nr_jitter_measurements=0) for entry in result]
+        result = get_ntp_v4_historical_measurements(session, host=server, start_time=start, end_time=end)
         return JSONResponse(
             status_code=200,
             content={
-                "measurements": formatted_results
+                "measurements": result
             }
         )
     except MeasurementQueryError as e:
@@ -235,7 +238,7 @@ async def read_historic_data_time(server: str,
 )
 @limiter.limit(get_rate_limit_per_client_ip())
 async def trigger_full_measurement(payload: MeasurementRequest, request: Request, background_tasks: BackgroundTasks,
-                                    session: Session = Depends(get_db)) -> JSONResponse:
+                                   session: Session = Depends(get_db)) -> JSONResponse:
     """
     This is the new method to trigger a full measurement. A full measurement consists of the main NTP measurement, an NTS
     measurement, NTP versions analysis on each NTP version and a RIPE measurement. You can play with the settings.
@@ -280,8 +283,8 @@ async def trigger_full_measurement(payload: MeasurementRequest, request: Request
         full_m_ip = FullMeasurementIP(
             status="pending",
             server_ip=server,
-            created_at_time=datetime.now(timezone.utc)#,
-            #settings=settings.model_dump()
+            created_at_time=datetime.now(timezone.utc)  # ,
+            # settings=settings.model_dump()
         )
         prefix_id = "ip"
         session.add(full_m_ip)
@@ -301,8 +304,8 @@ async def trigger_full_measurement(payload: MeasurementRequest, request: Request
         full_m_dn = FullMeasurementDN(
             status="pending",
             server=server,
-            created_at_time=datetime.now(timezone.utc)#,
-            #settings=settings.model_dump()
+            created_at_time=datetime.now(timezone.utc)  # ,
+            # settings=settings.model_dump()
         )
         prefix_id = "dn"
         session.add(full_m_dn)
@@ -318,6 +321,8 @@ async def trigger_full_measurement(payload: MeasurementRequest, request: Request
             "id": prefix_id + str(id),
             "status": status
         })
+
+
 @router.get(
     "/measurements/results/{m_id}",
     summary="get measurement results",
@@ -335,7 +340,7 @@ It is recommended to be used only on FullMeasurementIP, or only when the measure
 )
 @limiter.limit(get_rate_limit_per_client_ip())
 async def poll_full_measurement(m_id: Optional[str], request: Request, background_tasks: BackgroundTasks,
-                                    session: Session = Depends(get_db)) -> JSONResponse:
+                                session: Session = Depends(get_db)) -> JSONResponse:
     """
     This method polls the whole measurement.
     Args:
@@ -370,6 +375,7 @@ async def poll_full_measurement(m_id: Optional[str], request: Request, backgroun
         status_code=200,
         content=result_dict)
 
+
 @router.get(
     "/measurements/partial-results/{m_id}",
     summary="get measurement results",
@@ -384,7 +390,8 @@ Query the server and get the the IDs of the parts of the measurement structure. 
     }
 )
 @limiter.limit(get_rate_limit_per_client_ip())
-async def poll_partial_measurement(m_id: Optional[str], request: Request, session: Session = Depends(get_db)) -> JSONResponse:
+async def poll_partial_measurement(m_id: Optional[str], request: Request,
+                                   session: Session = Depends(get_db)) -> JSONResponse:
     """
     This method partially polls the measurement.
     Args:
@@ -417,6 +424,7 @@ async def poll_partial_measurement(m_id: Optional[str], request: Request, sessio
     return JSONResponse(
         status_code=200,
         content=result_dict)
+
 
 @router.get(
     "/measurements/ntp_versions/{m_id}",
@@ -452,6 +460,7 @@ async def poll_ntp_versions(m_id: Optional[int], request: Request, session: Sess
         status_code=200,
         content=ntp_versions_to_dict(session, m_vs))
 
+
 @router.get(
     "/measurements/ntpinfo-server-details/{ip_type}",
     summary="get measurement results",
@@ -464,7 +473,8 @@ Query the server and get the the IDs of the parts of the measurement structure. 
     }
 )
 @limiter.limit(get_rate_limit_per_client_ip())
-async def get_this_server_details(ip_type: Optional[int], request: Request, session: Session = Depends(get_db)) -> JSONResponse:
+async def get_this_server_details(ip_type: Optional[int], request: Request,
+                                  session: Session = Depends(get_db)) -> JSONResponse:
     """
     This method would provide you the details of this server, the NTPinfo server. You will get the location
     and the IP address, and you can use them into the website's map.
@@ -492,6 +502,8 @@ async def get_this_server_details(ip_type: Optional[int], request: Request, sess
             "full_ntp_message": "You can fetch full ntp results at /measurements/results/{id}"
         }
     )
+
+
 # NTS API
 @router.post(
     "/measurements/nts/",
@@ -511,7 +523,7 @@ Compute a live NTS synchronization measurement for a specified server.
 )
 @limiter.limit(get_rate_limit_per_client_ip())
 async def perform_and_read_nts_measurement(payload: MeasurementRequest, request: Request,
-                                    session: Session = Depends(get_db)) -> JSONResponse:
+                                           session: Session = Depends(get_db)) -> JSONResponse:
     """
     This API will perform an NTS measurement on the specified server.
     Args:
@@ -536,7 +548,7 @@ async def perform_and_read_nts_measurement(payload: MeasurementRequest, request:
     settings.wanted_ip_type = wanted_ip_type
 
     ans: dict = {}
-    if is_ip_address(server) is None: # domain name case
+    if is_ip_address(server) is None:  # domain name case
         ans = perform_nts_measurement_domain_name(server, settings)
     else:
         ans = perform_nts_measurement_ip(server)
@@ -545,6 +557,7 @@ async def perform_and_read_nts_measurement(payload: MeasurementRequest, request:
     return JSONResponse(
         status_code=200,
         content=ans)
+
 
 # RIPE APIs
 
