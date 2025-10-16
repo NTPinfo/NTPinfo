@@ -8,7 +8,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from starlette.responses import HTMLResponse
 
-from server.app.db.db_interaction import get_historical_measurements
+from server.app.db.db_interaction import get_ntp_v4_historical_measurements
+# from server.app.db.db_interaction import get_historical_measurements
 from server.app.utils.convert_measurement_to_format import full_measurement_dn_to_dict, full_measurement_ip_to_dict, \
     partial_measurement_dn_to_dict, ntp_versions_to_dict, partial_measurement_ip_to_dict
 from server.app.utils.domain_name_to_ip import domain_name_to_ip_list
@@ -211,7 +212,7 @@ async def read_historic_data_time(server: str,
     try:
         # result = fetch_historic_data_with_timestamps(server, start, end, session)
         # formatted_results = [get_format(entry, nr_jitter_measurements=0) for entry in result]
-        result = get_historical_measurements(session, target=server, start_time=start, end_time=end)
+        result = get_ntp_v4_historical_measurements(session, host=server, start_time=start, end_time=end)
         return JSONResponse(
             status_code=200,
             content={
