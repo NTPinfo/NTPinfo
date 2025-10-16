@@ -204,8 +204,9 @@ const ripeTriggerErr = null;
       server: query.trim(),
       ipv6_measurement: useIPv6,
       wanted_ip_type: useIPv6 ? 6 : 4,
-      ntp_versions_to_analyze: ["ntpv1", "ntpv2", "ntpv4", "ntpv5"], 
+      ntp_versions_to_analyze: ["ntpv3", "ntpv2", "ntpv4", "ntpv5"], 
       analyse_all_ntp_versions: false,
+      ntpv5_draft: "draft-ietf-ntp-ntpv5"
   
     }
 
