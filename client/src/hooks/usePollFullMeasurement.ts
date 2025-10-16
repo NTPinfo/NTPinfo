@@ -154,7 +154,7 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
   };
 
   fetchVersions();
-}, [ntpVersionsId]);
+}, [ntpVersionsId, ripeId]);
 
   return { ntpData, ntsData, ripeData, versionData, status, error, ripeStatus, ripeError, ripeId, ntpVerLoading};
 }
