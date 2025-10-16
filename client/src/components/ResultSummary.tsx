@@ -8,11 +8,19 @@ import LoadingSpinner from './LoadingSpinner.tsx'
 import { calculateStatus } from '../utils/calculateStatus.ts'
 
 
-function ResultSummary({data, ripeData, ripeErr, ripeStatus, measurementId} :
-    {data : NTPData | null, ripeData: RIPEData | null, ripeErr: Error | null, ripeStatus: RipeStatus | null, measurementId: string | null}) {
+function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, errMessage, measurementId} :
+    {data : NTPData | null, ripeData: RIPEData | null, ripeErr: Error | null, ripeStatus: RipeStatus | null, 
+        httpStatus: number, err: Error | null, errMessage: string | null, measurementId: string | null}) {
 
     const [serverStatus, setServerStatus] = useState<string | null>(null)
-
+    const [statusMessage, setStatusMessage] = useState<string | null>("")   
+    
+    useEffect(() => {
+    if (data == null) {
+        setStatusMessage(errMessage)
+        }
+    }, [data, errMessage])
+    
     useEffect(() => {
         if((ripeStatus === "complete") && ripeData && data){
             setServerStatus(calculateStatus(data, ripeData))
@@ -24,8 +32,8 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, measurementId} :
             setServerStatus(null)
     }, [data, ripeData, ripeErr, ripeStatus])
 
-    // if (data == null)
-    //     return <h2 id="not-found">{err && errMessage ? `Error ${httpStatus}: ${statusMessage}` : `Unknown error occurred`}</h2>
+     if (data == null)
+        return <h2 id="not-found">{err && errMessage ? `Error ${httpStatus}: ${statusMessage}` : `Unknown error occurred`}</h2>
 
 
 

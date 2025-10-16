@@ -81,7 +81,7 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
 const {fetchData: fetchHistoricalData} = useFetchHistoricalIPData()
   
 const {fetchServerDetails} = useFetchServerDetails()
-const { triggerMeasurement, loading: triggerLoading, measurementId: fullMeasurementId} = useTriggerMeasurement();
+const { triggerMeasurement, loading: triggerLoading, measurementId: fullMeasurementId, httpStatus, error, errorMessage} = useTriggerMeasurement();
 const { ntpData: fullNTP, ntsData, ripeData, versionData: fullVersionData, /* status: fullStatus, */ 
       ripeStatus: fetchedRIPEStatus, ripeError: ripeMeasurementError, ripeId: fullRipeId, ntpVerLoading
 } = usePollFullMeasurement(fullMeasurementId);
@@ -334,14 +334,18 @@ const ripeTriggerErr = null;
                         )}
         </div>
         {/* The main page shown after the main measurement is done */}
-      {((ntpData || ripeData)  && (<div className="results-and-graph">
+      {((ntpData || ripeData) && (<div className="results-and-graph">
         <ResultSummary data={ntpData}
                        ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null}
                        ripeErr={ripeTriggerErr ?? ripeMeasurementError}
+                       err={error}
+                       errMessage={errorMessage}
+                       httpStatus={httpStatus}
                        ripeStatus={ripeTriggerErr ? "error" : ripeMeasurementStatus}
                        measurementId={measurementId || null}/>
 
         {/* Div for the visualization graph, and the radios for setting the what measurement to show */}
+        {!error && ntpData && chartData && (
         <div className="graphs">
           <div className='graph-box'>
             <DynamicGraph
@@ -353,7 +357,7 @@ const ripeTriggerErr = null;
               existingData={chartData}
             />
           </div>
-        </div>
+        </div>)}
       </div>)) || 
       /* Show loading spinner for main-details when measurement is in progress */
       (triggerLoading || measurementSessionActive) && (
@@ -366,7 +370,7 @@ const ripeTriggerErr = null;
       ) ||
       /* Show error state when measurement failed */
       (!ntpData && !apiDataLoading && measured &&
-      <ResultSummary data={ntpData}
+      <ResultSummary data={ntpData}  err={error} httpStatus={httpStatus} errMessage={errorMessage}
       ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null} ripeErr={ripeTriggerErr ?? ripeMeasurementError} ripeStatus={ripeTriggerErr ? "error" :  ripeMeasurementStatus} measurementId={measurementId || null}/>) }
 
       {/* NTS Results Box - shown when NTP data is available */}

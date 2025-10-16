@@ -7,7 +7,8 @@ export const useTriggerMeasurement = () => {
   const [measurementId, setMeasurementId] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("idle");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [httpStatus, setHttpStatus] = useState<number>(200);
   
   const triggerMeasurement = async (server: string, payload: MeasurementRequest) => {
@@ -29,7 +30,8 @@ export const useTriggerMeasurement = () => {
       return id;
     } catch (err: any) {
       console.warn(err);
-      setError(err.response?.data?.detail || "Unknown error");
+      setError(err);
+      setErrorMessage(err.response?.data.detail)
       setHttpStatus(err.response?.status);
       return null;
     } finally {
@@ -37,5 +39,5 @@ export const useTriggerMeasurement = () => {
     }
   };
 
-  return { measurementId, status, loading, error, httpStatus, triggerMeasurement };
+  return { measurementId, status, loading, error, errorMessage, httpStatus, triggerMeasurement };
 };
