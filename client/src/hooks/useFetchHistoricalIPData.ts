@@ -27,7 +27,21 @@ export const useFetchHistoricalIPData = () => {
             const resp = await axios.get(endpoint);
             // console.log(`API call successful, received ${resp.data?.measurements?.length || 0} measurements`);
             const measurements = resp.data?.measurements || []
+            // console.log(measurements)
             const transformedData = measurements.map((d: any) => transformJSONDataToNTPData(d))
+            const grouped = new Map<string, NTPData[]>()
+              for (const m of transformedData) {
+                // choose a stable key you want shown in legend
+                const key = (m.ip && m.ip !== "null" ? m.ip : (m.server_name || m.vantage_point_ip || "unknown"))
+
+                if (!grouped.has(key)) grouped.set(key, [])
+                grouped.get(key)!.push(m)
+              }
+
+              // Optional: sort each series by time now, to be safe
+              for (const [, arr] of grouped.entries()) {
+                arr.sort((a, b) => a.time - b.time)
+              }
             setData(transformedData)
             return transformedData
         } catch (err: any) {

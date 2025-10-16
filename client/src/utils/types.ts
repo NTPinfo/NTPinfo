@@ -13,10 +13,10 @@ export type NTPData = {
   coordinates: LatLngTuple
   ntp_server_ref_parent_ip: string | null
   ref_id: string
-  client_sent_time: [number,number]
-  server_recv_time: [number,number]
-  server_sent_time: [number,number]
-  client_recv_time: [number,number]
+  client_sent_time: number
+  server_recv_time: number
+  server_sent_time: number
+  client_recv_time: number
   offset: number
   RTT: number
   stratum: number
@@ -24,7 +24,7 @@ export type NTPData = {
   root_delay: number
   poll: number
   root_dispersion: number
-  ntp_last_sync_time: [number,number]
+  ntp_last_sync_time: number
   leap: number
   jitter: number | null
   nr_measurements_jitter: number
