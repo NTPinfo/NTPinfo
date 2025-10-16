@@ -22,7 +22,7 @@ from server.app.utils.load_config_data import get_rate_limit_per_client_ip
 from server.app.dtos.RipeMeasurementResponse import RipeResult
 from server.app.dtos.NtpMeasurementResponse import MeasurementResponse
 from server.app.dtos.RipeMeasurementTriggerResponse import RipeMeasurementTriggerResponse
-from server.app.utils.location_resolver import get_country_for_ip, get_coordinates_for_ip
+from server.app.utils.location_resolver import get_country_for_ip, get_coordinates_for_ip, get_asn_for_ip
 from server.app.utils.ip_utils import client_ip_fetch, get_server_ip_if_possible, get_server_ip
 from server.app.models.CustomError import DNSError, MeasurementQueryError
 from server.app.utils.ip_utils import ip_to_str
@@ -297,7 +297,7 @@ async def trigger_full_measurement(payload: MeasurementRequest, request: Request
     else:
         # firstly validate that the domain name exists
         try:
-            dn_ips = domain_name_to_ip_list(server, None, settings.wanted_ip_type)  # ADD CLIENT IP
+            dn_ips = domain_name_to_ip_list(server, settings.custom_client_ip, settings.wanted_ip_type)
         except Exception as e:
             raise HTTPException(status_code=422, detail="Domain name is invalid or cannot be resolved.")
         # now we are sure the domain name has at least an IP address
@@ -492,6 +492,7 @@ async def get_this_server_details(ip_type: Optional[int], request: Request,
         status_code=200,
         content={
             "vantage_point_ip": ip_to_str(this_server_ip),
+            "vantage_point_asn": get_asn_for_ip(str(this_server_ip)) if this_server_ip is not None else None,
             "vantage_point_location": {
                 "country_code": get_country_for_ip(ip_to_str(this_server_ip)),
                 "coordinates": get_coordinates_for_ip(ip_to_str(this_server_ip))

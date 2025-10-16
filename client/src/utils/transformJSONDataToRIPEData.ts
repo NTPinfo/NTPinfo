@@ -46,7 +46,8 @@ export const transformJSONDataToRIPEData = (fetchedData: any): RIPEData | null =
         jitter: -1,
         nr_measurements_jitter: -1,
         asn_ntp_server: fetchedData.asn_ntp_server,
-        time: (measurement.client_sent_time.seconds - 2208988800) * 1000
+        time: (measurement.client_sent_time.seconds - 2208988800) * 1000,
+        measurement_id: fetchedData.id
     }
     return{
         measurementData: measurementData,
