@@ -18,10 +18,10 @@ export const transformFullMeasurementMainToNTPData = (m: any): NTPData | null =>
     vantage_point_ip: "",
     ip: m.measured_server_ip ?? m.host ?? "",
     server_name: m.host ?? "",
-    is_anycast: false,
-    country_code: "",
-    coordinates: [0, 0],
-    ntp_server_ref_parent_ip: null,
+    is_anycast: m.ntp_server_location.ip_is_anycast,
+    country_code: m.ntp_server_location.country_code,
+    coordinates: [m.ntp_server_location.coordinates_x, m.ntp_server_location.coordinates_y],
+    ntp_server_ref_parent_ip: m.ntp_server_ref_parent_ip,
     ref_id: m.ref_id ?? "",
     client_sent_time: [clientSentUnix ?? -1, 0],
     server_recv_time: [serverRecvUnix ?? -1, 0],
@@ -38,7 +38,7 @@ export const transformFullMeasurementMainToNTPData = (m: any): NTPData | null =>
     leap: m.leap ?? 0,
     jitter: null,
     nr_measurements_jitter: 0,
-    asn_ntp_server: "",
+    asn_ntp_server: m.ntp_server_location.asn_ntp_server,
     time: clientSentUnix ? clientSentUnix * 1000 : Date.now(),
     measurement_id: String(m.id ?? "")
   };

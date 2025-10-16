@@ -72,6 +72,7 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
 
   const handleIPv6Toggle = (value: boolean) => {
   updateCache({ ipv6Selected: value });
+  console.log(ntpData?.coordinates)
   };
 
 
@@ -80,8 +81,11 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
 const {fetchData: fetchHistoricalData} = useFetchHistoricalIPData()
   
 const {fetchServerDetails} = useFetchServerDetails()
-const { triggerMeasurement, loading: triggerLoading, measurementId: fullMeasurementId } = useTriggerMeasurement();
-const { ntpData: fullNTP, ntsData, ripeData, versionData: fullVersionData, /* status: fullStatus, */ ripeStatus: fetchedRIPEStatus, ripeError: ripeMeasurementError, ripeId: fullRipeId } = usePollFullMeasurement(fullMeasurementId);
+const { triggerMeasurement, loading: triggerLoading, measurementId: fullMeasurementId} = useTriggerMeasurement();
+const { ntpData: fullNTP, ntsData, ripeData, versionData: fullVersionData, /* status: fullStatus, */ 
+      ripeStatus: fetchedRIPEStatus, ripeError: ripeMeasurementError, ripeId: fullRipeId, ntpVerLoading
+} = usePollFullMeasurement(fullMeasurementId);
+
 const apiDataLoading = triggerLoading;
 const ripeTriggerErr = null;
 // const ntsLoading = false;
@@ -177,7 +181,6 @@ const ripeTriggerErr = null;
     if (query.trim().length == 0)
       return
 
-    
     // Reset cached values for a fresh run and start measurement session
     updateCache({
       measurementId: null,
@@ -202,8 +205,8 @@ const ripeTriggerErr = null;
       ipv6_measurement: useIPv6,
       wanted_ip_type: useIPv6 ? 6 : 4,
       ntp_versions_to_analyze: ["ntpv1", "ntpv2", "ntpv4", "ntpv5"], 
-      analyse_all_ntp_versions: false
-
+      analyse_all_ntp_versions: false,
+  
     }
 
     /**
@@ -286,6 +289,8 @@ const ripeTriggerErr = null;
             ntsResult: null,                    // Keep NTS result reset until new data arrives
             measurementSessionActive: true      // Keep session active for RIPE measurements
         })
+
+       
     } catch {
       // Error handling is done by the triggerMeasurement hook
     }
@@ -328,7 +333,7 @@ const ripeTriggerErr = null;
                         )}
         </div>
         {/* The main page shown after the main measurement is done */}
-      {((ntpData || ripeData) && !triggerLoading && !measurementSessionActive && (<div className="results-and-graph">
+      {((ntpData || ripeData)  && (<div className="results-and-graph">
         <ResultSummary data={ntpData}
                        ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null}
                        ripeErr={ripeTriggerErr ?? ripeMeasurementError}
@@ -402,8 +407,12 @@ const ripeTriggerErr = null;
           />
         )}
       </div>)}
-
-      {ntpData && (<NtpVersionAnalysis data={versionData}/>)} 
+       {(ntpData && ntpVerLoading && <div className="loading-div">
+                        <p>Loading NTP Versions Analysis...</p>
+                        <LoadingSpinner size="small"/>
+                    </div>
+      )}
+      {ntpData && (versionData || !ntpVerLoading) && (<NtpVersionAnalysis data={versionData}/>)} 
       {/*Map compoment that shows the NTP servers, the vantage point, and the RIPE probes*/}
        {(ripeMeasurementStatus === "complete" || ripeMeasurementStatus === "partial_results" || ripeMeasurementStatus === "timeout") && (
         <div className='map-box'>

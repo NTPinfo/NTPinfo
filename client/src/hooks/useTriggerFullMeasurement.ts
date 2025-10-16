@@ -9,11 +9,11 @@ export const useTriggerMeasurement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [httpStatus, setHttpStatus] = useState<number>(200);
-
+  
   const triggerMeasurement = async (server: string, payload: MeasurementRequest) => {
     setLoading(true);
     setError(null);
-
+    
     try {
       const resp = await axios.post(`${server}/measurements/trigger/`, payload, {
         headers: { "Content-Type": "application/json" },

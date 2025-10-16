@@ -36,7 +36,7 @@ export const transformJSONDataToNTPData = (fetchedData: any): NTPData | null => 
         leap: fetchedData.leap,
         jitter: fetchedData.jitter,
         nr_measurements_jitter: fetchedData.nr_measurements_jitter,
-        asn_ntp_server: fetchedData.asn_ntp_server,
+        asn_ntp_server: fetchedData.ntp_server_location.asn_ntp_server,
         time: (fetchedData.client_sent_time.seconds - 2208988800) * 1000,
         measurement_id: fetchedData.id
     }

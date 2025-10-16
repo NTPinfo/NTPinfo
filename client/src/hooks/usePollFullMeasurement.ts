@@ -37,6 +37,8 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
   const prevMeasurementId = useRef<string | null>(null);
   const fetchedVersionIdRef = useRef<string | null>(null);
 
+  const [ntpVerLoading, setNtpVerLoading] = useState(false);
+
   const { result: ripeData, status: ripeStatus, error: ripeError } = useFetchRIPEData(ripeId);
   const { ntpVersionsId } = usePollPartialMeasurement(measurementId);
 
@@ -70,6 +72,7 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
     setVersionData(null);
     setRipeId(null);
     setStatus(null);
+    setNtpVerLoading(true);
     fetchedVersionIdRef.current = null;
 
     const pollFullMeasurement = async () => {
@@ -144,6 +147,7 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
 
       const vsRes = await axios.get(`${SERVER}/measurements/ntp_versions/${ntpVersionsId}`);
       setVersionData(transformJSONDataToNTPVerData(vsRes.data));
+      setNtpVerLoading(false);
     } catch (err) {
       console.warn("NTP versions fetch failed:", err);
     }
@@ -152,5 +156,5 @@ export const usePollFullMeasurement = (measurementId: string | null, interval = 
   fetchVersions();
 }, [ntpVersionsId]);
 
-  return { ntpData, ntsData, ripeData, versionData, status, error, ripeStatus, ripeError, ripeId};
+  return { ntpData, ntsData, ripeData, versionData, status, error, ripeStatus, ripeError, ripeId, ntpVerLoading};
 }
