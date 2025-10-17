@@ -103,7 +103,7 @@
             <span class="n">lat</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">latitude</span>
             <span class="n">long</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">longitude</span>
             <span class="k">if</span> <span class="n">lat</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">long</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Location data incomplete.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Location data incomplete for </span><span class="si">{</span><span class="n">client_ip</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">lat</span><span class="p">,</span> <span class="n">long</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>

@@ -75,6 +75,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipaddress</span><span class="w"> </span><span class="kn">import</span> <span class="n">ip_address</span><span class="p">,</span> <span class="n">IPv4Address</span><span class="p">,</span> <span class="n">IPv6Address</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.ip_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">translate_ref_id</span><span class="p">,</span> <span class="n">get_ip_family</span><span class="p">,</span> <span class="n">ip_to_str</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.services.NtpCalculator</span><span class="w"> </span><span class="kn">import</span> <span class="n">NtpCalculator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.utils.location_resolver</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_country_for_ip</span><span class="p">,</span> <span class="n">get_coordinates_for_ip</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.models.CustomError</span><span class="w"> </span><span class="kn">import</span> <span class="n">RipeMeasurementError</span>
@@ -494,6 +495,13 @@
 
         <span class="n">time_to_result</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ttr&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
         <span class="n">ref_id</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ref-id&#39;</span><span class="p">,</span> <span class="s1">&#39;NO REFERENCE&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># if the reference is a number in base16, we will decode it</span>
+            <span class="n">ref_id_int</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ref_id</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+            <span class="n">ref_id</span> <span class="o">=</span> <span class="n">translate_ref_id</span><span class="p">(</span><span class="n">ref_id_int</span><span class="p">,</span> <span class="n">stratum</span><span class="p">,</span> <span class="n">get_ip_family</span><span class="p">(</span><span class="n">ip_to_str</span><span class="p">(</span><span class="n">server_info</span><span class="o">.</span><span class="n">ntp_server_ip</span><span class="p">)))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># abandon/it is not in base16</span>
+            <span class="n">ref_id</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ref-id&#39;</span><span class="p">,</span> <span class="s1">&#39;NO REFERENCE&#39;</span><span class="p">)</span>
         <span class="n">measurement_id</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;msm_id&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">msm_id</span> <span class="o">=</span> <span class="n">measurement_id</span>
 
