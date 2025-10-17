@@ -1,3 +1,4 @@
+[![Try the App](https://img.shields.io/badge/Try%20the%20App-Live-brightgreen)](https://ntpinfo.sidnlabs.nl/)
 [![Docs](https://img.shields.io/badge/Docs-Live-blue)](https://ntpinfo.github.io/NTPinfo/)
 
 # Are your time servers on time?
