@@ -210,13 +210,15 @@
     <span class="c1"># this code regarding ref_id is because we need to consider IPv6 cases (M5 hashes involved)</span>
     <span class="n">ref_id_str</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;NO REFERENCE&quot;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">ref_ip</span><span class="p">,</span> <span class="n">ref_text</span> <span class="o">=</span> <span class="n">ref_id_to_ip_or_name</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">measurement</span><span class="o">.</span><span class="n">ref_id</span><span class="p">),</span> <span class="n">measurement</span><span class="o">.</span><span class="n">ntp_measurement</span><span class="o">.</span><span class="n">main_details</span><span class="o">.</span><span class="n">stratum</span><span class="p">,</span>
-                                          <span class="n">get_ip_family</span><span class="p">(</span><span class="n">ip_to_str</span><span class="p">(</span><span class="n">measurement</span><span class="o">.</span><span class="n">ntp_measurement</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">ntp_server_ip</span><span class="p">)))</span>
+        <span class="n">ref_ip</span><span class="p">,</span> <span class="n">ref_text</span> <span class="o">=</span> <span class="n">ref_id_to_ip_or_name</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">measurement</span><span class="o">.</span><span class="n">ref_id</span><span class="p">),</span>
+                                                <span class="n">measurement</span><span class="o">.</span><span class="n">ntp_measurement</span><span class="o">.</span><span class="n">main_details</span><span class="o">.</span><span class="n">stratum</span><span class="p">,</span>
+                                                <span class="n">get_ip_family</span><span class="p">(</span>
+                                                    <span class="n">ip_to_str</span><span class="p">(</span><span class="n">measurement</span><span class="o">.</span><span class="n">ntp_measurement</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">ntp_server_ip</span><span class="p">)))</span>
         <span class="k">if</span> <span class="n">ref_ip</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ref_id_str</span> <span class="o">=</span> <span class="n">ip_to_str</span><span class="p">(</span><span class="n">ref_ip</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">ref_text</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ref_id_str</span> <span class="o">=</span> <span class="n">ref_text</span>
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span> <span class="c1">#if ref_id could not be converted to an integer (ex: it was already a str)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># if ref_id could not be converted to an integer (ex: it was already a str)</span>
         <span class="n">ref_id_str</span> <span class="o">=</span> <span class="n">measurement</span><span class="o">.</span><span class="n">ref_id</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;ntp_version&quot;</span><span class="p">:</span> <span class="n">measurement</span><span class="o">.</span><span class="n">ntp_measurement</span><span class="o">.</span><span class="n">server_info</span><span class="o">.</span><span class="n">ntp_version</span><span class="p">,</span>
@@ -294,6 +296,7 @@
     <span class="k">return</span> <span class="n">wanted_ip_type</span></div>
 
 
+
 <div class="viewcode-block" id="measure">
 <a class="viewcode-back" href="../../../../server.services.html#server.app.services.api_services.measure">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">measure</span><span class="p">(</span><span class="n">server</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -342,7 +345,8 @@
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">measurements</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">NtpMeasurement</span><span class="p">]]</span> <span class="o">=</span> <span class="n">perform_ntp_measurement_domain_name_list</span><span class="p">(</span><span class="n">server</span><span class="p">,</span>
-                                                                                                    <span class="n">client_ip</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">)</span>
+                                                                                                    <span class="n">client_ip</span><span class="p">,</span>
+                                                                                                    <span class="n">wanted_ip_type</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">measurements</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">m_results</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">measurements</span><span class="p">:</span>
@@ -367,6 +371,7 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
+
 <div class="viewcode-block" id="check_and_get_settings">
 <a class="viewcode-back" href="../../../../server.services.html#server.app.services.api_services.check_and_get_settings">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_and_get_settings</span><span class="p">(</span><span class="n">input_settings</span><span class="p">:</span> <span class="n">MeasurementRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AdvancedSettings</span><span class="p">:</span>
@@ -385,7 +390,7 @@
     <span class="n">input_settings</span><span class="o">.</span><span class="n">wanted_ip_type</span> <span class="o">=</span> <span class="n">override_desired_ip_type_if_input_is_ip</span><span class="p">(</span><span class="n">input_settings</span><span class="o">.</span><span class="n">server</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">)</span>
     <span class="c1"># create the settings (get rid of None-s)</span>
 
-    <span class="n">settings</span> <span class="o">=</span> <span class="n">AdvancedSettings</span><span class="p">()</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="n">AdvancedSettings</span><span class="p">(</span><span class="n">wanted_ip_type</span><span class="o">=</span><span class="n">wanted_ip_type</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">input_settings</span><span class="o">.</span><span class="n">measurement_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">settings</span><span class="o">.</span><span class="n">measurement_type</span> <span class="o">=</span> <span class="n">input_settings</span><span class="o">.</span><span class="n">measurement_type</span>
@@ -410,6 +415,7 @@
         <span class="n">settings</span><span class="o">.</span><span class="n">custom_client_ip</span> <span class="o">=</span> <span class="n">input_settings</span><span class="o">.</span><span class="n">custom_client_ip</span>
 
     <span class="k">return</span> <span class="n">check_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="check_settings">
@@ -437,13 +443,14 @@
     <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">ntp_versions_to_analyze</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">settings</span><span class="o">.</span><span class="n">measurement_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;ntpv1&quot;</span><span class="p">,</span> <span class="s2">&quot;ntpv2&quot;</span><span class="p">,</span> <span class="s2">&quot;ntpv3&quot;</span><span class="p">,</span> <span class="s2">&quot;ntpv4&quot;</span><span class="p">,</span> <span class="s2">&quot;ntpv5&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;the version </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2"> must be either ntpv1 or ntpv2 or ntpv3 or ntpv4 or ntpv5&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">analyse_all_ntp_versions</span><span class="p">:</span> <span class="c1"># if they want to measure everything, override the list</span>
+    <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">analyse_all_ntp_versions</span><span class="p">:</span>  <span class="c1"># if they want to measure everything, override the list</span>
         <span class="n">settings</span><span class="o">.</span><span class="n">ntp_versions_to_analyze</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ntpv1&quot;</span><span class="p">,</span> <span class="s2">&quot;ntpv2&quot;</span><span class="p">,</span> <span class="s2">&quot;ntpv3&quot;</span><span class="p">,</span> <span class="s2">&quot;ntpv4&quot;</span><span class="p">,</span> <span class="s2">&quot;ntpv5&quot;</span><span class="p">]</span>
 
     <span class="c1"># RIPE part</span>
     <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">custom_client_ip</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span> <span class="ow">and</span> <span class="n">is_ip_address</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">custom_client_ip</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;custom_client_ip must be either null/empty or a valid IP address&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">settings</span></div>
+
 
 
 <div class="viewcode-block" id="complete_this_measurement_dn">
@@ -457,8 +464,7 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.db_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">_SessionLocal</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;starting dn...</span><span class="si">{</span><span class="n">measurement_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-
-    <span class="k">if</span> <span class="n">_SessionLocal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># this will never be the case. This code is to solve a mypy type error</span>
+    <span class="k">if</span> <span class="n">_SessionLocal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># this will never be the case. This code is to solve a mypy type error</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;_SessionLocal is None. No connection to the database&quot;</span><span class="p">)</span>
         <span class="k">return</span>
     <span class="n">db</span> <span class="o">=</span> <span class="n">_SessionLocal</span><span class="p">()</span>
@@ -506,7 +512,7 @@
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">nts_ans</span> <span class="o">=</span> <span class="n">perform_nts_measurement_domain_name</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
 
-        <span class="n">nts</span> <span class="o">=</span> <span class="n">NTSMeasurement</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">nts_ans</span><span class="p">,</span> <span class="n">server</span><span class="p">)</span> <span class="c1"># currently we only support NTS with ntpv4</span>
+        <span class="n">nts</span> <span class="o">=</span> <span class="n">NTSMeasurement</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">nts_ans</span><span class="p">,</span> <span class="n">server</span><span class="p">)</span>  <span class="c1"># currently we only support NTS with ntpv4</span>
         <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">nts</span><span class="p">)</span>
         <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
         <span class="n">m</span><span class="o">.</span><span class="n">id_nts</span> <span class="o">=</span> <span class="n">nts</span><span class="o">.</span><span class="n">id_nts</span>
@@ -522,7 +528,6 @@
             <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">add_ntp_versions_to_db_measurement</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">server</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
-
 
         <span class="c1"># add settings</span>
         <span class="n">m</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
@@ -546,10 +551,9 @@
 
 
 
-
 <div class="viewcode-block" id="complete_this_measurement_ip">
 <a class="viewcode-back" href="../../../../server.services.html#server.app.services.api_services.complete_this_measurement_ip">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">complete_this_measurement_ip</span><span class="p">(</span><span class="n">measurement_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">AdvancedSettings</span><span class="p">,</span> <span class="n">part_of_dn_measurement</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">complete_this_measurement_ip</span><span class="p">(</span><span class="n">measurement_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">AdvancedSettings</span><span class="p">,</span> <span class="n">part_of_dn_measurement</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                                  <span class="n">from_dn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    if the measurement_id is not in the database, then this method does nothing.</span>
@@ -558,7 +562,7 @@
     <span class="c1"># very important: keep this &quot;import&quot; here (Because it needs to be imported after SQLAlchemy has been initialized)</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">server.app.db_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">_SessionLocal</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;starting ip...</span><span class="si">{</span><span class="n">measurement_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">_SessionLocal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="c1"># this will never be the case. This code is to solve a mypy type error</span>
+    <span class="k">if</span> <span class="n">_SessionLocal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># this will never be the case. This code is to solve a mypy type error</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;_SessionLocal is None. No connection to the database&quot;</span><span class="p">)</span>
         <span class="k">return</span>
     <span class="n">db</span> <span class="o">=</span> <span class="n">_SessionLocal</span><span class="p">()</span>
@@ -594,7 +598,7 @@
             <span class="n">nts_ans</span> <span class="o">=</span> <span class="n">perform_nts_measurement_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">)</span>
             <span class="n">nts_ans</span><span class="p">[</span><span class="s2">&quot;warning_ip&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;NTS measurements on IPs cannot check TLS certificate.&quot;</span>
             <span class="c1"># do not add from_dn here because NTS is special and KE of NTS may change the IP</span>
-            <span class="n">nts</span> <span class="o">=</span> <span class="n">NTSMeasurement</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">nts_ans</span><span class="p">,</span> <span class="n">server_ip</span><span class="p">)</span> <span class="c1"># currently we only support NTS with ntpv4</span>
+            <span class="n">nts</span> <span class="o">=</span> <span class="n">NTSMeasurement</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">nts_ans</span><span class="p">,</span> <span class="n">server_ip</span><span class="p">)</span>  <span class="c1"># currently we only support NTS with ntpv4</span>
             <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">nts</span><span class="p">)</span>
             <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
             <span class="n">m</span><span class="o">.</span><span class="n">id_nts</span> <span class="o">=</span> <span class="n">nts</span><span class="o">.</span><span class="n">id_nts</span>
@@ -612,7 +616,7 @@
                 <span class="n">m</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;adding NTP versions analysis&quot;</span>
                 <span class="n">status</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">status</span>
                 <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
-                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c1">#to make sure the server would not blacklist us</span>
+                <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># to make sure the server would not blacklist us</span>
                 <span class="n">add_ntp_versions_to_db_measurement</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">server_ip</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">from_dn</span><span class="p">)</span>
         <span class="c1"># add settings</span>
         <span class="n">m</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
@@ -624,6 +628,7 @@
         <span class="n">take_care_of_exception</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">measurement_id</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
     <span class="k">finally</span><span class="p">:</span>
         <span class="n">db</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
 
 
 <div class="viewcode-block" id="take_care_of_exception">
@@ -649,10 +654,11 @@
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error while marking failed:&quot;</span><span class="p">,</span> <span class="n">inner</span><span class="p">)</span></div>
 
 
+
 <div class="viewcode-block" id="add_custom_ntp_measurement_ip_to_db_measurement">
 <a class="viewcode-back" href="../../../../server.services.html#server.app.services.api_services.add_custom_ntp_measurement_ip_to_db_measurement">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">add_custom_ntp_measurement_ip_to_db_measurement</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">server_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">AdvancedSettings</span><span class="p">,</span>
-                                            <span class="n">full_m</span><span class="p">:</span> <span class="n">FullMeasurementIP</span><span class="p">,</span> <span class="n">from_dn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                                                    <span class="n">full_m</span><span class="p">:</span> <span class="n">FullMeasurementIP</span><span class="p">,</span> <span class="n">from_dn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This method is used when you performed a full measurement on an IP address.</span>
 <span class="sd">    If the measurement fails, you will not see why in the full_m.response_error</span>
@@ -675,7 +681,7 @@
         <span class="k">return</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">conf</span><span class="p">,</span> <span class="n">analysis</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">run_tool_on_ntp_version</span><span class="p">(</span><span class="n">server_ip</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">binary_nts_tool</span><span class="p">),</span>
-                                <span class="n">settings</span><span class="o">.</span><span class="n">measurement_type</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">ntpv5_draft</span><span class="p">)</span>
+                                                       <span class="n">settings</span><span class="o">.</span><span class="n">measurement_type</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">ntpv5_draft</span><span class="p">)</span>
 
         <span class="c1"># 3 cases:</span>
         <span class="c1"># 1 we received a real wanted ntp version</span>
@@ -698,7 +704,7 @@
             <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
             <span class="k">return</span>
 
-        <span class="k">if</span> <span class="n">response_version</span> <span class="o">!=</span> <span class="s2">&quot;5&quot;</span> <span class="ow">and</span> <span class="n">response_version</span> <span class="o">!=</span> <span class="s2">&quot;ntpv5&quot;</span><span class="p">:</span> <span class="c1"># I think this may help if someone is confused about notations.</span>
+        <span class="k">if</span> <span class="n">response_version</span> <span class="o">!=</span> <span class="s2">&quot;5&quot;</span> <span class="ow">and</span> <span class="n">response_version</span> <span class="o">!=</span> <span class="s2">&quot;ntpv5&quot;</span><span class="p">:</span>  <span class="c1"># I think this may help if someone is confused about notations.</span>
             <span class="c1"># then it is either NTPv1,v2,v3 or v4. But all of them are saved in the database in the NTPv4 format.</span>
             <span class="c1"># add the &quot;from_dn&quot; in case it exists.</span>
             <span class="n">measurement_v</span> <span class="o">=</span> <span class="n">NTPv4Measurement</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">measured_server_ip</span><span class="o">=</span><span class="n">server_ip</span><span class="p">)</span>
@@ -720,8 +726,9 @@
             <span class="n">full_m</span><span class="o">.</span><span class="n">id_main_measurement</span> <span class="o">=</span> <span class="n">measurement_v5</span><span class="o">.</span><span class="n">id</span>
         <span class="n">full_m</span><span class="o">.</span><span class="n">response_version</span> <span class="o">=</span> <span class="s2">&quot;ntpv&quot;</span> <span class="o">+</span> <span class="n">response_version</span>
         <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span> <span class="c1"># we arrive here iff run_tool_on_ntp_version throws an error</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># we arrive here iff run_tool_on_ntp_version throws an error</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;error in adding custom ntp measurement:&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="get_server_info_objectv4">
@@ -737,7 +744,7 @@
 <span class="sd">         None: nothing</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">msi</span> <span class="o">=</span> <span class="n">NTPv4ServerInfo</span><span class="p">(</span><span class="n">m_id</span><span class="o">=</span><span class="n">m_id</span><span class="p">,</span> <span class="n">ip_is_anycast</span><span class="o">=</span><span class="n">is_this_ip_anycast</span><span class="p">(</span><span class="n">server_ip</span><span class="p">),</span>
-                        <span class="n">asn_ntp_server</span><span class="o">=</span><span class="n">get_asn_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">),</span> <span class="n">country_code</span><span class="o">=</span><span class="n">get_country_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">))</span>
+                          <span class="n">asn_ntp_server</span><span class="o">=</span><span class="n">get_asn_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">),</span> <span class="n">country_code</span><span class="o">=</span><span class="n">get_country_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">))</span>
     <span class="n">msi</span><span class="o">.</span><span class="n">vantage_point_ip</span> <span class="o">=</span> <span class="n">ip_to_str</span><span class="p">(</span><span class="n">get_server_ip</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
     <span class="n">c</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">get_coordinates_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -745,6 +752,7 @@
         <span class="n">msi</span><span class="o">.</span><span class="n">coordinates_y</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">msi</span><span class="p">)</span>
     <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
+
 
 
 <div class="viewcode-block" id="get_server_info_objectv5">
@@ -760,7 +768,7 @@
 <span class="sd">         None: nothing</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">msi</span> <span class="o">=</span> <span class="n">NTPv5ServerInfo</span><span class="p">(</span><span class="n">m_id</span><span class="o">=</span><span class="n">m_id</span><span class="p">,</span> <span class="n">ip_is_anycast</span><span class="o">=</span><span class="n">is_this_ip_anycast</span><span class="p">(</span><span class="n">server_ip</span><span class="p">),</span>
-                        <span class="n">asn_ntp_server</span><span class="o">=</span><span class="n">get_asn_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">),</span> <span class="n">country_code</span><span class="o">=</span><span class="n">get_country_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">))</span>
+                          <span class="n">asn_ntp_server</span><span class="o">=</span><span class="n">get_asn_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">),</span> <span class="n">country_code</span><span class="o">=</span><span class="n">get_country_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">))</span>
     <span class="n">msi</span><span class="o">.</span><span class="n">vantage_point_ip</span> <span class="o">=</span> <span class="n">ip_to_str</span><span class="p">(</span><span class="n">get_server_ip</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
     <span class="n">c</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="n">get_coordinates_for_ip</span><span class="p">(</span><span class="n">server_ip</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -768,6 +776,7 @@
         <span class="n">msi</span><span class="o">.</span><span class="n">coordinates_y</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">msi</span><span class="p">)</span>
     <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span></div>
+
 
 
 <div class="viewcode-block" id="get_host_and_server_ip">
@@ -790,10 +799,11 @@
     <span class="k">return</span> <span class="n">host</span><span class="p">,</span> <span class="n">server_ip</span></div>
 
 
+
 <div class="viewcode-block" id="add_ntp_versions_to_db_measurement">
 <a class="viewcode-back" href="../../../../server.services.html#server.app.services.api_services.add_ntp_versions_to_db_measurement">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">add_ntp_versions_to_db_measurement</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">server</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">AdvancedSettings</span><span class="p">,</span>
-                                <span class="n">m</span><span class="p">:</span> <span class="n">FullMeasurementDN</span> <span class="o">|</span> <span class="n">FullMeasurementIP</span><span class="p">,</span> <span class="n">from_dn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+                                       <span class="n">m</span><span class="p">:</span> <span class="n">FullMeasurementDN</span> <span class="o">|</span> <span class="n">FullMeasurementIP</span><span class="p">,</span> <span class="n">from_dn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This method adds the ntp versions analysis to the database and to the measurement.</span>
 <span class="sd">    If this fails, then the ID for this measurement will be None/Null when the status of the overall</span>
@@ -811,7 +821,7 @@
     <span class="c1"># print(f&quot;ntpv: host: {host}, ip: {server_ip}&quot;)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">ntpv_ans</span> <span class="o">=</span> <span class="n">analyze_supported_ntp_versions</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
-        <span class="c1">#if there is an error with our tool (not the results from our tool! Important difference)</span>
+        <span class="c1"># if there is an error with our tool (not the results from our tool! Important difference)</span>
         <span class="k">if</span> <span class="n">ntpv_ans</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;error&quot;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="c1"># !!! IMPORTANT !!!</span>
@@ -846,7 +856,8 @@
         <span class="k">if</span> <span class="n">ntpv1</span><span class="p">:</span>
             <span class="n">ntp_vs</span><span class="o">.</span><span class="n">id_v4_1</span> <span class="o">=</span> <span class="n">ntpv1</span><span class="o">.</span><span class="n">id</span>
             <span class="n">ntp_vs</span><span class="o">.</span><span class="n">ntpv1_response_version</span> <span class="o">=</span> <span class="n">resp1_vs</span>
-            <span class="n">put_fields_4_or_5</span><span class="p">(</span><span class="n">ntpv1</span><span class="p">,</span> <span class="n">resp1_vs</span><span class="p">,</span> <span class="n">ntpv_ans</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ntpv1_m_result&quot;</span><span class="p">))</span><span class="c1">#, ntpv_ans.get(&quot;ntpv1_analysis&quot;) # redundant dat</span>
+            <span class="n">put_fields_4_or_5</span><span class="p">(</span><span class="n">ntpv1</span><span class="p">,</span> <span class="n">resp1_vs</span><span class="p">,</span>
+                              <span class="n">ntpv_ans</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ntpv1_m_result&quot;</span><span class="p">))</span>  <span class="c1"># , ntpv_ans.get(&quot;ntpv1_analysis&quot;) # redundant dat</span>
         <span class="k">if</span> <span class="n">ntpv2</span><span class="p">:</span>
             <span class="n">ntp_vs</span><span class="o">.</span><span class="n">id_v4_2</span> <span class="o">=</span> <span class="n">ntpv2</span><span class="o">.</span><span class="n">id</span>
             <span class="n">ntp_vs</span><span class="o">.</span><span class="n">ntpv2_response_version</span> <span class="o">=</span> <span class="n">resp2_vs</span>
@@ -862,7 +873,8 @@
         <span class="k">if</span> <span class="n">ntpv5</span><span class="p">:</span>
             <span class="n">ntp_vs</span><span class="o">.</span><span class="n">id_v5</span> <span class="o">=</span> <span class="n">ntpv5</span><span class="o">.</span><span class="n">id</span>
             <span class="n">ntp_vs</span><span class="o">.</span><span class="n">ntpv5_response_version</span> <span class="o">=</span> <span class="n">resp5_vs</span>
-            <span class="n">put_fields_4_or_5</span><span class="p">(</span><span class="n">ntpv5</span><span class="p">,</span> <span class="n">resp5_vs</span><span class="p">,</span> <span class="n">ntpv_ans</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ntpv5_m_result&quot;</span><span class="p">),</span> <span class="n">ntpv_ans</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ntpv5_analysis&quot;</span><span class="p">),</span> <span class="n">settings</span><span class="o">.</span><span class="n">ntpv5_draft</span><span class="p">)</span>
+            <span class="n">put_fields_4_or_5</span><span class="p">(</span><span class="n">ntpv5</span><span class="p">,</span> <span class="n">resp5_vs</span><span class="p">,</span> <span class="n">ntpv_ans</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ntpv5_m_result&quot;</span><span class="p">),</span> <span class="n">ntpv_ans</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ntpv5_analysis&quot;</span><span class="p">),</span>
+                              <span class="n">settings</span><span class="o">.</span><span class="n">ntpv5_draft</span><span class="p">)</span>
 
         <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
         <span class="n">m</span><span class="o">.</span><span class="n">id_vs</span> <span class="o">=</span> <span class="n">ntp_vs</span><span class="o">.</span><span class="n">id_vs</span>
@@ -872,9 +884,11 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;error in adding ntp versions: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
+
 <div class="viewcode-block" id="add_ntp_measurement">
 <a class="viewcode-back" href="../../../../server.services.html#server.app.services.api_services.add_ntp_measurement">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">add_ntp_measurement</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="n">settings</span><span class="p">:</span> <span class="n">AdvancedSettings</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">server_ip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> \
+<span class="k">def</span><span class="w"> </span><span class="nf">add_ntp_measurement</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="n">settings</span><span class="p">:</span> <span class="n">AdvancedSettings</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                        <span class="n">server_ip</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> \
         <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">NTPv4Measurement</span> <span class="o">|</span> <span class="n">NTPv5Measurement</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This method adds the result (NTP measurement) into the database.</span>
@@ -887,7 +901,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        Tuple[Optional[NTPv4Measurement | NTPv5Measurement], Optional[str]]: A pair of the measurement and its version.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1">#result = ntpv_ans.get(result_key)</span>
+    <span class="c1"># result = ntpv_ans.get(result_key)</span>
     <span class="k">if</span> <span class="n">result</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;error&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;version&quot;</span><span class="p">):</span>
         <span class="n">vs</span> <span class="o">=</span> <span class="s2">&quot;ntpv4&quot;</span>
         <span class="n">measurement_vs</span><span class="p">:</span> <span class="n">NTPv5Measurement</span> <span class="o">|</span> <span class="n">NTPv4Measurement</span>
@@ -902,6 +916,7 @@
         <span class="k">return</span> <span class="n">measurement_vs</span><span class="p">,</span> <span class="n">vs</span>
     <span class="c1"># if we did not receive a valid measurement, then we do not save it</span>
     <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span></div>
+
 
 
 <div class="viewcode-block" id="add_ripe_measurement_id_to_db_measurement">
@@ -931,6 +946,7 @@
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Failed to initiate RIPE measurement: &quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
         <span class="n">m</span><span class="o">.</span><span class="n">ripe_error</span> <span class="o">=</span> <span class="s2">&quot;Failed to initiate RIPE measurement&quot;</span>
         <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
 
 
 <div class="viewcode-block" id="fetch_historic_data_with_timestamps">
@@ -998,7 +1014,6 @@
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">measurements</span><span class="p">:</span>
         <span class="n">measurements_formated</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_ripe_format</span><span class="p">(</span><span class="n">m</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">measurements_formated</span><span class="p">,</span> <span class="n">status</span></div>
-
 
 
 
