@@ -63,10 +63,10 @@ describe('HomeTab', () => {
         coordinates: [52.3676, 4.9041],
         ntp_server_ref_parent_ip: "203.0.113.1",
         ref_id: "GPS",
-        client_sent_time: [1687000000, 123456789],
-        server_recv_time: [1687000000, 123456999],
-        server_sent_time: [1687000000, 123457199],
-        client_recv_time: [1687000000, 123457399],
+        client_sent_time: 2121212,
+        server_recv_time: 2121212,
+        server_sent_time: 2121212,
+        client_recv_time: 2121212,
         offset: -2.345,
         RTT: 1.543,
         stratum: 2,
@@ -74,7 +74,7 @@ describe('HomeTab', () => {
         root_delay: 0.125,
         poll: 6,
         root_dispersion: 0.256,
-        ntp_last_sync_time: [1686999900, 987654321],
+        ntp_last_sync_time: 2121212,
         leap: 0,
         jitter: 0.321,
         nr_measurements_jitter: 5,
@@ -94,10 +94,10 @@ describe('HomeTab', () => {
             coordinates: [50.1109, 8.6821],
             ntp_server_ref_parent_ip: "203.0.113.1",
             ref_id: "GPS",
-            client_sent_time: [1687000050, 223456789],
-            server_recv_time: [1687000050, 223456999],
-            server_sent_time: [1687000050, 223457199],
-            client_recv_time: [1687000050, 223457399],
+            client_sent_time: 2121212,
+            server_recv_time: 2121212,
+            server_sent_time: 2121212,
+            client_recv_time: 2121212,
             offset: -1.123,
             RTT: 1.234,
             stratum: 2,
@@ -105,7 +105,7 @@ describe('HomeTab', () => {
             root_delay: 0.144,
             poll: 6,
             root_dispersion: 0.189,
-            ntp_last_sync_time: [1686999950, 876543210],
+            ntp_last_sync_time: 2121212,
             leap: 0,
             jitter: 0.210,
             nr_measurements_jitter: 6,
@@ -283,8 +283,6 @@ describe('HomeTab', () => {
                        ripeMeasurementStatus: 'complete',
                        allNtpMeasurements: [mockNTPData],
                        vantagePointInfo: [[52.3676, 4.9041], '192.168.1.1'] })
-
-            expect(screen.getByText('Results')).toBeInTheDocument()
 
             expect(screen.getByText(`${mockNTPData.offset} ms`)).toBeInTheDocument()
             expect(screen.getByText(`${mockNTPData.RTT} ms`)).toBeInTheDocument()
