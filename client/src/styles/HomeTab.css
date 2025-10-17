@@ -219,6 +219,38 @@
   gap: 0.5rem;
 }
 
+.main-details-loading {
+  padding: 1rem;
+  width: 100%;
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  padding-left: 2rem;
+}
+
+.main-details-loading .loading-div {
+  flex-direction: column;
+  gap: 1rem;
+  padding: 2rem;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow);
+}
+
+.main-details-loading .loading-div p {
+  color: var(--clr-font-white);
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .main-details-loading {
+    padding-left: 1.1rem;
+  }
+}
+
 .radio-toggle {
   display: inline-flex;
   background: var(--bg-secondary);

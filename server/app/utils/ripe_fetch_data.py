@@ -2,6 +2,7 @@ import time
 from ipaddress import ip_address, IPv4Address, IPv6Address
 import requests
 
+from server.app.utils.ip_utils import translate_ref_id, get_ip_family, ip_to_str
 from server.app.services.NtpCalculator import NtpCalculator
 from server.app.utils.location_resolver import get_country_for_ip, get_coordinates_for_ip
 from server.app.models.CustomError import RipeMeasurementError
@@ -398,6 +399,13 @@ def parse_data_from_ripe_measurement(data_measurement: list[dict]) -> tuple[list
 
         time_to_result = measurement.get('ttr', -1.0)
         ref_id = measurement.get('ref-id', 'NO REFERENCE')
+        try:
+            # if the reference is a number in base16, we will decode it
+            ref_id_int = int(ref_id, 16)
+            ref_id = translate_ref_id(ref_id_int, stratum, get_ip_family(ip_to_str(server_info.ntp_server_ip)))
+        except Exception as e:
+            # abandon/it is not in base16
+            ref_id = measurement.get('ref-id', 'NO REFERENCE')
         measurement_id = measurement.get('msm_id', -1)
         msm_id = measurement_id
 

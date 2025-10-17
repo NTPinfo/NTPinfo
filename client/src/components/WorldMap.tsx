@@ -356,6 +356,7 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
       const failedLocations = new Map<string, LocationInfo>()
 
       for (const ntp of ntpServers) {
+        if (!ntp || !ntp.coordinates) continue
         const locStr = ntp.coordinates.join(',')
         if (ntp.RTT === -1) {
           failedLocations.set(locStr, { location: ntp.coordinates, ip: ntp.ip, server_name: ntp.server_name })
@@ -377,10 +378,11 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
       const ripeLocations = new Map<string, LocationInfo>()
 
       for (const probe of probes) {
-        const ip = probe.measurementData.ip
-        const loc = probe.measurementData.coordinates
+        const ip = probe?.measurementData?.ip
+        const loc = probe?.measurementData?.coordinates
+        if (!ip || !loc) continue
         const locStr = loc.join(',')
-        const server_name = probe.measurementData.server_name
+        const server_name = probe?.measurementData?.server_name ?? ""
         ripeLocations.set(locStr, { location: loc, ip, server_name })
       }
 
@@ -398,25 +400,28 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
     const failedLocations = new Map<string, LocationInfo>()
 
     for (const probe of probes) {
-      const ip = probe.measurementData.ip
-      const loc = probe.measurementData.coordinates
+      const ip = probe?.measurementData?.ip
+      const loc = probe?.measurementData?.coordinates
+      if (!ip || !loc) continue
       const locStr = loc.join(',')
-      const server_name = probe.measurementData.server_name
+      const server_name = probe?.measurementData?.server_name ?? ""
       probeIPMap.set(ip, probe)
       ripeLocations.set(locStr, { location: loc, ip, server_name })
     }
 
     const probeIps = new Set(probeIPMap.keys())
-    const inMeasurements = ntpServers.filter(x => !probeIps.has(x.ip))
+    const inMeasurements = ntpServers.filter(x => !!x && !!x.ip && !!x.coordinates && !probeIps.has(x.ip))
     const unavailable = inMeasurements.filter(x => x.RTT === -1)
 
     for (const ntp of ntpServers) {
+      if (!ntp || !ntp.coordinates) continue
       const loc = ntp.coordinates
       const locStr = loc.join(',')
       ntpLocations.set(locStr, { location: loc, ip: ntp.ip, server_name: ntp.server_name })
     }
 
     for (const ntp of unavailable) {
+      if (!ntp || !ntp.coordinates) continue
       const loc = ntp.coordinates
       const locStr = loc.join(',')
       if (!ripeLocations.has(locStr)) {

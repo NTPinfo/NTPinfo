@@ -13,10 +13,10 @@ export type NTPData = {
   coordinates: LatLngTuple
   ntp_server_ref_parent_ip: string | null
   ref_id: string
-  client_sent_time: [number,number]
-  server_recv_time: [number,number]
-  server_sent_time: [number,number]
-  client_recv_time: [number,number]
+  client_sent_time: number
+  server_recv_time: number
+  server_sent_time: number
+  client_recv_time: number
   offset: number
   RTT: number
   stratum: number
@@ -24,7 +24,7 @@ export type NTPData = {
   root_delay: number
   poll: number
   root_dispersion: number
-  ntp_last_sync_time: [number,number]
+  ntp_last_sync_time: number
   leap: number
   jitter: number | null
   nr_measurements_jitter: number
@@ -108,18 +108,24 @@ export type NTSResult = Record<string, any>;
  */
 export interface HomeCacheState {
   ntpData: NTPData | null
+  ntsResult: NTSResult | null 
+  ripeMeasurementResp: RIPEData[] | null
+  versionData: NTPVersionsData | null
+
   chartData: Map<string, NTPData[]> | null
   measured: boolean
   selMeasurement: Measurement          // 'offset' | 'RTT'
   measurementId: string | null
+  ripeMeasurementId: string | null     // RIPE measurement ID for reloading
   vantagePointInfo: [LatLngTuple,string] | null
   allNtpMeasurements: NTPData[] | null
-  ripeMeasurementResp: RIPEData[] | null
+  
   ripeMeasurementStatus: RipeStatus | null    // 'pending' | 'complete' | ...
   ipv6Selected: boolean
   isLoading: boolean                    // Track when NTP measurement is loading
   measurementSessionActive: boolean     // Track when any measurement session is active
-  ntsResult: NTSResult | null
+  error: any
+
 }
 
 export type RipeStatus = "pending" | "partial_results" | "complete" | "timeout" | "error"

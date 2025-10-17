@@ -27,7 +27,7 @@ const statusConfig = {
   "not-measured": {
     icon: null,
     color: "border-amber-600 bg-amber-50 text-amber-700",
-    label: "Partial Support",
+    label: "",
     iconColor: "text-amber-600",
   }
 }
