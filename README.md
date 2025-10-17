@@ -7,6 +7,7 @@
 ## About this project
 This project was developed by Group 15d as part of the **CSE2000 Software Project** course at the **Faculty of Electrical Engineering, Mathematics and Computer Science (EWI)**, **Delft University of Technology (TU Delft)**, as part of the **BSc Computer Science and Engineering** program.
 
+Thanks to SIDN Labs, this project has also been hosted. It can be found on this link: https://ntpinfo.sidnlabs.nl/ 
 <p align="center">
   <img src="assets/NtpInfoLogo.png" alt="Project Logo" style="width:100%; max-width:100%;"/>
 </p>
