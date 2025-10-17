@@ -298,7 +298,7 @@ def check_and_get_settings(input_settings: MeasurementRequest) -> AdvancedSettin
     input_settings.wanted_ip_type = override_desired_ip_type_if_input_is_ip(input_settings.server, wanted_ip_type)
     # create the settings (get rid of None-s)
 
-    settings = AdvancedSettings()
+    settings = AdvancedSettings(wanted_ip_type=wanted_ip_type)
 
     if input_settings.measurement_type is not None:
         settings.measurement_type = input_settings.measurement_type
