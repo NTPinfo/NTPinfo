@@ -27,14 +27,17 @@ body {
   /* instead of html */
 
   /* global variables */
-  --bg-clr-primary: #292f36;
-  --bg-clr-secondary: #323e4c;
+  --bg-clr-primary: #f0f0f0;
+  --bg-clr-secondary: white;
+  --crl-accent: #002154;
   --clr-font-white: #eff6ee;
   --clr-font-dark: #1b2025;
   --clr-green: #10a219;
   --clr-red-1: #ff6b6b;
   --clr-red-2: #f2404c;
-  --clr-btn-selected-purple: #27263f;
+  --clr-btn-not-sel: white;
+  --clr-btn-hover: #1961ac;
+  --clr-btn-sel: #002154;
   /**/
   background-color: var(--bg-clr-primary);
 }
@@ -67,6 +70,59 @@ body {
 }
 .open-popup-btn:hover {
   background-color: var(--clr-btn-selected-purple);
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* allow wrapping on small screens */
+  overflow-x: hidden; /* prevent horizontal scroll */
+  overflow-y: hidden; /* prevent vertical scroll */
+  padding: 0;
+  margin: 0;
+}
+
+.powered-by-section,
+.hosted-by-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.footer-label {
+  margin-right: 8px;
+  font-weight: bold;
+}
+
+.footer-and {
+  margin: 0 8px;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.footer-text-link {
+  text-decoration: underline;
+  color: var(--text-dark);
+}
+
+.footer-logo {
+  height: 35px;
+  width: auto;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.footer-logo-ripe {
+  height: 35px;
+  width: auto;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: var(--img-invert);
 }
 
 @keyframes logo-spin {
@@ -151,11 +207,7 @@ body {
   width: 100%;
   max-width: 100%;
   overflow-y: auto;
-  background: linear-gradient(
-    to bottom,
-    var(--bg-primary),
-    var(--bg-secondary)
-  );
+  background: var(--clr-bg-primary);
   margin-left: 55px;
   transition: margin-left 0.2s ease;
   /* Ensure no horizontal scrollbar */

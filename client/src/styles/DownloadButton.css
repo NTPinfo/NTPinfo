@@ -10,9 +10,9 @@
 }
 .download-btn {
     padding: .5rem .75rem;
-    color: var(--text-white);
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
+    color: var(--text-dark);
+    background-color: var(--bg-clr-secondary);
+    border: 1px solid var(--clr-btn-border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
 }
@@ -23,5 +23,6 @@
 } */
 
 .download-btn:focus, .download-btn:hover {
-    background-color: var(--clr-btn-selected-purple);
+    background-color: var(--clr-btn-hover);
+    color: var(--text-white);
 }

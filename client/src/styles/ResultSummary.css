@@ -4,9 +4,8 @@ h2#not-found {
   font-weight: 400;
   text-align: left;
   padding-inline: 2rem;
-  color: var(--clr-font-white);
+  color: var(--font-dark);
 }
-
 @media (max-width: 700px) {
   h2#not-found {
     padding-inline: 1rem;
@@ -32,16 +31,16 @@ h2#not-found {
   grid-area: summary;
   height: 100%;
   width: 100%;
-  background-color: var(--bg-secondary);
-  color: var(--clr-font-white);
+  background-color: var(--bg-clr-secondary);
+  color: var(--text-dark);
   font-weight: 500;
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 0.6rem;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   box-sizing: border-box;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--clr-btn-border);
   box-shadow: var(--shadow);
 }
 
@@ -55,7 +54,7 @@ h2#not-found {
 }
 
 .metric span:last-child {
-  font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+  /* font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace; */
   font-feature-settings: "tnum";
   font-variant-numeric: tabular-nums;
   /* text-overflow: ellipsis;
@@ -76,7 +75,7 @@ h2#not-found {
 }
 
 .res-label {
-  color: var(--clr-font-white);
+  color: var(--text-dark);
   font-weight: 600;
   padding-inline: 0.25rem;
   white-space: nowrap;
@@ -107,22 +106,22 @@ h2#not-found {
 .result-text {
   /* now used in App.css */
   font-size: 1.7rem;
-  color: var(--clr-font-white);
+  color: var(--text-dark);
   text-align: left;
   margin-left: 1rem;
   margin-bottom: 1rem;
 }
 
 .status-value.passing {
-  color: var(--clr-green);
+  color: var(--sidn-groen);
 }
 
 .status-value.failing {
-  color: var(--clr-red-1);
+  color: var(--sidn-oranje);
 }
 
 .status-value.caution {
-  color: var(--clr-yellow);
+  color: var(--sidn-lichtoranje);
 }
 
 .tooltip-container {
@@ -150,22 +149,22 @@ h2#not-found {
   border: 2px solid var(--clr-input-placeholder);
 }
 .tooltip-icon.fail {
-  color: var(--clr-red-2);
-  border: 2px solid var(--clr-red-2);
+  color: var(--sidn-oranje);
+  border: 2px solid var(--sidn-oranje);
 }
 #ripe-result:has(.tooltip-icon.fail) > #ripe-details {
-  border: 2px solid var(--clr-red-2);
+  border: 2px solid var(--sidn-oranje);
 }
 .tooltip-text {
   position: absolute;
   visibility: hidden;
   width: 250px;
-  background-color: var(--bg-secondary);
+  background-color: var(--bg-clr-secondary);
   color: var(--txt-white);
   text-align: justify;
   padding: 8px;
   border-radius: var(--radius);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--clr-btn-border);
   white-space: normal;
   word-wrap: break-word;
   z-index: 9999;
@@ -176,13 +175,14 @@ h2#not-found {
   transition: opacity 0.3s;
 }
 
+
 .tooltip-container:hover .tooltip-text {
   visibility: visible;
   opacity: 1;
 }
 
 .measurement-link {
-  color: var(--clr-font-white);
+  color: var(--text-dark);
   text-decoration: none;
   transition: color 0.2s ease;
 }
@@ -196,7 +196,7 @@ h2#not-found {
   font-weight: 600;
   font-size: 1.1rem;
   text-align: center;
-  color: var(--text-white);
+  color: var(--text-dark);
 }
 
 .result-boxes-container {
@@ -215,7 +215,7 @@ h2#not-found {
 }
 
 .ripe-loading-text {
-  color: var(--clr-font-white);
+  color: var(--text-dark);
   text-align: left;
   font-weight: 600;
 }

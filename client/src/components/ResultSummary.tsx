@@ -114,7 +114,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
 
                 <div className="result-boxes-container">
                     <div className="result-and-title">
-                        <div className="res-label">From our NTP Client (Netherlands)
+                    <div className="res-label"> Results from our <a href="https://time.nl" target="_blank">TIME.nl</a> synced server:
                             <div className="tooltip-container">
                             <span className="tooltip-icon">?</span>
                             <div className="tooltip-text">
@@ -140,7 +140,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                         </div>
                     </div>
                     <div className="result-and-title" id="ripe-result">
-                        <div className="res-label">From the RIPE Atlas probe (Close to you)
+                    <div className="res-label">Results from <a href="https://atlas.ripe.net" target="_blank">RIPE Atlas probes</a> (close to your location):
                         <div className="tooltip-container">
                         {((ripeStatus === "timeout" || ripeStatus === "error"|| ripeData?.measurementData.RTT === -1000.000) && <span className="tooltip-icon fail">!</span>) ||
                         (<span className="tooltip-icon success">?</span>)}

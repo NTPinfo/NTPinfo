@@ -1,10 +1,70 @@
+@font-face {
+	font-family: 'Milo Serif Regular';
+	src: url(fonts/MiloSerifWeb.woff) format("woff")
+}
+
+@font-face {
+	font-family: 'Milo Serif Regular Italic';
+	src: url(fonts/MiloSerifWeb-Ita.woff) format("woff")
+}
+
+@font-face {
+	font-family: 'Milo Serif Medium';
+	src: url(fonts/MiloSerifWeb-Medium.woff) format("woff")
+}
+
+@font-face {
+	font-family: 'Milo Serif Medium Italic';
+	src: url(fonts/MiloSerifWeb-MediumIta.woff) format("woff")
+}
+
+@font-face {
+	font-family: 'Milo Serif Bold';
+	src: url(fonts/MiloSerifWeb-Bold.woff) format("woff")
+}
+
+@font-face {
+	font-family: 'Milo Serif Bold Italic';
+	src: url(fonts/MiloSerifWeb-BoldIta.woff) format("woff")
+}
+
+@font-face {
+	font-family: 'Milo Sans Regular';
+	src: url(fonts/MiloWeb.woff) format("woff")
+}
+
+@font-face {
+	font-family: 'Milo Sans Regular Italic';
+	src: url(fonts/MiloWeb-Ita.woff) format("woff")
+}
+
+@font-face {
+	font-family: 'Milo Sans Medium';
+	src: url(fonts/MiloWeb-Medium.woff) format("woff")
+}
+
+@font-face {
+	font-family: 'Milo Sans Medium Italic';
+	src: url(fonts/MiloWeb-MediumIta.woff) format("woff")
+}
+
+@font-face {
+	font-family: 'Milo Sans Bold';
+	src: url(fonts/MiloWeb-Bold.woff) format("woff")
+}
+
+@font-face {
+	font-family: 'Milo Sans Bold Italic';
+	src: url(fonts/MiloWeb-BoldIta.woff) format("woff")
+}
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Milo Serif Regular";
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
+  color-scheme: light;
+  color: var(--text-dark);
   background-color: var(--bg-clr-primary);
 
   font-synthesis: none;
@@ -13,8 +73,8 @@
   -moz-osx-font-smoothing: grayscale;
 
   /* global variables */
-  --bg-clr-primary: #292f36;
-  --bg-clr-secondary: #323e4c;
+  --bg-clr-primary: #f0f0f0;
+  --bg-clr-secondary: #white;
   --clr-font-white: #eff6ee;
   --clr-font-dark: #1b2025;
   --clr-green: #10a219;
@@ -22,19 +82,42 @@
   --clr-red-2: #f2404c;
   --clr-red-3: #c03039;
   --clr-yellow: #fbb13c;
-  --clr-btn-selected-purple: #0d0d0e;
   --clr-input-placeholder: #b3b3b3;
   --clr-input-placeholder-dark: #6b6a6a;
 
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
-  --text-white: #f8fafc;
 
-  --border-color: #475569;
-  --radius: 8px;
+  --border-color: #dadada;
+  --radius: 1px;
   --radius-lg: 12px;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+  /* SIDN colors */
+  --bg-clr-primary: #f0f0f0;
+  --bg-clr-secondary: white;
+
+  --text-white: #fff;
+  --text-dark: #464646;
+  --text-blue: #002154;
+
+  --clr-btn-not-sel: white;
+  --clr-btn-hover: #1961ac;
+  --clr-btn-sel: #002154;
+  --clr-btn-border: #b4b4b4;
+
+  --crl-accent: #002154;
+
+  --sidn-oranje: #e85422;
+  --sidn-groen: #53b070;
+  --sidn-lichtoranje: #e59236;
+  --sidn-blauw: #1961ac;
+
+
+  --link-hover: #282828;
+  --img-invert: invert(.6);
+
 }
 *,
 *::before,
@@ -47,15 +130,15 @@
 }
 
 h2 {
-  color: var(--text-white);
+  color: var(--text-dark);
 }
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--sidn-blauw);
   text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+  color: var(--link-hover);
 }
 html {
   /* background-color: var(--bg-clr-primary); */
@@ -72,6 +155,7 @@ body {
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+  color: var(--text-dark);
 }
 
 button {
@@ -81,12 +165,12 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--clr-btn-not-sel);
   cursor: pointer;
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: var(--clr-btn-hover);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -95,7 +179,7 @@ button:hover {
     background-color: #ffffff;
   }
   a:hover {
-    color: #747bff;
+    color: var(--link-hover);
   }
   button {
     background-color: #f9f9f9;

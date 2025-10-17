@@ -1,7 +1,7 @@
 @import "../index.css";
 
 .app-container {
-  /* background-color: var(--bg-clr-primary); */
+  background-color: var(--bg-clr-primary);
   /* background: linear-gradient(to bottom, var(--bg-primary), var(--bg-secondary)); */
   flex: 1 0 auto;
   min-height: 0;
@@ -27,7 +27,7 @@
   padding: 0.5rem 0.75rem;
 }
 .open-popup-btn:hover {
-  background-color: var(--clr-btn-selected-purple);
+  background-color: var(--clr-btn-hover);
 }
 
 @keyframes logo-spin {
@@ -92,7 +92,7 @@
 
 .result-text p {
   font-size: 1.7rem;
-  color: var(--clr-font-white);
+  color: var(--text-dark);
   text-align: left;
   font-weight: 500;
   padding: 0;
@@ -117,10 +117,6 @@
   .download-buttons {
     padding-left: 1rem;
     padding-top: 0.5rem;
-    padding-right: 1rem;
-  }
-  .download-buttons button {
-    font-size: 0.8rem;
   }
 }
 
@@ -140,7 +136,7 @@
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  color: white;
+  color: var(--text-dark);
   width: 100%;
   box-shadow: var(--shadow);
   height: 100%;
@@ -151,17 +147,17 @@
   margin-right: 1rem;
   margin-top: 2.4rem;
   grid-area: summary;
-  background-color: var(--bg-secondary);
-  color: var(--txt-white);
+  background-color: var(--bg-clr-secondary);
+  color: var(--text-dark);
   font-weight: bold;
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 0.7rem;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   gap: 0.75rem;
 
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--clr-btn-border);
 }
 
 @media (max-width: 1246px) {
@@ -206,7 +202,7 @@
   padding: 1rem 2rem;
   font-weight: 700;
   font-size: 1.25rem;
-  color: var(--clr-font-white);
+  color: var(--text-dark);
 }
 
 .ip-list a {
@@ -253,12 +249,11 @@
 
 .radio-toggle {
   display: inline-flex;
-  background: var(--bg-secondary);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-clr-secondary);
   border-radius: var(--radius);
   padding: 2px;
   gap: 0;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--clr-btn-border);
 }
 
 .radio-toggle input[type="radio"] {
@@ -279,8 +274,8 @@
   font-size: 0.95rem;
   cursor: pointer;
   user-select: none;
-  color: var(--clr-font-muted, #9fa4b9);
-  border-radius: 8px;
+  color: var(--text-dark);
+  border-radius: 1px;
   transition: all 0.2s ease;
 }
 
@@ -300,7 +295,7 @@
   padding: 1rem;
   text-align: center;
   border-top: 1px solid var(--border-color);
-  background: var(--bg-secondary, #181c2f);
+  background: var(--bg-clr-secondary);
   z-index: 10;
 }
 
@@ -310,6 +305,7 @@
   justify-content: center;
   gap: 0.75rem;
   /* flex-wrap: wrap; */
+  color: var(--text-dark);
 }
 
 .footer-content a {
@@ -318,7 +314,7 @@
 }
 
 .powered-by {
-  color: var(--clr-font-muted, #9fa4b9);
+  color: var(--text-dark);
   font-size: 0.9rem;
   font-weight: 500;
 }
