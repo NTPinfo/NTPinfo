@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import { PartialMeasurementResult } from "../utils/types";
 
 const SERVER = import.meta.env.VITE_SERVER_HOST_ADDRESS;
-export const usePollPartialMeasurement = (measurementId: string | null, interval = 3000) => {
+export const usePollPartialMeasurement = (measurementId: string | null, interval = 10000) => {
 
-  const [data, setData] = useState<PartialMeasurementResult | null>(null);
+  const [data, setData] = useState<any | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  const [ntpVersionsId, setNtpVersionsId] = useState<string | null>(null);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -20,6 +21,7 @@ export const usePollPartialMeasurement = (measurementId: string | null, interval
       setData(null);
       setStatus(null);
       setError(null);
+      setNtpVersionsId(null)
       if (intervalRef.current) clearInterval(intervalRef.current);
       return;
     }
@@ -34,13 +36,19 @@ export const usePollPartialMeasurement = (measurementId: string | null, interval
                 signal: abortRef.current.signal,
             });
 
-            const partialData: PartialMeasurementResult = res.data;
+            const partialData = res.data;
             setStatus(res.data?.status);
             setData(partialData);
 
+            if (partialData.ntp_versions_id) 
+              setNtpVersionsId(partialData.ntp_versions_id);
+        
             if (res.data.status === "finished" || res.data.status === "failed") {
                 setLoading(false);
-                clearInterval(interval);
+                if (intervalRef.current) {
+                  clearInterval(intervalRef.current);
+                  intervalRef.current = null;
+                }
             }
                 
 
@@ -50,11 +58,14 @@ export const usePollPartialMeasurement = (measurementId: string | null, interval
         }
     }
 
-    const pollInterval = setInterval(pollPartialResults, interval);
+    intervalRef.current = setInterval(pollPartialResults, interval);
     pollPartialResults();
 
-    return () => clearInterval(pollInterval);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (abortRef.current) abortRef.current.abort();
+    };
   }, [measurementId, interval])
 
-  return {data, status, loading, error}
+  return {data, status, loading, error, ntpVersionsId}
 }

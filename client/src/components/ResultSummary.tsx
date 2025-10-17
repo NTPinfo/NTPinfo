@@ -8,18 +8,19 @@ import LoadingSpinner from './LoadingSpinner.tsx'
 import { calculateStatus } from '../utils/calculateStatus.ts'
 
 
-function ResultSummary({data, ripeData, err, httpStatus, ripeErr, ripeStatus, errMessage} :
-    {data : NTPData | null, ripeData: RIPEData | null, err : Error | null, httpStatus: number, ripeErr: Error | null, ripeStatus: RipeStatus | null, errMessage: string | null}) {
+function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, errMessage, measurementId} :
+    {data : NTPData | null, ripeData: RIPEData | null, ripeErr: Error | null, ripeStatus: RipeStatus | null, 
+        httpStatus: number, err: Error | null, errMessage: string | null, measurementId: string | null}) {
 
     const [serverStatus, setServerStatus] = useState<string | null>(null)
-
-    const [statusMessage, setStatusMessage] = useState<string | null>("")
+    const [statusMessage, setStatusMessage] = useState<string | null>("")   
+    
     useEffect(() => {
     if (data == null) {
         setStatusMessage(errMessage)
         }
     }, [data, errMessage])
-
+    
     useEffect(() => {
         if((ripeStatus === "complete") && ripeData && data){
             setServerStatus(calculateStatus(data, ripeData))
@@ -31,7 +32,7 @@ function ResultSummary({data, ripeData, err, httpStatus, ripeErr, ripeStatus, er
             setServerStatus(null)
     }, [data, ripeData, ripeErr, ripeStatus])
 
-    if (data == null)
+     if (data == null)
         return <h2 id="not-found">{err && errMessage ? `Error ${httpStatus}: ${statusMessage}` : `Unknown error occurred`}</h2>
 
 
@@ -128,13 +129,14 @@ function ResultSummary({data, ripeData, err, httpStatus, ripeErr, ripeStatus, er
                             <div className="metric" style = {{height: '22.8px'}}><span title='The smallest time unit that the NTP server can measure or represent'>Precision</span><span>2<sup>{data?.precision !== undefined ? data.precision : 'N/A'}</sup> {precisionIconNTP && <img src={precisionIconNTP} alt="precision performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                             <div className="metric"><span title='A hierarchical level number indicating the distance from the reference clock'>Stratum</span><span>{data?.stratum !== undefined ? data.stratum : 'N/A'}</span></div>
                             <div className="metric"><span title='The IP address of the NTP server'>IP address</span><span>{data?.ip ? data.ip : 'N/A'}</span></div>
-                            <div className="metric"><span>Vantage point IP</span><span>{data?.vantage_point_ip !== undefined ? data.vantage_point_ip : 'N/A'}</span></div>
+                            <div className="metric"><span>Vantage point IP</span><span>{data?.vantage_point_ip}</span></div>
                             <div className="metric"><span>Country</span><span>{data?.country_code ? data.country_code : 'N/A'}</span></div>
                             <div className="metric"><span>Reference ID</span><span>{data?.ref_id}</span></div>
                             <div className="metric"><span title='The total round-trip delay to the primary reference source'>Root delay</span><span>{data?.root_delay !== undefined ? data.root_delay : 'N/A'}</span></div>
                             <div className="metric"><span title='The poll interval used by the probe during the measurement'>Poll interval</span><span>{data?.poll !== undefined ? `${Math.pow(2, data.poll)} s` : 'N/A'}</span></div>
                             <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span>{data?.root_dispersion !== undefined ? `${(data.root_dispersion).toFixed(10)} s` : 'N/A'} {rootDispIconNTP && <img src={rootDispIconNTP} alt="root dispersion performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                             <div className="metric"><span>ASN</span><span>{data?.asn_ntp_server !== undefined ? data.asn_ntp_server : "N/A"}</span></div>
+                            <div className="metric"><span>Measurement ID</span><span>{measurementId ?? 'N/A'}</span></div>
                         </div>
                     </div>
                     <div className="result-and-title" id="ripe-result">

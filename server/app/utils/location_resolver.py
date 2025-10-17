@@ -28,7 +28,7 @@ def get_coordinates_for_ip(client_ip: Optional[str]) -> tuple[float, float]:
             lat = response.location.latitude
             long = response.location.longitude
             if lat is None or long is None:
-                raise ValueError("Location data incomplete.")
+                raise ValueError(f"Location data incomplete for {client_ip}")
             return lat, long
     except Exception as e:
         print(e)

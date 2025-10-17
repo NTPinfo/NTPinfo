@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { transformJSONDataToNTPData } from "../utils/transformJSONDataToNTPData.ts";
+import { transformFullMeasurementMainToNTPData } from "../utils/transformFullMeasurementMainToNTPData";
 import { transformJSONDataToNTPVerData } from "../utils/transformJSONDataToNTPverData.ts";
 import { NTPData } from "../utils/types.ts";
 import { useFetchRIPEData } from "./useFetchRipeData.ts";
+import { usePollPartialMeasurement } from "./usePollPartialMeasurement.ts";
 // interface AggregatedDNMeasurement {
 //   status: string;
 //   ripeData?: any;
@@ -21,9 +23,9 @@ import { useFetchRIPEData } from "./useFetchRipeData.ts";
 //   ntpVersions?: any;
 // }
 const SERVER = import.meta.env.VITE_SERVER_HOST_ADDRESS;
-export const usePollFullMeasurement = (measurementId: string | null,  partialData: any, interval = 3000
+export const usePollFullMeasurement = (measurementId: string | null, interval = 10000
 ) => {
-  const [ntpData, setNtpData] = useState<NTPData | null>(null);
+  const [ntpData, setNtpData] = useState<NTPData[] | null>(null);
   const [ntsData, setNtsData] = useState<any>(null);
   const [ripeId, setRipeId] = useState<string | null>(null);
   const [versionData, setVersionData] = useState<any>(null);
@@ -33,18 +35,24 @@ export const usePollFullMeasurement = (measurementId: string | null,  partialDat
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevMeasurementId = useRef<string | null>(null);
+  const fetchedVersionIdRef = useRef<string | null>(null);
+
+  const [ntpVerLoading, setNtpVerLoading] = useState(false);
 
   const { result: ripeData, status: ripeStatus, error: ripeError } = useFetchRIPEData(ripeId);
+  const { ntpVersionsId } = usePollPartialMeasurement(measurementId);
 
   useEffect(() => {
-
-    if (!measurementId || !partialData) {
+    // Start polling as soon as we have a measurement ID. 
+    if (!measurementId) {
       return;
     }
 
+    // Only start new polling if this is a different measurement ID
     if (prevMeasurementId.current === measurementId) return;
     prevMeasurementId.current = measurementId;
 
+    // Clean up any existing polling
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -54,9 +62,18 @@ export const usePollFullMeasurement = (measurementId: string | null,  partialDat
       clearTimeout(retryTimeoutRef.current);
       retryTimeoutRef.current = null;
     }
+    
     const controller = new AbortController();
     
-    setError(null)
+    // Reset all data when starting a new measurement
+    setError(null);
+    setNtpData(null);
+    setNtsData(null);
+    setVersionData(null);
+    setRipeId(null);
+    setStatus(null);
+    setNtpVerLoading(true);
+    fetchedVersionIdRef.current = null;
 
     const pollFullMeasurement = async () => {
       try {
@@ -75,43 +92,35 @@ export const usePollFullMeasurement = (measurementId: string | null,  partialDat
 
             //Main measurement
             if (respData.ip_measurements && respData.ip_measurements?.length > 0) {
-                const firstIP = respData.ip_measurements[0]
-               setNtpData(transformJSONDataToNTPData(firstIP.main_measurement))
-               setError(firstIP.response_error)
+                const ipMeasurements = respData.ip_measurements
+                const mapped = ipMeasurements
+                  .map((ip: any) => transformFullMeasurementMainToNTPData(ip.main_measurement) || transformJSONDataToNTPData(ip.main_measurement))
+                  .filter((x: any): x is NTPData => Boolean(x))
+                setNtpData(mapped.length ? mapped : null)
+                setError(respData.response_error)
             } else if (respData.main_measurement) {
-                setNtpData(transformJSONDataToNTPData(respData.main_measurement))
+                const transformed = transformFullMeasurementMainToNTPData(respData.main_measurement) || transformJSONDataToNTPData(respData.main_measurement)
+                setNtpData(transformed ? [transformed] : null)
                 setError(respData.response_error)
             }
 
             //NTS
-            if (respData.nts) setNtsData(respData.nts ?? null)
+            setNtsData(respData.nts ?? null)
 
-            //NTP versions
-            if (respData.id_vs) {
-                try {
-                    const vsRes = await axios.get(
-                        `${SERVER}/measurements/ntp_versions/${respData.id_vs}`
-                    )
-                    setVersionData(transformJSONDataToNTPVerData(vsRes.data))
-                } catch (err) {
-                    console.warn("NTP versions failed", err)
-                }
-            }
-
-            //Error
-            if (respData.response_error) setError(respData.response_error)
-
-        
 
             // stop polling if finished or failed
             if (respData.status === "finished" || respData.status === "failed") {
-                clearInterval(interval)
-              
+                if (intervalRef.current) {
+                  clearInterval(intervalRef.current);
+                  intervalRef.current = null;
+                }
             }
         } catch (err: any) {
-            setError(err)
-            
-            if (intervalRef.current) clearInterval(intervalRef.current)
+            setError(err?.message || "Polling failed")
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current)
+              intervalRef.current = null
+            }
         }
     }
 
@@ -123,7 +132,29 @@ export const usePollFullMeasurement = (measurementId: string | null,  partialDat
       if (retryTimeoutRef.current) clearTimeout(retryTimeoutRef.current);
       controller.abort();
     };
-  }, [measurementId, partialData, interval, ripeId]);
+  
+  }, [measurementId, interval]);
 
-  return { ntpData, ntsData, ripeData, versionData, status, error, ripeStatus, ripeError};
+  //Get NTP Versions ID from partial results and poll specific endpoint
+  useEffect(() => {
+  if (!ntpVersionsId) return;
+  if (fetchedVersionIdRef.current === ntpVersionsId) return;
+
+  fetchedVersionIdRef.current = ntpVersionsId;
+
+  const fetchVersions = async () => {
+    try {
+
+      const vsRes = await axios.get(`${SERVER}/measurements/ntp_versions/${ntpVersionsId}`);
+      setVersionData(transformJSONDataToNTPVerData(vsRes.data));
+      setNtpVerLoading(false);
+    } catch (err) {
+      console.warn("NTP versions fetch failed:", err);
+    }
+  };
+
+  fetchVersions();
+}, [ntpVersionsId]);
+
+  return { ntpData, ntsData, ripeData, versionData, status, error, ripeStatus, ripeError, ripeId, ntpVerLoading};
 }

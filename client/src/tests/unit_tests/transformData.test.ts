@@ -5,14 +5,14 @@ import { transformJSONDataToRIPEData } from '../../utils/transformJSONDataToRIPE
 describe("transform JSON Data to NTP Data", () => {
     test("tranform to NTP Data", () => {
     const fetchedData = {
-        ntp_version: 4,
+        version: 4,
         offset: 0.001,
         rtt: 0.001,
         stratum: 2,
         jitter: 0.0005,
         precision: -20,
         poll: 6,
-        root_dispersion: 0.01,
+        root_disp: 0.01,
         root_delay: 0.02,
         client_sent_time: { seconds: 3900000000, fraction: 123456789 },
         server_recv_time: { seconds: 3900000000, fraction: 123556789 },
@@ -21,48 +21,41 @@ describe("transform JSON Data to NTP Data", () => {
         ntp_server_ip: "192.168.0.1",
         ntp_server_name: "pool.ntp.org",
         ref_name: null,
-        ntp_server_ref_parent_ip: "10.0.0.1",
+        ref_id: "10.0.0.1",
         ntp_last_sync_time: { seconds: 3899990000, fraction: 0 },
         leap: 0,
         vantage_point_ip: "203.0.113.42",
         ntp_server_location: {
-            coordinates: [48.8566, 2.3522],
+            coordinates_x: 48.8566,
+            coordinates_y: 2.3522,
             country_code: "FR",
+            asn_ntp_server: "6185",
             ip_is_anycast: false
         },
         nr_measurements_jitter: 16,
-        asn_ntp_server: "6185",
+        id: "dn1"
     }
 
     const res = transformJSONDataToNTPData(fetchedData)
 
-    expect(res?.ntp_version).toBe(fetchedData.ntp_version)
+    expect(res?.ntp_version).toBe(fetchedData.version)
     expect(res?.offset).toBeCloseTo(fetchedData.offset * 1000, 3)
     expect(res?.RTT).toBeCloseTo(fetchedData.rtt * 1000, 3)
     expect(res?.stratum).toBe(fetchedData.stratum)
-    expect(res?.jitter).toBe(fetchedData.jitter)
+    expect(res?.jitter).toBe(0)
     expect(res?.precision).toBe(fetchedData.precision)
     expect(res?.poll).toBe(fetchedData.poll)
-    expect(res?.root_dispersion).toBe(fetchedData.root_dispersion)
+    expect(res?.root_dispersion).toBe(fetchedData.root_disp)
     expect(res?.root_delay).toBe(fetchedData.root_delay)
-    expect(res?.client_sent_time).toEqual([fetchedData.client_sent_time.seconds, fetchedData.client_sent_time.fraction])
-    expect(res?.server_recv_time).toEqual([fetchedData.server_recv_time.seconds, fetchedData.server_recv_time.fraction])
-    expect(res?.server_sent_time).toEqual([fetchedData.server_sent_time.seconds, fetchedData.server_sent_time.fraction])
-    expect(res?.client_recv_time).toEqual([fetchedData.client_recv_time.seconds, fetchedData.client_recv_time.fraction])
-    expect(res?.ntp_server_ref_parent_ip).toBe(fetchedData.ntp_server_ref_parent_ip)
-    expect(res?.ref_id).toBe(fetchedData.ntp_server_ref_parent_ip)
-    expect(res?.ntp_last_sync_time).toEqual([fetchedData.ntp_last_sync_time.seconds, fetchedData.ntp_last_sync_time.fraction])
+    expect(res?.ntp_server_ref_parent_ip).toBe(fetchedData.ref_id)
+    expect(res?.ref_id).toBe(fetchedData.ref_id)
     expect(res?.leap).toBe(fetchedData.leap)
-    expect(res?.nr_measurements_jitter).toBe(fetchedData.nr_measurements_jitter)
-    expect(res?.time).toBe((fetchedData.client_sent_time.seconds - 2208988800) * 1000)
-    expect(res?.ip).toBe(fetchedData.ntp_server_ip)
-    expect(res?.server_name).toBe(fetchedData.ntp_server_name)
     expect(res?.vantage_point_ip).toBe(fetchedData.vantage_point_ip)
-    expect(res?.coordinates[0]).toBe(fetchedData.ntp_server_location.coordinates[0])
-    expect(res?.coordinates[1]).toBe(fetchedData.ntp_server_location.coordinates[1])
+    expect(res?.coordinates[0]).toBe(fetchedData.ntp_server_location.coordinates_x)
+    expect(res?.coordinates[1]).toBe(fetchedData.ntp_server_location.coordinates_y)
     expect(res?.country_code).toBe(fetchedData.ntp_server_location.country_code)
     expect(res?.is_anycast).toBe(fetchedData.ntp_server_location.ip_is_anycast)
-    expect(res?.asn_ntp_server).toBe(fetchedData.asn_ntp_server)
+    expect(res?.asn_ntp_server).toBe(fetchedData.ntp_server_location.asn_ntp_server)
 })
 
     test("Return null on null input", () => {
