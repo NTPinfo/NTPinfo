@@ -75,7 +75,6 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
 
   const handleIPv6Toggle = (value: boolean) => {
   updateCache({ ipv6Selected: value });
-  console.log(ntpData?.coordinates)
   };
 
 
@@ -328,14 +327,14 @@ const ripeTriggerErr = null;
         />
       </div>
       {/* <h3 id="disclaimer">DISCLAIMER: Your IP may be used to get a RIPE probe close to you for the most accurate data. Your IP will not be stored.</h3> */}
-        <div className="result-text">
-          {(!apiDataLoading && measured && (<p>Results</p>)) ||
+        {/* <div className="result-text">
+          {((triggerLoading || measurementSessionActive) && measured && (<p>Results</p>)) ||
                     (apiDataLoading && <div className="loading-div">
                         <p>Loading...</p>
                         <LoadingSpinner size="small"/>
                     </div>
                         )}
-        </div>
+        </div> */}
         {/* The main page shown after the main measurement is done */}
       {((ntpData || ripeData) && (<div className="results-and-graph">
         <ResultSummary data={ntpData}

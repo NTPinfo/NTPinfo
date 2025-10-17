@@ -228,14 +228,12 @@
   flex-direction: column;
   gap: 1rem;
   padding: 2rem;
-  background-color: var(--bg-secondary);
+  background-color: transparent;
   border-radius: 8px;
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow);
 }
 
 .main-details-loading .loading-div p {
-  color: var(--clr-font-white);
+  color: var(--font-dark);
   font-size: 1.1rem;
   font-weight: 500;
   margin: 0;
