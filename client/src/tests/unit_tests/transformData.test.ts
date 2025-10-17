@@ -14,15 +14,15 @@ describe("transform JSON Data to NTP Data", () => {
         poll: 6,
         root_disp: 0.01,
         root_delay: 0.02,
-        client_sent_time: { seconds: 3900000000, fraction: 123456789 },
-        server_recv_time: { seconds: 3900000000, fraction: 123556789 },
-        server_sent_time: { seconds: 3900000000, fraction: 123656789 },
-        client_recv_time: { seconds: 3900000000, fraction: 123756789 },
+        client_sent_time: 3900000000,
+        server_recv_time: 3900000000,
+        server_sent_time: 3900000000,
+        client_recv_time: 3900000000,
         ntp_server_ip: "192.168.0.1",
         ntp_server_name: "pool.ntp.org",
         ref_name: null,
         ref_id: "10.0.0.1",
-        ntp_last_sync_time: { seconds: 3899990000, fraction: 0 },
+        ntp_last_sync_time: 399990000,
         leap: 0,
         vantage_point_ip: "203.0.113.42",
         ntp_server_location: {
@@ -71,6 +71,7 @@ describe('transform JSON Data to RIPE Data', () => {
     ntp_server_ip: "192.0.2.1",
     ntp_server_name: "ntp.example.com",
     stratum: 2,
+    time: (3792998400 - 2208988800) * 1000,
     precision: -20,
     root_dispersion: 0.1,
     root_delay: 0.05,
@@ -94,10 +95,10 @@ describe('transform JSON Data to RIPE Data', () => {
       {
         offset: 0.00123,
         rtt: 0.00456,
-        client_sent_time: { seconds: 3792998400, fraction: 111 },
-        server_recv_time: { seconds: 3792998400, fraction: 222 },
-        server_sent_time: { seconds: 3792998400, fraction: 333 },
-        client_recv_time: { seconds: 3792998400, fraction: 444 },
+        client_sent_time: 3792998400,
+        server_recv_time: 3792998400,
+        server_sent_time: 3792998400,
+        client_recv_time: 3792998400,
       }
     ]
   }
@@ -115,10 +116,10 @@ describe('transform JSON Data to RIPE Data', () => {
   expect(result!.measurementData.ntp_server_ref_parent_ip).toBe("")
   expect(result!.measurementData.ref_id).toBe("GPS")
 
-  expect(result!.measurementData.client_sent_time).toEqual([3792998400, 111])
-  expect(result!.measurementData.server_recv_time).toEqual([3792998400, 222])
-  expect(result!.measurementData.server_sent_time).toEqual([3792998400, 333])
-  expect(result!.measurementData.client_recv_time).toEqual([3792998400, 444])
+  expect(result!.measurementData.client_sent_time).toEqual(3792998400)
+  expect(result!.measurementData.server_recv_time).toEqual(3792998400)
+  expect(result!.measurementData.server_sent_time).toEqual(3792998400)
+  expect(result!.measurementData.client_recv_time).toEqual(3792998400)
 
   expect(result!.measurementData.offset).toBeCloseTo(1.23)
   expect(result!.measurementData.RTT).toBeCloseTo(4.56)
@@ -127,11 +128,10 @@ describe('transform JSON Data to RIPE Data', () => {
   expect(result!.measurementData.root_delay).toBe(0.05)
   expect(result!.measurementData.poll).toBe(6)
   expect(result!.measurementData.root_dispersion).toBe(0.1)
-  expect(result!.measurementData.ntp_last_sync_time).toEqual([-1, -1])
+  expect(result!.measurementData.ntp_last_sync_time).toEqual(-1)
   expect(result!.measurementData.leap).toBe(-1)
   expect(result!.measurementData.jitter).toBe(-1)
   expect(result!.measurementData.nr_measurements_jitter).toBe(-1)
-  expect(result!.measurementData.time).toBe((3792998400 - 2208988800) * 1000)
   expect(result!.measurementData.asn_ntp_server).toBe("6185")
 
   expect(result!.probe_addr_v4).toBe("203.0.113.5")
