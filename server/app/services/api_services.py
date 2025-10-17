@@ -132,13 +132,15 @@ def get_ripe_format(measurement: RipeMeasurement) -> dict[str, Any]:
     # this code regarding ref_id is because we need to consider IPv6 cases (M5 hashes involved)
     ref_id_str: str | None = "NO REFERENCE"
     try:
-        ref_ip, ref_text = ref_id_to_ip_or_name(int(measurement.ref_id), measurement.ntp_measurement.main_details.stratum,
-                                          get_ip_family(ip_to_str(measurement.ntp_measurement.server_info.ntp_server_ip)))
+        ref_ip, ref_text = ref_id_to_ip_or_name(int(measurement.ref_id),
+                                                measurement.ntp_measurement.main_details.stratum,
+                                                get_ip_family(
+                                                    ip_to_str(measurement.ntp_measurement.server_info.ntp_server_ip)))
         if ref_ip is not None:
             ref_id_str = ip_to_str(ref_ip)
         elif ref_text is not None:
             ref_id_str = ref_text
-    except Exception as e: #if ref_id could not be converted to an integer (ex: it was already a str)
+    except Exception as e:  # if ref_id could not be converted to an integer (ex: it was already a str)
         ref_id_str = measurement.ref_id
     return {
         "ntp_version": measurement.ntp_measurement.server_info.ntp_version,
@@ -212,6 +214,7 @@ def override_desired_ip_type_if_input_is_ip(target_server: str, wanted_ip_type: 
         return 6
     return wanted_ip_type
 
+
 def measure(server: str, wanted_ip_type: int, session: Session, client_ip: Optional[str] = None,
             measurement_no: int = get_nr_of_measurements_for_jitter()) -> list[tuple[
     NtpMeasurement, float, int]] | None:
@@ -258,7 +261,8 @@ def measure(server: str, wanted_ip_type: int, session: Session, client_ip: Optio
             return None
         else:
             measurements: Optional[list[NtpMeasurement]] = perform_ntp_measurement_domain_name_list(server,
-                                                                                                    client_ip, wanted_ip_type)
+                                                                                                    client_ip,
+                                                                                                    wanted_ip_type)
             if measurements is not None:
                 m_results = []
                 for m in measurements:
@@ -282,6 +286,7 @@ def measure(server: str, wanted_ip_type: int, session: Session, client_ip: Optio
         print("Performing measurement error message:", e)
         return None
 
+
 def check_and_get_settings(input_settings: MeasurementRequest) -> AdvancedSettings:
     """
     This method takes the parameters that the client inputted. It checks them and it returns the settings.
@@ -298,7 +303,7 @@ def check_and_get_settings(input_settings: MeasurementRequest) -> AdvancedSettin
     input_settings.wanted_ip_type = override_desired_ip_type_if_input_is_ip(input_settings.server, wanted_ip_type)
     # create the settings (get rid of None-s)
 
-    settings = AdvancedSettings()
+    settings = AdvancedSettings(wanted_ip_type=wanted_ip_type)
 
     if input_settings.measurement_type is not None:
         settings.measurement_type = input_settings.measurement_type
@@ -324,6 +329,7 @@ def check_and_get_settings(input_settings: MeasurementRequest) -> AdvancedSettin
 
     return check_settings(settings)
 
+
 def check_settings(settings: AdvancedSettings) -> AdvancedSettings:
     """
     This method checks the values in the settings.
@@ -347,13 +353,14 @@ def check_settings(settings: AdvancedSettings) -> AdvancedSettings:
     for v in settings.ntp_versions_to_analyze:
         if not settings.measurement_type in ["ntpv1", "ntpv2", "ntpv3", "ntpv4", "ntpv5"]:
             raise InputError(f"the version {v} must be either ntpv1 or ntpv2 or ntpv3 or ntpv4 or ntpv5")
-    if settings.analyse_all_ntp_versions: # if they want to measure everything, override the list
+    if settings.analyse_all_ntp_versions:  # if they want to measure everything, override the list
         settings.ntp_versions_to_analyze = ["ntpv1", "ntpv2", "ntpv3", "ntpv4", "ntpv5"]
 
     # RIPE part
     if settings.custom_client_ip != "" and is_ip_address(settings.custom_client_ip) is None:
         raise InputError("custom_client_ip must be either null/empty or a valid IP address")
     return settings
+
 
 def complete_this_measurement_dn(measurement_id: int, dn_ips: list[str], settings: AdvancedSettings) -> None:
     """
@@ -364,8 +371,7 @@ def complete_this_measurement_dn(measurement_id: int, dn_ips: list[str], setting
     from server.app.db_config import _SessionLocal
     print(f"starting dn...{measurement_id}")
 
-
-    if _SessionLocal is None: # this will never be the case. This code is to solve a mypy type error
+    if _SessionLocal is None:  # this will never be the case. This code is to solve a mypy type error
         print("_SessionLocal is None. No connection to the database")
         return
     db = _SessionLocal()
@@ -413,7 +419,7 @@ def complete_this_measurement_dn(measurement_id: int, dn_ips: list[str], setting
         time.sleep(1)
         nts_ans = perform_nts_measurement_domain_name(server, settings)
 
-        nts = NTSMeasurement.from_dict(nts_ans, server) # currently we only support NTS with ntpv4
+        nts = NTSMeasurement.from_dict(nts_ans, server)  # currently we only support NTS with ntpv4
         db.add(nts)
         db.flush()
         m.id_nts = nts.id_nts
@@ -429,7 +435,6 @@ def complete_this_measurement_dn(measurement_id: int, dn_ips: list[str], setting
             db.commit()
             time.sleep(1)
             add_ntp_versions_to_db_measurement(db, server, settings, m)
-
 
         # add settings
         m.settings = settings.model_dump()
@@ -452,8 +457,7 @@ def complete_this_measurement_dn(measurement_id: int, dn_ips: list[str], setting
         db.close()
 
 
-
-def complete_this_measurement_ip(measurement_id: int, settings: AdvancedSettings, part_of_dn_measurement: bool=False,
+def complete_this_measurement_ip(measurement_id: int, settings: AdvancedSettings, part_of_dn_measurement: bool = False,
                                  from_dn: Optional[str] = None) -> None:
     """
     if the measurement_id is not in the database, then this method does nothing.
@@ -462,7 +466,7 @@ def complete_this_measurement_ip(measurement_id: int, settings: AdvancedSettings
     # very important: keep this "import" here (Because it needs to be imported after SQLAlchemy has been initialized)
     from server.app.db_config import _SessionLocal
     print(f"starting ip...{measurement_id}")
-    if _SessionLocal is None: # this will never be the case. This code is to solve a mypy type error
+    if _SessionLocal is None:  # this will never be the case. This code is to solve a mypy type error
         print("_SessionLocal is None. No connection to the database")
         return
     db = _SessionLocal()
@@ -498,7 +502,7 @@ def complete_this_measurement_ip(measurement_id: int, settings: AdvancedSettings
             nts_ans = perform_nts_measurement_ip(server_ip)
             nts_ans["warning_ip"] = "NTS measurements on IPs cannot check TLS certificate."
             # do not add from_dn here because NTS is special and KE of NTS may change the IP
-            nts = NTSMeasurement.from_dict(nts_ans, server_ip) # currently we only support NTS with ntpv4
+            nts = NTSMeasurement.from_dict(nts_ans, server_ip)  # currently we only support NTS with ntpv4
             db.add(nts)
             db.flush()
             m.id_nts = nts.id_nts
@@ -516,7 +520,7 @@ def complete_this_measurement_ip(measurement_id: int, settings: AdvancedSettings
                 m.status = "adding NTP versions analysis"
                 status = m.status
                 db.commit()
-                time.sleep(1) #to make sure the server would not blacklist us
+                time.sleep(1)  # to make sure the server would not blacklist us
                 add_ntp_versions_to_db_measurement(db, server_ip, settings, m, from_dn)
         # add settings
         m.settings = settings.model_dump()
@@ -528,6 +532,7 @@ def complete_this_measurement_ip(measurement_id: int, settings: AdvancedSettings
         take_care_of_exception(db, e, measurement_id, True)
     finally:
         db.close()
+
 
 def take_care_of_exception(db: Session, e: Exception, measurement_id: int, ip_measurement: bool) -> None:
     """
@@ -549,8 +554,9 @@ def take_care_of_exception(db: Session, e: Exception, measurement_id: int, ip_me
     except Exception as inner:
         print("Error while marking failed:", inner)
 
+
 def add_custom_ntp_measurement_ip_to_db_measurement(db: Session, server_ip: str, settings: AdvancedSettings,
-                                            full_m: FullMeasurementIP, from_dn: Optional[str] = None) -> None:
+                                                    full_m: FullMeasurementIP, from_dn: Optional[str] = None) -> None:
     """
     This method is used when you performed a full measurement on an IP address.
     If the measurement fails, you will not see why in the full_m.response_error
@@ -573,7 +579,7 @@ def add_custom_ntp_measurement_ip_to_db_measurement(db: Session, server_ip: str,
         return
     try:
         conf, analysis, data = run_tool_on_ntp_version(server_ip, str(binary_nts_tool),
-                                settings.measurement_type, settings.ntpv5_draft)
+                                                       settings.measurement_type, settings.ntpv5_draft)
 
         # 3 cases:
         # 1 we received a real wanted ntp version
@@ -596,7 +602,7 @@ def add_custom_ntp_measurement_ip_to_db_measurement(db: Session, server_ip: str,
             db.commit()
             return
 
-        if response_version != "5" and response_version != "ntpv5": # I think this may help if someone is confused about notations.
+        if response_version != "5" and response_version != "ntpv5":  # I think this may help if someone is confused about notations.
             # then it is either NTPv1,v2,v3 or v4. But all of them are saved in the database in the NTPv4 format.
             # add the "from_dn" in case it exists.
             measurement_v = NTPv4Measurement(host=host, measured_server_ip=server_ip)
@@ -618,8 +624,9 @@ def add_custom_ntp_measurement_ip_to_db_measurement(db: Session, server_ip: str,
             full_m.id_main_measurement = measurement_v5.id
         full_m.response_version = "ntpv" + response_version
         db.commit()
-    except Exception as e: # we arrive here iff run_tool_on_ntp_version throws an error
+    except Exception as e:  # we arrive here iff run_tool_on_ntp_version throws an error
         print("error in adding custom ntp measurement:", e)
+
 
 def get_server_info_objectv4(db: Session, m_id: int, server_ip: str) -> None:
     """
@@ -632,7 +639,7 @@ def get_server_info_objectv4(db: Session, m_id: int, server_ip: str) -> None:
          None: nothing
     """
     msi = NTPv4ServerInfo(m_id=m_id, ip_is_anycast=is_this_ip_anycast(server_ip),
-                        asn_ntp_server=get_asn_for_ip(server_ip), country_code=get_country_for_ip(server_ip))
+                          asn_ntp_server=get_asn_for_ip(server_ip), country_code=get_country_for_ip(server_ip))
     msi.vantage_point_ip = ip_to_str(get_server_ip(4))
     c: Optional[Tuple[float, float]] = get_coordinates_for_ip(server_ip)
     if c is not None:
@@ -640,6 +647,7 @@ def get_server_info_objectv4(db: Session, m_id: int, server_ip: str) -> None:
         msi.coordinates_y = c[1]
     db.add(msi)
     db.flush()
+
 
 def get_server_info_objectv5(db: Session, m_id: int, server_ip: str) -> None:
     """
@@ -652,7 +660,7 @@ def get_server_info_objectv5(db: Session, m_id: int, server_ip: str) -> None:
          None: nothing
     """
     msi = NTPv5ServerInfo(m_id=m_id, ip_is_anycast=is_this_ip_anycast(server_ip),
-                        asn_ntp_server=get_asn_for_ip(server_ip), country_code=get_country_for_ip(server_ip))
+                          asn_ntp_server=get_asn_for_ip(server_ip), country_code=get_country_for_ip(server_ip))
     msi.vantage_point_ip = ip_to_str(get_server_ip(4))
     c: Optional[Tuple[float, float]] = get_coordinates_for_ip(server_ip)
     if c is not None:
@@ -660,6 +668,7 @@ def get_server_info_objectv5(db: Session, m_id: int, server_ip: str) -> None:
         msi.coordinates_y = c[1]
     db.add(msi)
     db.flush()
+
 
 def get_host_and_server_ip(server: str, from_dn: Optional[str] = None) -> Tuple[str, Optional[str]]:
     """
@@ -678,8 +687,9 @@ def get_host_and_server_ip(server: str, from_dn: Optional[str] = None) -> Tuple[
         host = from_dn
     return host, server_ip
 
+
 def add_ntp_versions_to_db_measurement(db: Session, server: str, settings: AdvancedSettings,
-                                m: FullMeasurementDN | FullMeasurementIP, from_dn: Optional[str] = None) -> None:
+                                       m: FullMeasurementDN | FullMeasurementIP, from_dn: Optional[str] = None) -> None:
     """
     This method adds the ntp versions analysis to the database and to the measurement.
     If this fails, then the ID for this measurement will be None/Null when the status of the overall
@@ -697,7 +707,7 @@ def add_ntp_versions_to_db_measurement(db: Session, server: str, settings: Advan
     # print(f"ntpv: host: {host}, ip: {server_ip}")
     try:
         ntpv_ans = analyze_supported_ntp_versions(server, settings)
-        #if there is an error with our tool (not the results from our tool! Important difference)
+        # if there is an error with our tool (not the results from our tool! Important difference)
         if ntpv_ans.get("error") is not None:
             return
         # !!! IMPORTANT !!!
@@ -732,7 +742,8 @@ def add_ntp_versions_to_db_measurement(db: Session, server: str, settings: Advan
         if ntpv1:
             ntp_vs.id_v4_1 = ntpv1.id
             ntp_vs.ntpv1_response_version = resp1_vs
-            put_fields_4_or_5(ntpv1, resp1_vs, ntpv_ans.get("ntpv1_m_result"))#, ntpv_ans.get("ntpv1_analysis") # redundant dat
+            put_fields_4_or_5(ntpv1, resp1_vs,
+                              ntpv_ans.get("ntpv1_m_result"))  # , ntpv_ans.get("ntpv1_analysis") # redundant dat
         if ntpv2:
             ntp_vs.id_v4_2 = ntpv2.id
             ntp_vs.ntpv2_response_version = resp2_vs
@@ -748,7 +759,8 @@ def add_ntp_versions_to_db_measurement(db: Session, server: str, settings: Advan
         if ntpv5:
             ntp_vs.id_v5 = ntpv5.id
             ntp_vs.ntpv5_response_version = resp5_vs
-            put_fields_4_or_5(ntpv5, resp5_vs, ntpv_ans.get("ntpv5_m_result"), ntpv_ans.get("ntpv5_analysis"), settings.ntpv5_draft)
+            put_fields_4_or_5(ntpv5, resp5_vs, ntpv_ans.get("ntpv5_m_result"), ntpv_ans.get("ntpv5_analysis"),
+                              settings.ntpv5_draft)
 
         db.flush()
         m.id_vs = ntp_vs.id_vs
@@ -757,7 +769,9 @@ def add_ntp_versions_to_db_measurement(db: Session, server: str, settings: Advan
     except Exception as e:
         print(f"error in adding ntp versions: {e}")
 
-def add_ntp_measurement(db: Session, result: Optional[dict], settings: AdvancedSettings, host: str, server_ip: Optional[str]) \
+
+def add_ntp_measurement(db: Session, result: Optional[dict], settings: AdvancedSettings, host: str,
+                        server_ip: Optional[str]) \
         -> Tuple[Optional[NTPv4Measurement | NTPv5Measurement], Optional[str]]:
     """
     This method adds the result (NTP measurement) into the database.
@@ -770,7 +784,7 @@ def add_ntp_measurement(db: Session, result: Optional[dict], settings: AdvancedS
     Returns:
         Tuple[Optional[NTPv4Measurement | NTPv5Measurement], Optional[str]]: A pair of the measurement and its version.
     """
-    #result = ntpv_ans.get(result_key)
+    # result = ntpv_ans.get(result_key)
     if result and not result.get("error") and result.get("version"):
         vs = "ntpv4"
         measurement_vs: NTPv5Measurement | NTPv4Measurement
@@ -785,6 +799,7 @@ def add_ntp_measurement(db: Session, result: Optional[dict], settings: AdvancedS
         return measurement_vs, vs
     # if we did not receive a valid measurement, then we do not save it
     return None, None
+
 
 def add_ripe_measurement_id_to_db_measurement(db: Session, server: str, settings: AdvancedSettings,
                                               m: FullMeasurementDN | FullMeasurementIP) -> None:
@@ -811,6 +826,7 @@ def add_ripe_measurement_id_to_db_measurement(db: Session, server: str, settings
         print("Failed to initiate RIPE measurement: ", e)
         m.ripe_error = "Failed to initiate RIPE measurement"
         db.commit()
+
 
 def fetch_historic_data_with_timestamps(server: str, start: datetime, end: datetime, session: Session) -> list[
     NtpMeasurement]:
@@ -872,7 +888,6 @@ def fetch_ripe_data(measurement_id: str) -> tuple[list[dict], str]:
     for m in measurements:
         measurements_formated.append(get_ripe_format(m))
     return measurements_formated, status
-
 
 
 def perform_ripe_measurement(ntp_server: str, client_ip: Optional[str], wanted_ip_type: int) -> str:

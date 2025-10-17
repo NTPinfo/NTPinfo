@@ -1,5 +1,6 @@
 from server.app.db_config import init_engine
 from server.app.models.Base import Base
+from server.app.dtos.full_ntp_measurement import *
 
 from server.app.models.Time import Time
 from server.app.models.Measurement import Measurement
