@@ -24,6 +24,8 @@ def parse_ntp_versions_response_to_dict(content: str) -> dict:
         return data
     except Exception as e:
         raise InputError(f"could not parse json {e}")
+
+
 # packet = struct.pack(
 #         "!B B H I I I Q Q Q Q",
 #         0,  # LI + Status
@@ -38,7 +40,7 @@ def parse_ntp_versions_response_to_dict(content: str) -> dict:
 #         current_ntp_time  # Transmit Timestamp
 #     )
 
-def directly_analyze_all_ntp_versions(server: str, binary_nts_tool: str, ntpv5_draft: str="") -> dict:
+def directly_analyze_all_ntp_versions(server: str, binary_nts_tool: str, ntpv5_draft: str = "") -> dict:
     """
     This method simply runs the ntp-nts-tool and analyse the output.
     If an error field is present in the response, then the analysis failed.
@@ -59,14 +61,14 @@ def directly_analyze_all_ntp_versions(server: str, binary_nts_tool: str, ntpv5_d
             capture_output=True, text=True,
             env=os.environ.copy()
         )
-        if result.returncode != 0: #we should never arrive here, but just to be sure
+        if result.returncode != 0:  # we should never arrive here, but just to be sure
             raise Exception(f"all ntp analysis failed")
     except Exception as e:
         m_data["error"] = "Error: " + str(e)
         return m_data
     try:
         m_data = parse_ntp_versions_response_to_dict(result.stdout.strip())
-        #in this mode, the tool provide more details than just the result. So we need to extract it manually
+        # in this mode, the tool provide more details than just the result. So we need to extract it manually
         ntp_versions_analysis["ntpv1_m_result"] = m_data.get("ntpv1", {}).get("result")
         ntp_versions_analysis["ntpv2_m_result"] = m_data.get("ntpv2", {}).get("result")
         ntp_versions_analysis["ntpv3_m_result"] = m_data.get("ntpv3", {}).get("result")
@@ -78,21 +80,23 @@ def directly_analyze_all_ntp_versions(server: str, binary_nts_tool: str, ntpv5_d
         # ntpv5_data: dict = m_data.get("ntpv5")
 
         (ntp_versions_analysis["ntpv1_supported_confidence"],
-        ntp_versions_analysis["ntpv1_analysis"]) = analyse_ntpv1_response(ntp_versions_analysis["ntpv1_m_result"])
+         ntp_versions_analysis["ntpv1_analysis"]) = analyse_ntpv1_response(ntp_versions_analysis["ntpv1_m_result"])
         (ntp_versions_analysis["ntpv2_supported_confidence"],
-        ntp_versions_analysis["ntpv2_analysis"]) = analyse_ntpv2_response(ntp_versions_analysis["ntpv2_m_result"])
+         ntp_versions_analysis["ntpv2_analysis"]) = analyse_ntpv2_response(ntp_versions_analysis["ntpv2_m_result"])
         (ntp_versions_analysis["ntpv3_supported_confidence"],
-        ntp_versions_analysis["ntpv3_analysis"]) = analyse_ntpv3_response(ntp_versions_analysis["ntpv3_m_result"])
+         ntp_versions_analysis["ntpv3_analysis"]) = analyse_ntpv3_response(ntp_versions_analysis["ntpv3_m_result"])
         (ntp_versions_analysis["ntpv4_supported_confidence"],
-        ntp_versions_analysis["ntpv4_analysis"]) = analyse_ntpv4_response(ntp_versions_analysis["ntpv4_m_result"])
+         ntp_versions_analysis["ntpv4_analysis"]) = analyse_ntpv4_response(ntp_versions_analysis["ntpv4_m_result"])
         (ntp_versions_analysis["ntpv5_supported_confidence"],
-        ntp_versions_analysis["ntpv5_analysis"]) = analyse_ntpv5_response(ntp_versions_analysis["ntpv5_m_result"])
+         ntp_versions_analysis["ntpv5_analysis"]) = analyse_ntpv5_response(ntp_versions_analysis["ntpv5_m_result"])
         return ntp_versions_analysis
     except Exception as e:
         m_data["error"] = "Error: " + str(e)
         return m_data
 
-def run_tool_on_ntp_version(server: str, binary_nts_tool: str, ntp_version: str, ntpv5_draft: str="") -> Tuple[str, str, dict]:
+
+def run_tool_on_ntp_version(server: str, binary_nts_tool: str, ntp_version: str, ntpv5_draft: str = "") -> Tuple[
+    str, str, dict]:
     """
     This method runs the tool on the specified NTP version and then analyses the response.
     If conf is 0, then the result will not contain anything useful (a dict with "error": <error>)
@@ -136,13 +140,14 @@ def run_tool_on_ntp_version(server: str, binary_nts_tool: str, ntp_version: str,
             analysis = result.stdout.strip()
             m_data["error"] = analysis
 
-        else: # success
+        else:  # success
             m_data = parse_ntp_versions_response_to_dict(result.stdout.strip())
             conf, analysis = analyse_ntp_version_response(m_data, ntp_version)
     except Exception as e:
         conf = "0"
         analysis = "Received something, but could not parse the response."
     return conf, analysis, m_data
+
 
 def analyse_ntp_version_response(m_data: dict, ntp_version: str) -> Tuple[str, str]:
     """
@@ -165,8 +170,9 @@ def analyse_ntp_version_response(m_data: dict, ntp_version: str) -> Tuple[str, s
         return analyse_ntpv3_response(m_data)
     elif ntp_version == "ntpv4":
         return analyse_ntpv4_response(m_data)
-    #elif ntp_version == "ntpv5":
+    # elif ntp_version == "ntpv5":
     return analyse_ntpv5_response(m_data)
+
 
 def analyse_ntpv1_response(m_data: dict) -> Tuple[str, str]:
     """
@@ -184,12 +190,13 @@ def analyse_ntpv1_response(m_data: dict) -> Tuple[str, str]:
         analysis = str(m_data.get("error"))
     elif m_data.get("version") is not None:
         conf = "25"
-        analysis = f"The received result is not NTPv1. The version is: {m_data.get("version")}"
+        analysis = f"The received result is not NTPv1. The version is: {m_data.get('version')}"
     else:
         # ntpv1 is very limited, so if we arrived here, I think it is supported
         conf = "100"
         analysis = f"It supports NTPv1."
     return conf, analysis
+
 
 def analyse_ntpv2_response(m_data: dict) -> Tuple[str, str]:
     """
@@ -207,7 +214,7 @@ def analyse_ntpv2_response(m_data: dict) -> Tuple[str, str]:
         analysis = str(m_data.get("error"))
     elif str(m_data.get("version")) != "2":  # does not have the same version
         conf = "50"
-        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get("version")}. Wanted ntpv2."
+        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get('version')}. Wanted ntpv2."
         try:
             rf: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
             m_data["ref_id"] = rf
@@ -222,10 +229,11 @@ def analyse_ntpv2_response(m_data: dict) -> Tuple[str, str]:
         r: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
         m_data["ref_id"] = r
     except Exception as e:
-        if conf == "100": # if we thought it was a good server
+        if conf == "100":  # if we thought it was a good server
             conf = "75"
         analysis = analysis + f"\nCould not translate ref id"
     return conf, analysis
+
 
 def analyse_ntpv3_response(m_data: dict) -> Tuple[str, str]:
     """
@@ -243,7 +251,7 @@ def analyse_ntpv3_response(m_data: dict) -> Tuple[str, str]:
         analysis = str(m_data.get("error"))
     elif str(m_data.get("version")) != "3":  # does not have the same version
         conf = "50"
-        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get("version")}. Wanted ntpv3."
+        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get('version')}. Wanted ntpv3."
         try:
             rf: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
             m_data["ref_id"] = rf
@@ -258,10 +266,11 @@ def analyse_ntpv3_response(m_data: dict) -> Tuple[str, str]:
         r: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
         m_data["ref_id"] = r
     except Exception as e:
-        if conf == "100": # if we thought it was a good server
+        if conf == "100":  # if we thought it was a good server
             conf = "75"
         analysis = analysis + f"\nCould not translate ref id"
     return conf, analysis
+
 
 def analyse_ntpv4_response(m_data: dict) -> Tuple[str, str]:
     """
@@ -279,7 +288,7 @@ def analyse_ntpv4_response(m_data: dict) -> Tuple[str, str]:
         analysis = str(m_data.get("error"))
     elif str(m_data.get("version")) != "4":  # does not have the same version
         conf = "50"
-        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get("version")}. Wanted ntpv4."
+        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get('version')}. Wanted ntpv4."
         try:
             rf: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
             m_data["ref_id"] = rf
@@ -294,10 +303,11 @@ def analyse_ntpv4_response(m_data: dict) -> Tuple[str, str]:
         r: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
         m_data["ref_id"] = r
     except Exception as e:
-        if conf == "100": # if we thought it was a good server
+        if conf == "100":  # if we thought it was a good server
             conf = "75"
         analysis = analysis + f"\nCould not translate ref id"
     return conf, analysis
+
 
 def analyse_ntpv5_response(m_data: dict) -> Tuple[str, str]:
     """
@@ -315,7 +325,7 @@ def analyse_ntpv5_response(m_data: dict) -> Tuple[str, str]:
         analysis = str(m_data.get("error"))
     elif str(m_data.get("version")) != "5":  # does not have the same version
         conf = "50"
-        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get("version")}. Wanted ntpv5."
+        analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get('version')}. Wanted ntpv5."
         try:
             rf: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
             m_data["ref_id"] = rf
@@ -341,22 +351,21 @@ def analyse_ntpv5_response(m_data: dict) -> Tuple[str, str]:
             analysis = f"It may support NTPv5, but response format is invalid: {e}"
     return conf, analysis
 
-
 # def prob_to_be_ntpv5(data: dict) -> float:
 #     if data.get("era") != 0:
 #         return 0
 #     if str(data.get("version")) == "4":
 #         return 0
-    #     ntpv4              ntpv5 draft 05
-    # root delay     vs   timescale|era|flags
-    # root disp      vs   root delay
-    # ref id         vs   root disp
-    # reference tmp  vs   server cookie
-    # origin tmp t1  vs   client cookie
-    # recv tmp t2    vs   recv tmp t2   #same
-    # sent tmp t3    vs   sent tmp t3   #same
-    # rtt
-    # offset
+#     ntpv4              ntpv5 draft 05
+# root delay     vs   timescale|era|flags
+# root disp      vs   root delay
+# ref id         vs   root disp
+# reference tmp  vs   server cookie
+# origin tmp t1  vs   client cookie
+# recv tmp t2    vs   recv tmp t2   #same
+# sent tmp t3    vs   sent tmp t3   #same
+# rtt
+# offset
 
 
 # simple model (data from ntpv5 compared to the data format of ntpv4):
