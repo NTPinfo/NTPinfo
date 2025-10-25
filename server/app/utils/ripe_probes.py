@@ -334,6 +334,7 @@ def get_available_probes_asn_and_prefix(client_ip: str, ip_asn: str, ip_prefix: 
         prefix_type: ip_prefix,
         "status": 1,  # Connected probes
         "tags": f"system-{ip_type.lower()}-works",
+        "tags_not": "system-ipv4-rfc1918" if ip_type.lower() == "ipv4" else "system-ipv6-ula",
         "is_public": True
     }
     probes = ProbeRequest(
@@ -389,6 +390,7 @@ def get_available_probes_asn_and_country(client_ip: str, ip_asn: str, ip_country
         "country_code": ip_country_code,
         "status": 1,  # Connected probes
         "tags": f"system-{ip_type.lower()}-works",
+        "tags_not": "system-ipv4-rfc1918" if ip_type.lower() == "ipv4" else "system-ipv6-ula",
         "is_public": True
     }
     probes = ProbeRequest(
@@ -443,6 +445,7 @@ def get_available_probes_asn(client_ip: str, ip_asn: str, ip_type: str) -> list[
         "asn": ip_asn_number,
         "status": 1,  # Connected probes
         "tags": f"system-{ip_type.lower()}-works",
+        "tags_not": "system-ipv4-rfc1918" if ip_type.lower() == "ipv4" else "system-ipv6-ula",
         "is_public": True
     }
     probes = ProbeRequest(
@@ -493,6 +496,7 @@ def get_available_probes_prefix(client_ip: str, ip_prefix: str, ip_type: str) ->
         prefix_type: ip_prefix,
         "status": 1,  # Connected probes
         "tags": f"system-{ip_type.lower()}-works",
+        "tags_not": "system-ipv4-rfc1918" if ip_type.lower() == "ipv4" else "system-ipv6-ula",
         "is_public": True
     }
     probes = ProbeRequest(
@@ -543,6 +547,7 @@ def get_available_probes_country(client_ip: str, country_code: str, ip_type: str
         "country_code": country_code,
         "status": 1,  # Connected probes
         "tags": f"system-{ip_type.lower()}-works",
+        "tags_not": "system-ipv4-rfc1918" if ip_type.lower() == "ipv4" else "system-ipv6-ula",
         "is_public": True
     }
     probes = ProbeRequest(

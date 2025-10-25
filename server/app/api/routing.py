@@ -298,6 +298,9 @@ async def trigger_full_measurement(payload: MeasurementRequest, request: Request
         # firstly validate that the domain name exists
         try:
             dn_ips = domain_name_to_ip_list(server, settings.custom_client_ip, settings.wanted_ip_type)
+            # remove this "if" in the future, when we would show all results.
+            if len(dn_ips) > 2:
+                dn_ips = dn_ips[:2]
         except Exception as e:
             raise HTTPException(status_code=422, detail="Domain name is invalid or cannot be resolved.")
         # now we are sure the domain name has at least an IP address
