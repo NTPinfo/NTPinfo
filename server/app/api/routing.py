@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from fastapi.responses import JSONResponse
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, Mapped
 from sqlalchemy import func, and_
 from starlette.responses import HTMLResponse
 
@@ -826,7 +826,16 @@ async def get_this_server_details(request: Request, session: Session = Depends(g
 
         # success is determined by supported_conf >= 50 (received a valid NTP response, even if it has a wrong version)
         # 0% = no response, 25% = invalid format, 50%+ = valid response (even if it has a wrong version)
-        def calculate_success_rate(version_field):
+        def calculate_success_rate(version_field:  Mapped[int | None]):
+            """
+            This method calculates the success rate of an NTP measurement on a specific version.
+            Success is determined by supported_conf >= 50
+
+            Args:
+                version_field (Mapped[int | None]): The version of the NTP measurement to fetch.
+            Returns:
+                float: The success rate (in [0,1]) of an NTP measurement on a specific version.
+            """
             total = session.query(func.count(NTPVersions.id_vs)).filter(
                 version_field.isnot(None)
             ).scalar() or 0

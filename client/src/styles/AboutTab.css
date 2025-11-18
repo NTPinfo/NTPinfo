@@ -9,12 +9,13 @@
 .about-section {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 4em 2em;
+    padding: 2em 2em 4em 2em;
     text-align: center;
 }
 
 .about-section h1 {
     font-size: 3.5em;
+    margin-top: 0;
     margin-bottom: 0.5em;
     background: var(--text-blue);
     -webkit-background-clip: text;
@@ -25,8 +26,53 @@
 .about-subtitle {
     font-size: 1.5em;
     color: var(--text-dark);
-    margin-bottom: 3em;
+    margin-bottom: 2em;
     opacity: 0.9;
+}
+
+.about-project-info {
+    max-width: 900px;
+    margin: 0 auto 3em auto;
+    text-align: left;
+    background-color: var(--bg-clr-secondary);
+    padding: 2em;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.about-project-info h2 {
+    font-size: 2em;
+    margin-bottom: 1em;
+    color: var(--text-blue);
+    text-align: center;
+}
+
+.about-project-info p {
+    color: var(--text-dark);
+    line-height: 1.8;
+    margin-bottom: 1.5em;
+    font-size: 1.05em;
+}
+
+.about-project-info p:last-child {
+    margin-bottom: 0;
+}
+
+.about-project-info strong {
+    color: var(--text-blue);
+    font-weight: 600;
+}
+
+.about-project-info a {
+    color: var(--sidn-blauw);
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.about-project-info a:hover {
+    color: var(--clr-btn-hover);
 }
 
 .about-features {
@@ -68,6 +114,48 @@
     line-height: 1.6;
 }
 
+.statistics-section {
+    margin-top: 4em;
+    text-align: center;
+}
+
+.statistics-section h2 {
+    font-size: 2.5em;
+    margin-bottom: 0.5em;
+    color: var(--text-blue);
+}
+
+.statistics-description {
+    font-size: 1.1em;
+    color: var(--text-dark);
+    margin-bottom: 2em;
+    opacity: 0.9;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.statistics-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+}
+
+.statistics-error {
+    background-color: var(--bg-clr-secondary);
+    padding: 2em;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    color: var(--text-dark);
+}
+
+.statistics-error p {
+    font-size: 1.1em;
+    color: var(--clr-red-2);
+}
+
 @media (max-width: 768px) {
     .about-section h1 {
         font-size: 2.5em;
@@ -79,5 +167,25 @@
 
     .about-features {
         grid-template-columns: 1fr;
+    }
+
+    .about-project-info {
+        padding: 1.5em;
+    }
+
+    .about-project-info h2 {
+        font-size: 1.5em;
+    }
+
+    .about-project-info p {
+        font-size: 1em;
+    }
+
+    .statistics-section h2 {
+        font-size: 2em;
+    }
+
+    .statistics-description {
+        font-size: 1em;
     }
 }
