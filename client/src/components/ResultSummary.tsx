@@ -142,18 +142,18 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                     <div className="result-and-title" id="ripe-result">
                     <div className="res-label">Results from <a href="https://atlas.ripe.net" target="_blank">RIPE Atlas probes</a> (close to your location):
                         <div className="tooltip-container">
-                        {((ripeStatus === "timeout" || ripeStatus === "error"|| ripeData?.measurementData.RTT === -1000.000) && <span className="tooltip-icon fail">!</span>) ||
+                        {((ripeStatus === "timeout" || (ripeStatus === "error" && !ripeData) || ripeData?.measurementData.RTT === -1000.000) && <span className="tooltip-icon fail">!</span>) ||
                         (<span className="tooltip-icon success">?</span>)}
                             <div className="tooltip-text">
                                 {(ripeStatus === "timeout" && <span>RIPE Measurement timed out. <br /> </span>) ||
-                                (ripeStatus === "error" && <span>RIPE Measurement failed. <br /></span>) || 
+                                (ripeStatus === "error" && !ripeData && <span>RIPE Measurement failed. <br /></span>) || 
                                 (ripeData?.measurementData.RTT === -1000.000 && <span> Probe failed to respond. <br /></span>)}
                                 RIPE Atlas tries to choose a probe near the user to perform more accurate measurements. This can take longer.
                             </div>
                         </div>
                     </div>
 
-                        { ((ripeStatus === "complete" || (ripeStatus === "timeout")) &&
+                        { ((ripeStatus === "complete" || ripeStatus === "timeout") &&
                     (
                     <div className="result-box" id="ripe-details">
                         <div className="metric"><span title='The difference between the time reported by the like an NTP server and your local clock'>Offset</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.offset !== undefined ? `${(ripeData.measurementData.offset).toFixed(3)} ms` : 'N/A'} {!isRipeMeasurementFailed && offsetIconRIPE && <img src={offsetIconRIPE} alt="offset performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
@@ -190,7 +190,37 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                             <LoadingSpinner size="medium"/>
                         </div>
                     )) ||
-                    (ripeStatus === "error" && (<p className="ripe-err">RIPE measurement failed</p>))}
+                    (ripeStatus === "error" && !ripeData && (<p className="ripe-err">RIPE measurement failed</p>)) ||
+                    (ripeStatus === "error" && ripeData && (
+                    <div className="result-box" id="ripe-details">
+                        <div className="metric"><span title='The difference between the time reported by the like an NTP server and your local clock'>Offset</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.offset !== undefined ? `${(ripeData.measurementData.offset).toFixed(3)} ms` : 'N/A'} {!isRipeMeasurementFailed && offsetIconRIPE && <img src={offsetIconRIPE} alt="offset performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
+                        <div className="metric"><span title='The total time taken for a request to travel from the client to the server and back.'>Round-trip time</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.RTT !== undefined ? `${(ripeData.measurementData.RTT).toFixed(3)} ms` : 'N/A'} {!isRipeMeasurementFailed && rttIconRIPE && <img src={rttIconRIPE} alt="rtt performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
+                        <div className="metric"><span title='The variability in delay times between successive NTP messages, calculated as std. dev. of offsets'>Jitter</span><span>{'N/A'}</span></div>
+                        <div className="metric"><span title='The smallest time unit that the NTP server can measure or represent'>Precision</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.precision !== undefined ? ripeData.measurementData.precision : 'N/A'} {!isRipeMeasurementFailed && precisionIconRIPE && <img src={precisionIconRIPE} alt="precision performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
+                        <div className="metric"><span title='A hierarchical level number indicating the distance from the reference clock'>Stratum</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.stratum !== undefined ? ripeData.measurementData.stratum : 'N/A'}</span></div>
+                        <div className="metric"><span title='The IP address of the NTP server'>IP address</span><span>{ripeData?.measurementData.ip}</span></div>
+                        <div className="metric"><span>Vantage point IP</span><span>{ripeData?.measurementData.vantage_point_ip}</span></div>
+                        <div className="metric"><span>Country</span><span>{ripeData?.measurementData.country_code ? ripeData.measurementData.country_code : 'N/A'}</span></div>
+                        <div className="metric"><span>Reference ID</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.ref_id ? ripeData.measurementData.ref_id : 'N/A'}</span></div>
+                        <div className="metric"><span title='The total round-trip delay to the primary reference source'>Root delay</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.root_delay !== undefined ? ripeData.measurementData.root_delay : 'N/A'}</span></div>
+                        <div className="metric"><span title='The poll interval used by the probe during the measurement'>Poll interval</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.poll !== undefined ? `${ripeData.measurementData.poll} s` : 'N/A'}</span></div>
+                        <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.root_dispersion !== undefined ? `${(ripeData.measurementData.root_dispersion).toFixed(10)} s` : 'N/A'} {!isRipeMeasurementFailed && rootDispIconRIPE && <img src={rootDispIconRIPE} alt="root dispersion performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
+                        <div className="metric"><span>ASN</span><span>{ripeData?.measurementData.asn_ntp_server !== undefined ? ripeData.measurementData.asn_ntp_server : 'N/A' }</span></div>
+                        <div className="metric"><span>Measurement ID</span><span>
+                            {ripeData?.measurement_id ? (
+                                <a
+                                    href={`https://atlas.ripe.net/measurements/${ripeData.measurement_id}/`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="measurement-link"
+                                    style={{textDecoration:'underline'}}
+                                >
+                                    {ripeData.measurement_id}
+                                    <img src={linkIcon} alt="external link" style={{width:'14px',verticalAlign:'middle',marginLeft:'4px',transform:'translateY(-1px)'}} />
+                                </a>
+                            ) : 'N/A'}
+                        </span></div>
+                    </div>))}
                     </div>
 
                 </div>

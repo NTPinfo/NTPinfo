@@ -125,6 +125,7 @@ export interface HomeCacheState {
   isLoading: boolean                    // Track when NTP measurement is loading
   measurementSessionActive: boolean     // Track when any measurement session is active
   error: any
+  measurementSettings: MeasurementRequest | null  // Advanced measurement settings
 
 }
 

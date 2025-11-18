@@ -28,6 +28,7 @@ import { useTriggerMeasurement } from "../hooks/useTriggerFullMeasurement";
 import { usePollIncrementalMeasurement } from "../hooks/usePollIncrementalMeasurement";
 import { useFetchServerDetails } from '../hooks/useFetchServerDetails.ts'
 import MeasurementStatusIndicator from '../components/MeasurementStatusIndicator.tsx'
+import MeasurementSettings from '../components/MeasurementSettings.tsx'
 interface HomeTabProps {
   cache: HomeCacheState;
   setCache: React.Dispatch<React.SetStateAction<HomeCacheState>>;
@@ -62,7 +63,8 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
     allNtpMeasurements,
     ripeMeasurementStatus,
     ipv6Selected,
-    measurementSessionActive
+    measurementSessionActive,
+    measurementSettings
   } = cache;
 
   // still local UI state
@@ -191,17 +193,39 @@ const ripeTriggerErr = null;
     });
 
     /**
-     * The payload for the measurement call, containing the server and the choice of using IPv6 or not
+     * The payload for the measurement call, containing the server and settings
      */
-    const payload: MeasurementRequest = {
+    const defaultSettings: MeasurementRequest = {
       server: query.trim(),
       ipv6_measurement: useIPv6,
       wanted_ip_type: useIPv6 ? 6 : 4,
-      ntp_versions_to_analyze: ["ntpv3", "ntpv2", "ntpv4", "ntpv5"], 
+      measurement_type: 'ntpv4',
+      ntpv5_draft: "draft-ietf-ntp-ntpv5-06",
       analyse_all_ntp_versions: false,
-      ntpv5_draft: "draft-ietf-ntp-ntpv5"
-  
-    }
+      ntp_versions_analysis_on_each_ip: false,
+      nts_analysis_on_each_ip: false
+    };
+    
+    // Merge with user settings if they exist
+    const payload: MeasurementRequest = measurementSettings 
+      ? { 
+          ...measurementSettings, 
+          server: query.trim(), 
+          ipv6_measurement: useIPv6, 
+          wanted_ip_type: useIPv6 ? 6 : 4,
+          // If analyse_all_ntp_versions is true, don't send ntp_versions_to_analyze (backend will override it)
+          // Otherwise, only include ntp_versions_to_analyze if it's actually set (not null/undefined/empty)
+          // Always include analyse_all_ntp_versions (default to false)
+          ...(measurementSettings.analyse_all_ntp_versions === true
+            ? { analyse_all_ntp_versions: true, ntp_versions_to_analyze: undefined }
+            : (measurementSettings.ntp_versions_to_analyze && measurementSettings.ntp_versions_to_analyze.length > 0)
+              ? { ntp_versions_to_analyze: measurementSettings.ntp_versions_to_analyze, analyse_all_ntp_versions: false }
+              : { ntp_versions_to_analyze: undefined, analyse_all_ntp_versions: false }),
+          // Hidden options - always set to false
+          ntp_versions_analysis_on_each_ip: false,
+          nts_analysis_on_each_ip: false
+        }
+      : defaultSettings;
 
     /**
      * Get the response from the measurement data endpoint
@@ -315,6 +339,18 @@ const ripeTriggerErr = null;
           onIPv6Toggle={handleIPv6Toggle}
           ripeMeasurementStatus={ripeMeasurementStatus}
           measurementSessionActive={measurementSessionActive}
+        />
+        <MeasurementSettings
+          settings={measurementSettings || {
+            server: '',
+            ipv6_measurement: ipv6Selected,
+            wanted_ip_type: ipv6Selected ? 6 : 4,
+            measurement_type: 'ntpv4',
+            ntpv5_draft: "draft-ietf-ntp-ntpv5-06",
+            analyse_all_ntp_versions: false
+          }}
+          onSettingsChange={(newSettings) => updateCache({ measurementSettings: newSettings })}
+          disabled={measurementSessionActive || triggerLoading}
         />
       </div>
       {/* Status indicator showing current measurement step */}

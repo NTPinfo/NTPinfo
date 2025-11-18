@@ -1,4 +1,5 @@
 import pprint
+import time
 
 import ntplib
 from ipaddress import ip_address
@@ -203,6 +204,7 @@ def analyze_supported_ntp_versions(server: str, settings: AdvancedSettings) -> d
              # settings.ntpv5_draft will be considered if and only if the ntp_version is "ntpv5"
              ntp_versions_analysis[ntp_version + "_m_result"]) = run_tool_on_ntp_version(server, str(binary_nts_tool),
                                                                                                    ntp_version, settings.ntpv5_draft)
+            time.sleep(0.7) # to not get RATE from the server
     return ntp_versions_analysis
 
 

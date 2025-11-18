@@ -32,7 +32,8 @@ function App() {
     ipv6Selected: false,
     isLoading: false,
     measurementSessionActive: false,
-    error: null
+    error: null,
+    measurementSettings: null
   };
   const [homeCache, setHomeCache] = useState<HomeCacheState>(initialCache);
 
