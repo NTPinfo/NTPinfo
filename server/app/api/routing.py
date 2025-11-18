@@ -6,6 +6,7 @@ from typing import Optional
 from fastapi.responses import JSONResponse
 
 from sqlalchemy.orm import Session
+from sqlalchemy import func, and_
 from starlette.responses import HTMLResponse
 
 from server.app.db.db_interaction import get_ntp_v4_historical_measurements
@@ -14,7 +15,7 @@ from server.app.utils.convert_measurement_to_format import full_measurement_dn_t
     partial_measurement_dn_to_dict, ntp_versions_to_dict, partial_measurement_ip_to_dict
 from server.app.utils.domain_name_to_ip import domain_name_to_ip_list
 from server.app.utils.validate import sanitize_string
-from server.app.dtos.full_ntp_measurement import FullMeasurementIP, FullMeasurementDN, NTPVersions
+from server.app.dtos.full_ntp_measurement import FullMeasurementIP, FullMeasurementDN, NTPVersions, NTSMeasurement
 from server.app.utils.validate import is_ip_address
 from server.app.dtos.AdvancedSettings import AdvancedSettings
 from server.app.utils.nts_check import perform_nts_measurement_domain_name, perform_nts_measurement_ip
@@ -769,3 +770,115 @@ async def get_ripe_measurement_result(measurement_id: str, request: Request) -> 
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=f"Sever error: {str(e)}.")
+
+
+# statistics
+@router.get(
+    "/statistics/measurements_count",
+    summary="get the number of the domain name measurements in the database",
+    description="""We count the total number, including the failed ones.
+    For success rates, we consider measurements with a valid NTP format (even though it has invalid NTP version)
+    So, an NTPv5 measurement with version 4, is still considered successful (see confidence).
+""",
+    responses={
+        200: {"description": "The json data regarding some statistics of the server"},
+    }
+)
+@limiter.limit(get_rate_limit_per_client_ip())
+async def get_this_server_details(request: Request, session: Session = Depends(get_db)) -> JSONResponse:
+    """
+    Get statistics about measurements in the database.
+    Returns counts for domain name measurements, IP measurements, NTS measurements,
+    NTP versions analysis counts and success rates, and RIPE measurements.
+    Args:
+        request (Request): The Request object.
+        session (Session): The currently active database session.
+    Returns:
+        JSONResponse: A json response containing some statistics regarding the number of measurements.
+    Raises:
+        HTTPException: 500 - If something fails.
+    """
+    try:
+        dn_measurements_count = session.query(func.count(FullMeasurementDN.id_m_dn)).scalar() or 0
+        ip_measurements_count = session.query(func.count(FullMeasurementIP.id_m_ip)).scalar() or 0
+        nts_measurements_count = session.query(func.count(NTSMeasurement.id_nts)).scalar() or 0
+
+        # we get the number of analyzed measurements on each specific version. (only results in NTP versions count)
+        ntpv1_count = session.query(func.count(NTPVersions.id_vs)).filter(
+            NTPVersions.ntpv1_supported_conf.isnot(None)
+        ).scalar() or 0
+        
+        ntpv2_count = session.query(func.count(NTPVersions.id_vs)).filter(
+            NTPVersions.ntpv2_supported_conf.isnot(None)
+        ).scalar() or 0
+        
+        ntpv3_count = session.query(func.count(NTPVersions.id_vs)).filter(
+            NTPVersions.ntpv3_supported_conf.isnot(None)
+        ).scalar() or 0
+        
+        ntpv4_count = session.query(func.count(NTPVersions.id_vs)).filter(
+            NTPVersions.ntpv4_supported_conf.isnot(None)
+        ).scalar() or 0
+        
+        ntpv5_count = session.query(func.count(NTPVersions.id_vs)).filter(
+            NTPVersions.ntpv5_supported_conf.isnot(None)
+        ).scalar() or 0
+
+        # success is determined by supported_conf >= 50 (received a valid NTP response, even if it has a wrong version)
+        # 0% = no response, 25% = invalid format, 50%+ = valid response (even if it has a wrong version)
+        def calculate_success_rate(version_field):
+            total = session.query(func.count(NTPVersions.id_vs)).filter(
+                version_field.isnot(None)
+            ).scalar() or 0
+            if total == 0:
+                return 0.0
+            # supported_conf >= 50 means received a valid NTP response
+            successful = session.query(func.count(NTPVersions.id_vs)).filter(
+                and_(version_field.isnot(None), version_field >= 50)
+            ).scalar() or 0
+            rate = successful / total if total > 0 else 0.0
+            return round(rate, 3)
+        
+        success_rate_ntpv1 = calculate_success_rate(NTPVersions.ntpv1_supported_conf)
+        success_rate_ntpv2 = calculate_success_rate(NTPVersions.ntpv2_supported_conf)
+        success_rate_ntpv3 = calculate_success_rate(NTPVersions.ntpv3_supported_conf)
+        success_rate_ntpv4 = calculate_success_rate(NTPVersions.ntpv4_supported_conf)
+        # this one may be >0, but it probably has fake NTPv5 responses. (with NTPv4 as the version)
+        success_rate_ntpv5 = calculate_success_rate(NTPVersions.ntpv5_supported_conf)
+        
+        # count RIPE measurements (distinct id_ripe from both DN and IP measurements)
+        ripe_ids_dn = [row[0] for row in session.query(FullMeasurementDN.id_ripe).filter(
+            FullMeasurementDN.id_ripe.isnot(None)
+        ).distinct().all()]
+        
+        ripe_ids_ip = [row[0] for row in session.query(FullMeasurementIP.id_ripe).filter(
+            FullMeasurementIP.id_ripe.isnot(None)
+        ).distinct().all()]
+        
+        # count unique RIPE measurement IDs
+        all_ripe_ids = set(ripe_ids_dn + ripe_ids_ip)
+        ripe_measurements_count = len(all_ripe_ids)
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "dn_measurements_count": dn_measurements_count,
+                "ip_measurements_count": ip_measurements_count,
+                "nts_measurements_count": nts_measurements_count,
+                "ntp_versions_analyzed_count": {
+                    "analyzed_ntpv1": ntpv1_count,
+                    "analyzed_ntpv2": ntpv2_count,
+                    "analyzed_ntpv3": ntpv3_count,
+                    "analyzed_ntpv4": ntpv4_count,
+                    "analyzed_ntpv5": ntpv5_count,
+                    "success_rate_ntpv1": success_rate_ntpv1,
+                    "success_rate_ntpv2": success_rate_ntpv2,
+                    "success_rate_ntpv3": success_rate_ntpv3,
+                    "success_rate_ntpv4": success_rate_ntpv4,
+                    "success_rate_ntpv5": success_rate_ntpv5,
+                },
+                "ripe_measurements_count": ripe_measurements_count,
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
