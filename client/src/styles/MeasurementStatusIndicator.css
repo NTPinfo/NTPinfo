@@ -1,0 +1,53 @@
+.measurement-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  background-color: #f0f0f0;
+  border-radius: 6px;
+  border-left: 4px solid #1961ac;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.measurement-status-indicator.complete {
+  background-color: #e8f5e9;
+  border-left-color: #4caf50;
+  color: #2e7d32;
+}
+
+.measurement-status-indicator.failed {
+  background-color: #ffebee;
+  border-left-color: #f44336;
+  color: #c62828;
+}
+
+.status-icon {
+  font-size: 18px;
+  font-weight: bold;
+  animation: spin 2s linear infinite;
+}
+
+.measurement-status-indicator.complete .status-icon {
+  animation: none;
+}
+
+.measurement-status-indicator.failed .status-icon {
+  animation: none;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.status-message {
+  font-weight: 500;
+}
+

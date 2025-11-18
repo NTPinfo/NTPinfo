@@ -25,8 +25,9 @@ import { NtpVersionAnalysis } from '../components/NTPVersions.tsx'
 import sidnLogo from '../assets/sidnlabs-log.svg';
 
 import { useTriggerMeasurement } from "../hooks/useTriggerFullMeasurement";
-import { usePollFullMeasurement } from "../hooks/usePollFullMeasurement";
+import { usePollIncrementalMeasurement } from "../hooks/usePollIncrementalMeasurement";
 import { useFetchServerDetails } from '../hooks/useFetchServerDetails.ts'
+import MeasurementStatusIndicator from '../components/MeasurementStatusIndicator.tsx'
 interface HomeTabProps {
   cache: HomeCacheState;
   setCache: React.Dispatch<React.SetStateAction<HomeCacheState>>;
@@ -84,9 +85,10 @@ const {fetchData: fetchHistoricalData} = useFetchHistoricalIPData()
   
 const {fetchServerDetails} = useFetchServerDetails()
 const { triggerMeasurement, loading: triggerLoading, measurementId: fullMeasurementId, httpStatus, error, errorMessage} = useTriggerMeasurement();
-const { ntpData: fullNTP, ntsData, ripeData, versionData: fullVersionData, /* status: fullStatus, */ 
-      ripeStatus: fetchedRIPEStatus, ripeError: ripeMeasurementError, ripeId: fullRipeId, ntpVerLoading
-} = usePollFullMeasurement(fullMeasurementId);
+const { ntpData: fullNTP, ntsData, ripeData, versionData: fullVersionData, 
+      ripeStatus: fetchedRIPEStatus, ripeError: ripeMeasurementError, ripeId: fullRipeId, 
+      ntpVerLoading, status: measurementStatus
+} = usePollIncrementalMeasurement(fullMeasurementId, 3000);
 
 const apiDataLoading = triggerLoading;
 const ripeTriggerErr = null;
@@ -115,17 +117,6 @@ const ripeTriggerErr = null;
       ripeMeasurementStatus: fetchedRIPEStatus,
     });
   }, [ripeData, fetchedRIPEStatus, updateCache]);
-
-  // When RIPE data arrives, set vantage point info for the map
-  useEffect(() => {
-    if (ripeData && ripeData.length > 0) {
-      const vpIp = ripeData[0]?.measurementData?.vantage_point_ip ?? null;
-      const vpLoc = ripeData[0]?.probe_location ?? null;
-      if (vpIp && vpLoc) {
-        updateCache({ vantagePointInfo: [vpLoc, vpIp] });
-      }
-    }
-  }, [ripeData, updateCache]);
 
   // When full NTP data arrives, select a display row and populate cache
   useEffect(() => {
@@ -319,13 +310,20 @@ const ripeTriggerErr = null;
       <div className="input-wrapper">
         <InputSection
           onClick={handleInput}
-          loading={triggerLoading || (!fullNTP)}
+          loading={triggerLoading || (!fullNTP && measurementSessionActive)}
           ipv6Selected={ipv6Selected}
           onIPv6Toggle={handleIPv6Toggle}
           ripeMeasurementStatus={ripeMeasurementStatus}
           measurementSessionActive={measurementSessionActive}
         />
       </div>
+      {/* Status indicator showing current measurement step */}
+      {(measurementSessionActive || measurementStatus) && (
+        <MeasurementStatusIndicator 
+          status={measurementStatus} 
+          isLoading={measurementSessionActive && measurementStatus !== "finished" && measurementStatus !== "failed"}
+        />
+      )}
       {/* <h3 id="disclaimer">DISCLAIMER: Your IP may be used to get a RIPE probe close to you for the most accurate data. Your IP will not be stored.</h3> */}
         {/* <div className="result-text">
           {((triggerLoading || measurementSessionActive) && measured && (<p>Results</p>)) ||
@@ -335,9 +333,9 @@ const ripeTriggerErr = null;
                     </div>
                         )}
         </div> */}
-        {/* The main page shown after the main measurement is done */}
-      {((ntpData || ripeData) && (<div className="results-and-graph">
-        <ResultSummary data={ntpData}
+        {/* The main page shown as results become available */}
+      {((fullNTP || ripeData) && (<div className="results-and-graph">
+        <ResultSummary data={fullNTP ? selectResult(fullNTP) : null}
                        ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null}
                        ripeErr={ripeTriggerErr ?? ripeMeasurementError}
                        err={error}
@@ -361,11 +359,11 @@ const ripeTriggerErr = null;
           </div>
         </div>)}
       </div>)) || 
-      /* Show loading spinner for main-details when measurement is in progress */
-      (triggerLoading || measurementSessionActive) && (
+      /* Show loading spinner for main-details when measurement is in progress and no results yet */
+      ((triggerLoading || measurementSessionActive) && !fullNTP && !ripeData) && (
         <div className="main-details-loading">
           <div className="loading-div">
-            <p>Loading measurement results...</p>
+            <p>Initializing measurement...</p>
             <LoadingSpinner size="medium"/>
           </div>
         </div>
@@ -376,21 +374,21 @@ const ripeTriggerErr = null;
       ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null} ripeErr={ripeTriggerErr ?? ripeMeasurementError} ripeStatus={ripeTriggerErr ? "error" :  ripeMeasurementStatus} measurementId={measurementId || null}/>) }
 
       {/* NTS Results Box - shown when NTP data is available */}
-      {ntpData && !apiDataLoading && (
+      {fullNTP && (
         <NTSResultBox 
           ntsResult={ntsResult} 
-          loading={!ntsResult && (apiDataLoading || measurementSessionActive)} 
+          loading={!ntsResult && measurementSessionActive} 
           error={null} 
         />
       )}
 
       {/*Buttons to download results in JSON and CSV format as well as open a popup displaying historical data*/}
       {/*The open popup button is commented out, because it is implemented as a separate tab*/}
-      {ntpData && !apiDataLoading && (<div className="download-buttons">
+      {fullNTP && (<div className="download-buttons">
         <DownloadButton 
           name="Download JSON" 
           onclick={() => {
-            const bundle: any[] = [ntpData];
+            const bundle: any[] = fullNTP ? (Array.isArray(fullNTP) ? fullNTP : [fullNTP]) : [];
             if (ripeMeasurementResp) bundle.push(ripeMeasurementResp[0]);
             if (ntsResult) {
               // Create a wrapper object for NTS data to match the expected format
@@ -402,7 +400,10 @@ const ripeTriggerErr = null;
         />
         <DownloadButton 
           name="Download CSV" 
-          onclick={() => downloadCSV(ripeMeasurementResp ? [ntpData, ripeMeasurementResp[0]] : [ntpData])} 
+          onclick={() => {
+            const ntpDataArray = fullNTP ? (Array.isArray(fullNTP) ? fullNTP : [fullNTP]) : [];
+            downloadCSV(ripeMeasurementResp ? [...ntpDataArray, ripeMeasurementResp[0]] : ntpDataArray);
+          }} 
         />
         {ntsResult && (
           <DownloadButton 
