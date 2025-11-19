@@ -126,6 +126,10 @@ export interface HomeCacheState {
   measurementSessionActive: boolean     // Track when any measurement session is active
   error: any
   measurementSettings: MeasurementRequest | null  // Advanced measurement settings
+  
+  // Navigation indices for multiple measurements
+  currentNtpIndex: number              // Current index in allNtpMeasurements array
+  currentRipeIndex: number             // Current index in ripeMeasurementResp array
 
 }
 

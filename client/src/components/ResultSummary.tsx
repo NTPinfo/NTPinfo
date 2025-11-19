@@ -7,10 +7,67 @@ import linkIcon from '../assets/link-svgrepo-com.png'
 import LoadingSpinner from './LoadingSpinner.tsx'
 import { calculateStatus } from '../utils/calculateStatus.ts'
 
+// Helper function to format numbers from scientific notation to readable format
+function formatNumber(num: number | string | undefined): string {
+    if (num === undefined || num === null) return 'N/A';
+    const numValue = typeof num === 'string' ? parseFloat(num) : num;
+    if (isNaN(numValue)) return 'N/A';
+    
+    // Check if the original string was in scientific notation or if the number is very small/large
+    const originalStr = typeof num === 'string' ? num : numValue.toString();
+    const isScientific = originalStr.includes('e') || originalStr.includes('E');
+    
+    if (isScientific || Math.abs(numValue) < 0.0001 || Math.abs(numValue) >= 1000000) {
+        // Convert scientific notation to fixed decimal format
+        // For very small numbers, show enough precision to be readable
+        if (Math.abs(numValue) < 0.0001) {
+            const formatted = numValue.toFixed(10);
+            return formatted.replace(/\.?0+$/, '') || '0';
+        } else {
+            const formatted = numValue.toFixed(5);
+            return formatted.replace(/\.?0+$/, '') || '0';
+        }
+    }
+    
+    // For regular numbers, return as string (remove trailing zeros if decimal)
+    return numValue.toString().replace(/\.?0+$/, '');
+}
 
-function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, errMessage, measurementId} :
+// Helper function to format root delay and root dispersion with max 5 decimals
+function formatRootValue(value: number | string | undefined): string {
+    if (value === undefined || value === null) return 'N/A';
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (isNaN(numValue)) return 'N/A';
+    
+    // Check if the original string was in scientific notation
+    const originalStr = typeof value === 'string' ? value : numValue.toString();
+    const isScientific = originalStr.includes('e') || originalStr.includes('E');
+    
+    if (isScientific || Math.abs(numValue) < 0.0001) {
+        // For very small numbers in scientific notation, convert to readable format
+        // Show up to 5 decimal places, but allow more for very small numbers
+        if (Math.abs(numValue) < 0.0001) {
+            const formatted = numValue.toFixed(10);
+            return formatted.replace(/\.?0+$/, '') || '0';
+        } else {
+            const formatted = numValue.toFixed(6);
+            return formatted.replace(/\.?0+$/, '') || '0';
+        }
+    }
+    
+    // Limit to 5 decimal places for regular numbers
+    const formatted = numValue.toFixed(6);
+    return formatted.replace(/\.?0+$/, '') || '0';
+}
+
+
+function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, errMessage, measurementId,
+        allNtpMeasurements, allRipeMeasurements, currentNtpIndex, currentRipeIndex, onNtpIndexChange, onRipeIndexChange} :
     {data : NTPData | null, ripeData: RIPEData | null, ripeErr: Error | null, ripeStatus: RipeStatus | null, 
-        httpStatus: number, err: Error | null, errMessage: string | null, measurementId: string | null}) {
+        httpStatus: number, err: Error | null, errMessage: string | null, measurementId: string | null,
+        allNtpMeasurements: NTPData[] | null, allRipeMeasurements: RIPEData[] | null,
+        currentNtpIndex: number, currentRipeIndex: number,
+        onNtpIndexChange: (index: number) => void, onRipeIndexChange: (index: number) => void}) {
 
     const [serverStatus, setServerStatus] = useState<string | null>(null)
     const [statusMessage, setStatusMessage] = useState<string | null>("")   
@@ -37,7 +94,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
 
 
 
-    // Helper to determine which icon to show for a metric
+    // Compares the currently displayed NTP measurement (data) with the currently displayed RIPE measurement (ripeData)
     function getMetricIcons(ntpValue: number | undefined, ripeValue: number | undefined, lowerIsBetter = true) {
         if (ntpValue === undefined || ripeValue === undefined) return [null, null];
         if (ntpValue === ripeValue) return [triangleGreen, triangleGreen];
@@ -48,6 +105,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
         }
     }
 
+    // Extract values from the currently displayed measurements (data = current NTP, ripeData = current RIPE)
     const ntpOffset = data?.offset !== undefined ? data.offset : undefined;
     const ripeOffset = ripeData?.measurementData.offset !== undefined ? ripeData.measurementData.offset : undefined;
     const ntpRTT = data?.RTT !== undefined ? data.RTT : undefined;
@@ -56,6 +114,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
     // Check if RIPE measurement failed (RTT = -1000 is a hardcoded failure value)
     const isRipeMeasurementFailed = ripeRTT === -1000;
 
+    // Compare the currently displayed NTP measurement with the currently displayed RIPE measurement
     const [offsetIconNTP, offsetIconRIPE] = getMetricIcons(
         ntpOffset !== undefined ? Math.abs(ntpOffset) : undefined,
         ripeOffset !== undefined ? Math.abs(ripeOffset) : undefined,
@@ -63,10 +122,20 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
     );
     const [rttIconNTP, rttIconRIPE] = getMetricIcons(ntpRTT, ripeRTT, true);
 
-
-    const ntpPrecision = data?.precision !== undefined ? data.precision : undefined;
-    const ripePrecision = ripeData?.measurementData.precision !== undefined ? ripeData.measurementData.precision : undefined;
-    const [precisionIconNTP, precisionIconRIPE] = getMetricIcons(ntpPrecision, ripePrecision, true);
+    // For precision, compare numeric values (handle both number and string formats)
+    const ntpPrecisionNum = data?.precision !== undefined 
+        ? (typeof data.precision === 'number' ? data.precision : parseFloat(String(data.precision)))
+        : undefined;
+    const ripePrecisionNum = ripeData?.measurementData.precision !== undefined 
+        ? (typeof ripeData.measurementData.precision === 'number' 
+            ? ripeData.measurementData.precision 
+            : parseFloat(String(ripeData.measurementData.precision)))
+        : undefined;
+    const [precisionIconNTP, precisionIconRIPE] = getMetricIcons(
+        !isNaN(ntpPrecisionNum!) ? ntpPrecisionNum : undefined,
+        !isNaN(ripePrecisionNum!) ? ripePrecisionNum : undefined,
+        true
+    );
 
     const ntpRootDispersion = data?.root_dispersion !== undefined ? data.root_dispersion : undefined;
     const ripeRootDispersion = ripeData?.measurementData.root_dispersion !== undefined ? ripeData.measurementData.root_dispersion : undefined;
@@ -114,7 +183,8 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
 
                 <div className="result-boxes-container">
                     <div className="result-and-title">
-                    <div className="res-label"> Results from our <a href="https://time.nl" target="_blank">TIME.nl</a> synced server:
+                    <div className="res-label"> 
+                        Results from our <a href="https://time.nl" target="_blank">TIME.nl</a> synced server:
                             <div className="tooltip-container">
                             <span className="tooltip-icon">?</span>
                             <div className="tooltip-text">
@@ -126,21 +196,51 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                             <div className="metric"><span title='The difference between the time reported by the like an NTP server and your local clock'>Offset</span><span>{data?.offset !== undefined ? `${(data.offset).toFixed(3)} ms` : 'N/A'} {offsetIconNTP && <img src={offsetIconNTP} alt="offset performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                             <div className="metric"><span title='The total time taken for a request to travel from the client to the server and back.'>Round-trip time</span><span>{data?.RTT !== undefined ? `${(data.RTT).toFixed(3)} ms` : 'N/A'} {rttIconNTP && <img src={rttIconNTP} alt="rtt performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                             <div className="metric"><span title={`The variability in delay times between successive NTP messages, calculated as std. dev. of ${data?.nr_measurements_jitter} offsets`}>Jitter</span><span>{data?.jitter ? `${(data.jitter).toFixed(3)} ms` : 'N/A'}</span></div>
-                            <div className="metric" style = {{height: '22.8px'}}><span title='The smallest time unit that the NTP server can measure or represent'>Precision</span><span>2<sup>{data?.precision !== undefined ? data.precision : 'N/A'}</sup> {precisionIconNTP && <img src={precisionIconNTP} alt="precision performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
+                            <div className="metric" style = {{height: '22.8px'}}><span title='The smallest time unit that the NTP server can measure or represent'>Precision</span><span>{data?.precision !== undefined ? (typeof data.precision === 'number' ? <>2<sup>{data.precision}</sup></> : formatNumber(data.precision)) : 'N/A'} {precisionIconNTP && <img src={precisionIconNTP} alt="precision performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                             <div className="metric"><span title='A hierarchical level number indicating the distance from the reference clock'>Stratum</span><span>{data?.stratum !== undefined ? data.stratum : 'N/A'}</span></div>
                             <div className="metric"><span title='The IP address of the NTP server'>IP address</span><span>{data?.ip ? data.ip : 'N/A'}</span></div>
                             <div className="metric"><span>Vantage point IP</span><span>{data?.vantage_point_ip}</span></div>
                             <div className="metric"><span>Country</span><span>{data?.country_code ? data.country_code : 'N/A'}</span></div>
                             <div className="metric"><span>Reference ID</span><span>{data?.ref_id}</span></div>
-                            <div className="metric"><span title='The total round-trip delay to the primary reference source'>Root delay</span><span>{data?.root_delay !== undefined ? data.root_delay : 'N/A'}</span></div>
+                            <div className="metric"><span title='The total round-trip delay to the primary reference source'>Root delay</span><span>{data?.root_delay !== undefined ? formatRootValue(data.root_delay) : 'N/A'}</span></div>
                             <div className="metric"><span title='The poll interval used by the probe during the measurement'>Poll interval</span><span>{data?.poll !== undefined ? `${Math.pow(2, data.poll)} s` : 'N/A'}</span></div>
-                            <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span>{data?.root_dispersion !== undefined ? `${(data.root_dispersion).toFixed(10)} s` : 'N/A'} {rootDispIconNTP && <img src={rootDispIconNTP} alt="root dispersion performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
+                            <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span>{data?.root_dispersion !== undefined ? `${formatRootValue(data.root_dispersion)} s` : 'N/A'} {rootDispIconNTP && <img src={rootDispIconNTP} alt="root dispersion performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                             <div className="metric"><span>ASN</span><span>{data?.asn_ntp_server !== undefined ? data.asn_ntp_server : "N/A"}</span></div>
                             <div className="metric"><span>Measurement ID</span><span>{measurementId ?? 'N/A'}</span></div>
                         </div>
+                        {allNtpMeasurements && allNtpMeasurements.length > 1 && (
+                            <div className="measurement-navigation">
+                                <button 
+                                    className="nav-button nav-button-prev" 
+                                    onClick={() => onNtpIndexChange(Math.max(0, currentNtpIndex - 1))}
+                                    disabled={currentNtpIndex === 0}
+                                    aria-label="Previous NTP measurement"
+                                    title="Previous measurement"
+                                >
+                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                </button>
+                                <span className="nav-counter">
+                                    {currentNtpIndex + 1} / {allNtpMeasurements.length}
+                                </span>
+                                <button 
+                                    className="nav-button nav-button-next" 
+                                    onClick={() => onNtpIndexChange(Math.min(allNtpMeasurements.length - 1, currentNtpIndex + 1))}
+                                    disabled={currentNtpIndex === allNtpMeasurements.length - 1}
+                                    aria-label="Next NTP measurement"
+                                    title="Next measurement"
+                                >
+                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        )}
                     </div>
                     <div className="result-and-title" id="ripe-result">
-                    <div className="res-label">Results from <a href="https://atlas.ripe.net" target="_blank">RIPE Atlas probes</a> (close to your location):
+                    <div className="res-label">
+                        Results from <a href="https://atlas.ripe.net" target="_blank">RIPE Atlas probes</a> (close to your location):
                         <div className="tooltip-container">
                         {((ripeStatus === "timeout" || (ripeStatus === "error" && !ripeData) || ripeData?.measurementData.RTT === -1000.000) && <span className="tooltip-icon fail">!</span>) ||
                         (<span className="tooltip-icon success">?</span>)}
@@ -159,15 +259,15 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                         <div className="metric"><span title='The difference between the time reported by the like an NTP server and your local clock'>Offset</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.offset !== undefined ? `${(ripeData.measurementData.offset).toFixed(3)} ms` : 'N/A'} {!isRipeMeasurementFailed && offsetIconRIPE && <img src={offsetIconRIPE} alt="offset performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                         <div className="metric"><span title='The total time taken for a request to travel from the client to the server and back.'>Round-trip time</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.RTT !== undefined ? `${(ripeData.measurementData.RTT).toFixed(3)} ms` : 'N/A'} {!isRipeMeasurementFailed && rttIconRIPE && <img src={rttIconRIPE} alt="rtt performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                         <div className="metric"><span title='The variability in delay times between successive NTP messages, calculated as std. dev. of offsets'>Jitter</span><span>{'N/A'}</span></div>
-                        <div className="metric"><span title='The smallest time unit that the NTP server can measure or represent'>Precision</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.precision !== undefined ? ripeData.measurementData.precision : 'N/A'} {!isRipeMeasurementFailed && precisionIconRIPE && <img src={precisionIconRIPE} alt="precision performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
+                        <div className="metric"><span title='The smallest time unit that the NTP server can measure or represent'>Precision</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.precision !== undefined ? formatNumber(ripeData.measurementData.precision) : 'N/A'} {!isRipeMeasurementFailed && precisionIconRIPE && <img src={precisionIconRIPE} alt="precision performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                         <div className="metric"><span title='A hierarchical level number indicating the distance from the reference clock'>Stratum</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.stratum !== undefined ? ripeData.measurementData.stratum : 'N/A'}</span></div>
                         <div className="metric"><span title='The IP address of the NTP server'>IP address</span><span>{ripeData?.measurementData.ip}</span></div>
                         <div className="metric"><span>Vantage point IP</span><span>{ripeData?.measurementData.vantage_point_ip}</span></div>
                         <div className="metric"><span>Country</span><span>{ripeData?.measurementData.country_code ? ripeData.measurementData.country_code : 'N/A'}</span></div>
                         <div className="metric"><span>Reference ID</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.ref_id ? ripeData.measurementData.ref_id : 'N/A'}</span></div>
-                        <div className="metric"><span title='The total round-trip delay to the primary reference source'>Root delay</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.root_delay !== undefined ? ripeData.measurementData.root_delay : 'N/A'}</span></div>
+                        <div className="metric"><span title='The total round-trip delay to the primary reference source'>Root delay</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.root_delay !== undefined ? formatRootValue(ripeData.measurementData.root_delay) : 'N/A'}</span></div>
                         <div className="metric"><span title='The poll interval used by the probe during the measurement'>Poll interval</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.poll !== undefined ? `${ripeData.measurementData.poll} s` : 'N/A'}</span></div>
-                        <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.root_dispersion !== undefined ? `${(ripeData.measurementData.root_dispersion).toFixed(10)} s` : 'N/A'} {!isRipeMeasurementFailed && rootDispIconRIPE && <img src={rootDispIconRIPE} alt="root dispersion performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
+                        <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.root_dispersion !== undefined ? `${formatRootValue(ripeData.measurementData.root_dispersion)} s` : 'N/A'} {!isRipeMeasurementFailed && rootDispIconRIPE && <img src={rootDispIconRIPE} alt="root dispersion performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                         <div className="metric"><span>ASN</span><span>{ripeData?.measurementData.asn_ntp_server !== undefined ? ripeData.measurementData.asn_ntp_server : 'N/A' }</span></div>
                         <div className="metric"><span>Measurement ID</span><span>
                             {ripeData?.measurement_id ? (
@@ -196,15 +296,15 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                         <div className="metric"><span title='The difference between the time reported by the like an NTP server and your local clock'>Offset</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.offset !== undefined ? `${(ripeData.measurementData.offset).toFixed(3)} ms` : 'N/A'} {!isRipeMeasurementFailed && offsetIconRIPE && <img src={offsetIconRIPE} alt="offset performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                         <div className="metric"><span title='The total time taken for a request to travel from the client to the server and back.'>Round-trip time</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.RTT !== undefined ? `${(ripeData.measurementData.RTT).toFixed(3)} ms` : 'N/A'} {!isRipeMeasurementFailed && rttIconRIPE && <img src={rttIconRIPE} alt="rtt performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                         <div className="metric"><span title='The variability in delay times between successive NTP messages, calculated as std. dev. of offsets'>Jitter</span><span>{'N/A'}</span></div>
-                        <div className="metric"><span title='The smallest time unit that the NTP server can measure or represent'>Precision</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.precision !== undefined ? ripeData.measurementData.precision : 'N/A'} {!isRipeMeasurementFailed && precisionIconRIPE && <img src={precisionIconRIPE} alt="precision performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
+                        <div className="metric"><span title='The smallest time unit that the NTP server can measure or represent'>Precision</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.precision !== undefined ? formatNumber(ripeData.measurementData.precision) : 'N/A'} {!isRipeMeasurementFailed && precisionIconRIPE && <img src={precisionIconRIPE} alt="precision performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                         <div className="metric"><span title='A hierarchical level number indicating the distance from the reference clock'>Stratum</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.stratum !== undefined ? ripeData.measurementData.stratum : 'N/A'}</span></div>
                         <div className="metric"><span title='The IP address of the NTP server'>IP address</span><span>{ripeData?.measurementData.ip}</span></div>
                         <div className="metric"><span>Vantage point IP</span><span>{ripeData?.measurementData.vantage_point_ip}</span></div>
                         <div className="metric"><span>Country</span><span>{ripeData?.measurementData.country_code ? ripeData.measurementData.country_code : 'N/A'}</span></div>
                         <div className="metric"><span>Reference ID</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.ref_id ? ripeData.measurementData.ref_id : 'N/A'}</span></div>
-                        <div className="metric"><span title='The total round-trip delay to the primary reference source'>Root delay</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.root_delay !== undefined ? ripeData.measurementData.root_delay : 'N/A'}</span></div>
+                        <div className="metric"><span title='The total round-trip delay to the primary reference source'>Root delay</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.root_delay !== undefined ? formatRootValue(ripeData.measurementData.root_delay) : 'N/A'}</span></div>
                         <div className="metric"><span title='The poll interval used by the probe during the measurement'>Poll interval</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.poll !== undefined ? `${ripeData.measurementData.poll} s` : 'N/A'}</span></div>
-                        <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.root_dispersion !== undefined ? `${(ripeData.measurementData.root_dispersion).toFixed(10)} s` : 'N/A'} {!isRipeMeasurementFailed && rootDispIconRIPE && <img src={rootDispIconRIPE} alt="root dispersion performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
+                        <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.root_dispersion !== undefined ? `${formatRootValue(ripeData.measurementData.root_dispersion)} s` : 'N/A'} {!isRipeMeasurementFailed && rootDispIconRIPE && <img src={rootDispIconRIPE} alt="root dispersion performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                         <div className="metric"><span>ASN</span><span>{ripeData?.measurementData.asn_ntp_server !== undefined ? ripeData.measurementData.asn_ntp_server : 'N/A' }</span></div>
                         <div className="metric"><span>Measurement ID</span><span>
                             {ripeData?.measurement_id ? (
@@ -221,6 +321,35 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                             ) : 'N/A'}
                         </span></div>
                     </div>))}
+                        {allRipeMeasurements && allRipeMeasurements.length > 1 && (ripeStatus === "complete" || ripeStatus === "timeout" || (ripeStatus === "error" && ripeData)) && (
+                            <div className="measurement-navigation">
+                                <button 
+                                    className="nav-button nav-button-prev" 
+                                    onClick={() => onRipeIndexChange(Math.max(0, currentRipeIndex - 1))}
+                                    disabled={currentRipeIndex === 0}
+                                    aria-label="Previous RIPE measurement"
+                                    title="Previous measurement"
+                                >
+                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                </button>
+                                <span className="nav-counter">
+                                    {currentRipeIndex + 1} / {allRipeMeasurements.length}
+                                </span>
+                                <button 
+                                    className="nav-button nav-button-next" 
+                                    onClick={() => onRipeIndexChange(Math.min(allRipeMeasurements.length - 1, currentRipeIndex + 1))}
+                                    disabled={currentRipeIndex === allRipeMeasurements.length - 1}
+                                    aria-label="Next RIPE measurement"
+                                    title="Next measurement"
+                                >
+                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                 </div>

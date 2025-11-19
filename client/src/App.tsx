@@ -33,7 +33,9 @@ function App() {
     isLoading: false,
     measurementSessionActive: false,
     error: null,
-    measurementSettings: null
+    measurementSettings: null,
+    currentNtpIndex: 0,
+    currentRipeIndex: 0
   };
   const [homeCache, setHomeCache] = useState<HomeCacheState>(initialCache);
 
@@ -53,25 +55,41 @@ function App() {
           const measurementResult = await fetchMeasurementById(homeCache.measurementId);
           
           // Update cache with fetched results
-          setHomeCache(prev => ({
-            ...prev,
-            ntpData: measurementResult.ntpData ? measurementResult.ntpData[0] : null,
-            allNtpMeasurements: measurementResult.ntpData,
-            ntsResult: measurementResult.ntsData,
-            versionData: measurementResult.versionData,
-            error: measurementResult.error
-          }));
+          setHomeCache(prev => {
+            const allNtp = measurementResult.ntpData;
+            const currentIndex = prev.currentNtpIndex || 0;
+            const safeIndex = allNtp && allNtp.length > 0 
+              ? Math.max(0, Math.min(currentIndex, allNtp.length - 1))
+              : 0;
+            return {
+              ...prev,
+              ntpData: allNtp && allNtp.length > 0 ? allNtp[safeIndex] : null,
+              allNtpMeasurements: allNtp,
+              currentNtpIndex: safeIndex,
+              ntsResult: measurementResult.ntsData,
+              versionData: measurementResult.versionData,
+              error: measurementResult.error
+            };
+          });
 
           // Fetch RIPE measurement results if we have a RIPE measurement ID
           if (homeCache.ripeMeasurementId) {
             const ripeResult = await fetchRipeMeasurementById(homeCache.ripeMeasurementId);
             
-            setHomeCache(prev => ({
-              ...prev,
-              ripeMeasurementResp: ripeResult.ripeData,
-              ripeMeasurementStatus: ripeResult.status,
-              error: ripeResult.error || prev.error
-            }));
+            setHomeCache(prev => {
+              const allRipe = ripeResult.ripeData;
+              const currentIndex = prev.currentRipeIndex || 0;
+              const safeIndex = allRipe && allRipe.length > 0
+                ? Math.max(0, Math.min(currentIndex, allRipe.length - 1))
+                : 0;
+              return {
+                ...prev,
+                ripeMeasurementResp: allRipe,
+                currentRipeIndex: safeIndex,
+                ripeMeasurementStatus: ripeResult.status,
+                error: ripeResult.error || prev.error
+              };
+            });
           }
         } catch (error) {
           console.error('Failed to reload measurement results:', error);

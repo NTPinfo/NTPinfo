@@ -219,3 +219,87 @@ h2#not-found {
   text-align: left;
   font-weight: 600;
 }
+
+.measurement-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  padding: 0.5rem;
+  margin-top: -0.15rem;
+  background-color: var(--bg-clr-secondary);
+  border-radius: var(--radius);
+  border: 1px solid var(--clr-btn-border);
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.nav-button {
+  background-color: var(--bg-clr-secondary);
+  border: 1.5px solid var(--clr-btn-border);
+  color: var(--text-dark);
+  width: 2rem;
+  height: 2rem;
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.nav-button svg {
+  transition: transform 0.2s ease;
+  width: 14px;
+  height: 14px;
+}
+
+.nav-button:hover:not(:disabled) {
+  background-color: var(--clr-input-placeholder);
+  color: var(--txt-white);
+  border-color: var(--clr-input-placeholder);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.nav-button:hover:not(:disabled) svg {
+  transform: scale(1.15);
+}
+
+.nav-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.nav-button:focus-visible {
+  outline: 2px solid var(--clr-input-placeholder);
+  outline-offset: 2px;
+}
+
+.nav-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background-color: var(--bg-clr-secondary);
+  border-color: var(--clr-btn-border);
+  box-shadow: none;
+}
+
+.nav-button:disabled svg {
+  opacity: 0.4;
+}
+
+.nav-counter {
+  font-size: 0.85rem;
+  color: var(--text-dark);
+  font-weight: 600;
+  min-width: 2.5rem;
+  text-align: center;
+  padding: 0 0.35rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}

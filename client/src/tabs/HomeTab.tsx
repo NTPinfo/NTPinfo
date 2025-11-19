@@ -64,7 +64,9 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
     ripeMeasurementStatus,
     ipv6Selected,
     measurementSessionActive,
-    measurementSettings
+    measurementSettings,
+    currentNtpIndex,
+    currentRipeIndex
   } = cache;
 
   // still local UI state
@@ -120,16 +122,42 @@ const ripeTriggerErr = null;
     });
   }, [ripeData, fetchedRIPEStatus, updateCache]);
 
+  // Ensure RIPE index stays within bounds when array updates
+  useEffect(() => {
+    if (!ripeMeasurementResp || ripeMeasurementResp.length === 0) {
+      updateCache({ currentRipeIndex: 0 });
+      return;
+    }
+    const safeIndex = Math.max(0, Math.min(currentRipeIndex, ripeMeasurementResp.length - 1));
+    if (safeIndex !== currentRipeIndex) {
+      updateCache({ currentRipeIndex: safeIndex });
+    }
+  }, [ripeMeasurementResp, currentRipeIndex, updateCache]);
+
   // When full NTP data arrives, select a display row and populate cache
   useEffect(() => {
     if (!fullNTP || fullNTP.length === 0) return;
-    const display = selectResult(fullNTP);
+    // Update allNtpMeasurements first
     updateCache({
-      ntpData: display ?? null,
       allNtpMeasurements: fullNTP ?? null,
       measured: true,
     });
   }, [fullNTP, updateCache]);
+
+  // Update displayed NTP measurement based on current index
+  useEffect(() => {
+    if (!allNtpMeasurements || allNtpMeasurements.length === 0) {
+      updateCache({ ntpData: null });
+      return;
+    }
+    // Ensure index is within bounds
+    const safeIndex = Math.max(0, Math.min(currentNtpIndex, allNtpMeasurements.length - 1));
+    if (safeIndex !== currentNtpIndex) {
+      updateCache({ currentNtpIndex: safeIndex });
+    }
+    const display = allNtpMeasurements[safeIndex] ?? selectResult(allNtpMeasurements);
+    updateCache({ ntpData: display ?? null });
+  }, [allNtpMeasurements, currentNtpIndex, updateCache]);
 
   // Sync NTS and NTP Versions when present
   useEffect(() => {
@@ -190,6 +218,8 @@ const ripeTriggerErr = null;
       allNtpMeasurements: null,
       vantagePointInfo: null,
       measurementSessionActive: true,  // Start measurement session
+      currentNtpIndex: 0,  // Reset navigation indices
+      currentRipeIndex: 0,
     });
 
     /**
@@ -371,14 +401,22 @@ const ripeTriggerErr = null;
         </div> */}
         {/* The main page shown as results become available */}
       {((fullNTP || ripeData) && (<div className="results-and-graph">
-        <ResultSummary data={fullNTP ? selectResult(fullNTP) : null}
-                       ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null}
-                       ripeErr={ripeTriggerErr ?? ripeMeasurementError}
-                       err={error}
-                       errMessage={errorMessage}
-                       httpStatus={httpStatus}
-                       ripeStatus={ripeTriggerErr ? "error" : ripeMeasurementStatus}
-                       measurementId={measurementId || null}/>
+        <ResultSummary 
+          data={ntpData}
+          ripeData={ripeMeasurementResp && ripeMeasurementResp.length > 0 ? ripeMeasurementResp[currentRipeIndex] : null}
+          ripeErr={ripeTriggerErr ?? ripeMeasurementError}
+          err={error}
+          errMessage={errorMessage}
+          httpStatus={httpStatus}
+          ripeStatus={ripeTriggerErr ? "error" : ripeMeasurementStatus}
+          measurementId={measurementId || null}
+          allNtpMeasurements={allNtpMeasurements}
+          allRipeMeasurements={ripeMeasurementResp}
+          currentNtpIndex={currentNtpIndex}
+          currentRipeIndex={currentRipeIndex}
+          onNtpIndexChange={(index) => updateCache({ currentNtpIndex: index })}
+          onRipeIndexChange={(index) => updateCache({ currentRipeIndex: index })}
+        />
 
         {/* Div for the visualization graph, and the radios for setting the what measurement to show */}
         {!error && ntpData && chartData && (
@@ -406,8 +444,22 @@ const ripeTriggerErr = null;
       ) ||
       /* Show error state when measurement failed */
       (!ntpData && !apiDataLoading && measured &&
-      <ResultSummary data={ntpData}  err={error} httpStatus={httpStatus} errMessage={errorMessage}
-      ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null} ripeErr={ripeTriggerErr ?? ripeMeasurementError} ripeStatus={ripeTriggerErr ? "error" :  ripeMeasurementStatus} measurementId={measurementId || null}/>) }
+      <ResultSummary 
+        data={ntpData}  
+        err={error} 
+        httpStatus={httpStatus} 
+        errMessage={errorMessage}
+        ripeData={ripeMeasurementResp && ripeMeasurementResp.length > 0 ? ripeMeasurementResp[currentRipeIndex] : null} 
+        ripeErr={ripeTriggerErr ?? ripeMeasurementError} 
+        ripeStatus={ripeTriggerErr ? "error" :  ripeMeasurementStatus} 
+        measurementId={measurementId || null}
+        allNtpMeasurements={allNtpMeasurements}
+        allRipeMeasurements={ripeMeasurementResp}
+        currentNtpIndex={currentNtpIndex}
+        currentRipeIndex={currentRipeIndex}
+        onNtpIndexChange={(index) => updateCache({ currentNtpIndex: index })}
+        onRipeIndexChange={(index) => updateCache({ currentRipeIndex: index })}
+      />) }
 
       {/* NTS Results Box - shown when NTP data is available */}
       {fullNTP && (
@@ -424,8 +476,12 @@ const ripeTriggerErr = null;
         <DownloadButton 
           name="Download JSON" 
           onclick={() => {
-            const bundle: any[] = fullNTP ? (Array.isArray(fullNTP) ? fullNTP : [fullNTP]) : [];
-            if (ripeMeasurementResp) bundle.push(ripeMeasurementResp[0]);
+            const bundle: any[] = allNtpMeasurements ? (Array.isArray(allNtpMeasurements) ? allNtpMeasurements : [allNtpMeasurements]) : [];
+            if (ripeMeasurementResp && Array.isArray(ripeMeasurementResp)) {
+              bundle.push(...ripeMeasurementResp);
+            } else if (ripeMeasurementResp) {
+              bundle.push(ripeMeasurementResp);
+            }
             if (ntsResult) {
               // Create a wrapper object for NTS data to match the expected format
               const ntsWrapper = { type: 'NTS Data', ...ntsResult };
@@ -437,8 +493,9 @@ const ripeTriggerErr = null;
         <DownloadButton 
           name="Download CSV" 
           onclick={() => {
-            const ntpDataArray = fullNTP ? (Array.isArray(fullNTP) ? fullNTP : [fullNTP]) : [];
-            downloadCSV(ripeMeasurementResp ? [...ntpDataArray, ripeMeasurementResp[0]] : ntpDataArray);
+            const ntpDataArray = allNtpMeasurements ? (Array.isArray(allNtpMeasurements) ? allNtpMeasurements : [allNtpMeasurements]) : [];
+            const ripeDataArray = ripeMeasurementResp ? (Array.isArray(ripeMeasurementResp) ? ripeMeasurementResp : [ripeMeasurementResp]) : [];
+            downloadCSV([...ntpDataArray, ...ripeDataArray]);
           }} 
         />
         {ntsResult && (

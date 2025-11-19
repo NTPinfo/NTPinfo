@@ -356,12 +356,12 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
       const failedLocations = new Map<string, LocationInfo>()
 
       for (const ntp of ntpServers) {
-        if (!ntp || !ntp.coordinates) continue
-        const locStr = ntp.coordinates.join(',')
+        if (!ntp || !ntp.coordinates || !ntp.ip) continue
+        // Use IP as key to show all unique servers
         if (ntp.RTT === -1) {
-          failedLocations.set(locStr, { location: ntp.coordinates, ip: ntp.ip, server_name: ntp.server_name })
+          failedLocations.set(ntp.ip, { location: ntp.coordinates, ip: ntp.ip, server_name: ntp.server_name })
         } else {
-          ntpLocations.set(locStr, { location: ntp.coordinates, ip: ntp.ip, server_name: ntp.server_name })
+          ntpLocations.set(ntp.ip, { location: ntp.coordinates, ip: ntp.ip, server_name: ntp.server_name })
         }
       }
 
@@ -396,36 +396,36 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
     const probeIPMap = new Map<string, RIPEData>()
 
     const ripeLocations = new Map<string, LocationInfo>()
-    const ntpLocations = new Map<string, LocationInfo>()
-    const failedLocations = new Map<string, LocationInfo>()
+    const ntpLocations = new Map<string, LocationInfo>()  // Now keyed by IP instead of location
+    const failedLocations = new Map<string, LocationInfo>()  // Now keyed by IP instead of location
 
     for (const probe of probes) {
       const ip = probe?.measurementData?.ip
       const loc = probe?.measurementData?.coordinates
       if (!ip || !loc) continue
-      const locStr = loc.join(',')
       const server_name = probe?.measurementData?.server_name ?? ""
       probeIPMap.set(ip, probe)
-      ripeLocations.set(locStr, { location: loc, ip, server_name })
+      // Use IP as key to show all unique servers, even if they share location
+      ripeLocations.set(ip, { location: loc, ip, server_name })
     }
 
     const probeIps = new Set(probeIPMap.keys())
     const inMeasurements = ntpServers.filter(x => !!x && !!x.ip && !!x.coordinates && !probeIps.has(x.ip))
     const unavailable = inMeasurements.filter(x => x.RTT === -1)
 
+    // Store all NTP servers by IP to show all unique servers
     for (const ntp of ntpServers) {
-      if (!ntp || !ntp.coordinates) continue
+      if (!ntp || !ntp.coordinates || !ntp.ip) continue
       const loc = ntp.coordinates
-      const locStr = loc.join(',')
-      ntpLocations.set(locStr, { location: loc, ip: ntp.ip, server_name: ntp.server_name })
+      ntpLocations.set(ntp.ip, { location: loc, ip: ntp.ip, server_name: ntp.server_name })
     }
 
+    // Store failed servers by IP
     for (const ntp of unavailable) {
-      if (!ntp || !ntp.coordinates) continue
+      if (!ntp || !ntp.coordinates || !ntp.ip) continue
       const loc = ntp.coordinates
-      const locStr = loc.join(',')
-      if (!ripeLocations.has(locStr)) {
-        failedLocations.set(locStr, { location: loc, ip: ntp.ip, server_name: ntp.server_name })
+      if (!ripeLocations.has(ntp.ip)) {
+        failedLocations.set(ntp.ip, { location: loc, ip: ntp.ip, server_name: ntp.server_name })
       }
     }
 
@@ -433,17 +433,18 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
     const ripeOnly = new Map<string, LocationInfo>()
     const ntpOnly = new Map<string, LocationInfo>()
 
-    for (const [locStr, info] of ripeLocations) {
-      if (ntpLocations.has(locStr)) {
-        intersected.set(locStr, info)
+    // Check intersection by IP instead of location
+    for (const [ip, info] of ripeLocations) {
+      if (ntpLocations.has(ip)) {
+        intersected.set(ip, info)
       } else {
-        ripeOnly.set(locStr, info)
+        ripeOnly.set(ip, info)
       }
     }
 
-    for (const [locStr, info] of ntpLocations) {
-      if (!ripeLocations.has(locStr)) {
-        ntpOnly.set(locStr, info)
+    for (const [ip, info] of ntpLocations) {
+      if (!ripeLocations.has(ip)) {
+        ntpOnly.set(ip, info)
       }
     }
 
