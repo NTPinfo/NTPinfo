@@ -1,4 +1,5 @@
 import {useEffect, useCallback } from 'react'
+import axios from 'axios'
 import { HomeCacheState, MeasurementRequest } from '../utils/types' // new import for caching result
 import '../styles/HomeTab.css'
 import InputSection from '../components/InputSection.tsx'
@@ -9,7 +10,7 @@ import LoadingSpinner from '../components/LoadingSpinner'
 import DynamicGraph from '../components/DynamicGraph.tsx'
 import { useFetchHistoricalIPData } from '../hooks/useFetchHistoricalIPData.ts'
 import { dateFormatConversion } from '../utils/dateFormatConversion.ts'
-import {downloadJSON, downloadCSV} from '../utils/downloadFormats.ts'
+import {downloadCSV} from '../utils/downloadFormats.ts'
 import WorldMap from '../components/WorldMap.tsx'
 import Header from '../components/Header.tsx';
 
@@ -62,6 +63,7 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
     vantagePointInfo,
     allNtpMeasurements,
     ripeMeasurementStatus,
+    ripeMeasurementId,
     ipv6Selected,
     measurementSessionActive,
     measurementSettings,
@@ -471,23 +473,72 @@ const ripeTriggerErr = null;
       )}
 
       {/*Buttons to download results in JSON and CSV format as well as open a popup displaying historical data*/}
-      {/*The open popup button is commented out, because it is implemented as a separate tab*/}
       {fullNTP && (<div className="download-buttons">
         <DownloadButton 
           name="Download JSON" 
-          onclick={() => {
-            const bundle: any[] = allNtpMeasurements ? (Array.isArray(allNtpMeasurements) ? allNtpMeasurements : [allNtpMeasurements]) : [];
-            if (ripeMeasurementResp && Array.isArray(ripeMeasurementResp)) {
-              bundle.push(...ripeMeasurementResp);
-            } else if (ripeMeasurementResp) {
-              bundle.push(ripeMeasurementResp);
+          onclick={async () => {
+            try {
+              const serverUrl = `${import.meta.env.VITE_SERVER_HOST_ADDRESS}`;
+              const bundle: any = {
+                download_timestamp: new Date().toISOString(),
+                measurement_id: measurementId || null,
+                ripe_measurement_id: ripeMeasurementId || null
+              };
+              
+              // Fetch raw NTP measurement data from server
+              if (measurementId) {
+                try {
+                  console.log(`Fetching NTP measurement: ${measurementId}`);
+                  const ntpResponse = await axios.get(`${serverUrl}/measurements/results/${measurementId}`);
+                  bundle.ntp_measurement = ntpResponse.data;
+                  console.log('NTP measurement fetched successfully');
+                } catch (ntpError: any) {
+                  console.error('Failed to fetch NTP measurement:', ntpError);
+                  bundle.ntp_measurement_error = {
+                    message: ntpError.response?.data?.detail || ntpError.message || 'Unknown error',
+                    status: ntpError.response?.status,
+                    statusText: ntpError.response?.statusText
+                  };
+                }
+              } else {
+                bundle.ntp_measurement_error = 'No measurement ID available';
+              }
+              
+              // Fetch raw RIPE measurement data from server
+              if (ripeMeasurementId) {
+                try {
+                  // Convert to string in case it's a number
+                  const ripeIdStr = String(ripeMeasurementId);
+                  console.log(`Fetching RIPE measurement: ${ripeIdStr}`);
+                  const ripeResponse = await axios.get(`${serverUrl}/measurements/ripe/${ripeIdStr}`);
+                  bundle.ripe_measurement = ripeResponse.data;
+                  console.log('RIPE measurement fetched successfully');
+                } catch (ripeError: any) {
+                  console.error('Failed to fetch RIPE measurement:', ripeError);
+                  bundle.ripe_measurement_error = {
+                    message: ripeError.response?.data?.detail || ripeError.message || 'Unknown error',
+                    status: ripeError.response?.status,
+                    statusText: ripeError.response?.statusText
+                  };
+                }
+              } else {
+                bundle.ripe_measurement_error = 'No RIPE measurement ID available';
+              }
+              
+              // Always download the bundle, even if there are errors (so user can see what went wrong)
+              // Download raw JSON object directly (not using downloadJSON which expects an array)
+              const json = JSON.stringify(bundle, null, 2);
+              const blob = new Blob([json], {type: 'application/json'});
+              const downloadLink = document.createElement('a');
+              downloadLink.href = window.URL.createObjectURL(blob);
+              downloadLink.download = `measurement_data_${measurementId || 'unknown'}_${new Date().toISOString().split('T')[0]}.json`;
+              downloadLink.click();
+              window.URL.revokeObjectURL(downloadLink.href);
+            } catch (error: any) {
+              console.error('Failed to download raw JSON:', error);
+              const errorMsg = error.response?.data?.detail || error.message || 'Unknown error occurred';
+              alert(`Failed to download raw JSON data: ${errorMsg}\n\nCheck the browser console (F12) for more details.`);
             }
-            if (ntsResult) {
-              // Create a wrapper object for NTS data to match the expected format
-              const ntsWrapper = { type: 'NTS Data', ...ntsResult };
-              bundle.push(ntsWrapper as any);
-            }
-            downloadJSON(bundle);
           }} 
         />
         <DownloadButton 
@@ -498,15 +549,6 @@ const ripeTriggerErr = null;
             downloadCSV([...ntpDataArray, ...ripeDataArray]);
           }} 
         />
-        {ntsResult && (
-          <DownloadButton 
-            name="Download NTS Result" 
-            onclick={() => {
-              const ntsWrapper = { type: 'NTS Data', ...ntsResult };
-              downloadJSON([ntsWrapper as any]);
-            }} 
-          />
-        )}
       </div>)}
        {(ntpData && ntpVerLoading && <div className="loading-div">
                         <p>Loading NTP Versions Analysis...</p>

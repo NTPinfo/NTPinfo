@@ -203,7 +203,7 @@ export default function MeasurementSettings({ settings, onSettingsChange, disabl
               </>
             )}
 
-            {/* Checkboxes Row - Hidden for now (will be used in future) */}
+            {/* Checkboxes */}
             {/* 
             <div className="settings-row">
               <label className="settings-checkbox-label-compact">
