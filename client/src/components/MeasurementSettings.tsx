@@ -150,7 +150,7 @@ export default function MeasurementSettings({ settings, onSettingsChange, disabl
                 <div className="settings-row">
                   <label htmlFor="ntpv5_draft" className="settings-label-compact">
                     NTPv5 Draft
-                    <span className="settings-tooltip" title="Specify which NTPv5 draft specification to use for testing.">?</span>
+                    <span className="settings-tooltip" title="Specify which NTPv5 draft name to use">?</span>
                   </label>
                   <select
                     id="ntpv5_draft"

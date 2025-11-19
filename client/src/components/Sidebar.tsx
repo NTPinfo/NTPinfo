@@ -4,6 +4,7 @@ import houseIcon from '../assets/house-svgrepo-com.png';
 import compareIcon from '../assets/scale-unbalanced-svgrepo-com.png';
 import graphIcon from '../assets/graph-svgrepo-com.png';
 import aboutIcon from '../assets/info-square-svgrepo-com.png';
+import SearchIcon from './SearchIcon';
 import hamburgerIcon from '../assets/hamburger-md-svgrepo-com.png';
 
 interface SidebarProps {
@@ -33,6 +34,11 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedTab, setSelectedTab, open, se
     },
     {
       id: 4,
+      label: 'Search',
+      icon: <SearchIcon className="sidebar__icon" />,
+    },
+    {
+      id: 5,
       label: 'About',
       icon: <img src={aboutIcon} alt="About" className="sidebar__icon" />,
     },
