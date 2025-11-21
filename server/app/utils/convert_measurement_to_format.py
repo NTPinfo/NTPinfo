@@ -2,7 +2,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from server.app.dtos.full_ntp_measurement import FullMeasurementIP, NTSMeasurement, NTPVersions, NTPv5Measurement, \
-    FullMeasurementDN, NTPv4Measurement, NTPv4ServerInfo, NTPv5ServerInfo
+    FullMeasurementDN, NTPv4Measurement, NTPv4ServerInfo, NTPv5ServerInfo, DNIPLink
 
 
 # methods to convert to JSON (dict)
@@ -357,4 +357,90 @@ def partial_measurement_dn_to_dict(db: Session, m: FullMeasurementDN) -> dict:
         "ripe_error": m.ripe_error,
         "response_error": m.response_error,
         "settings": m.settings #if isinstance(m.settings, dict) else getattr(m.settings, "dict", lambda: m.settings)()
+    }
+
+def short_format_measurement_ip(db: Session, m: FullMeasurementIP, known_server_dn: Optional[str] = None) -> dict:
+    """
+    This method returns a short summary of the measurement on an IP address.
+    If an NTP version was not measured, then we put "None" in its place.
+    Besides server_ip, the summary may also contain "server", if we know the domain name. (not always)
+
+    Args:
+        db (Session): A connection to the database (we need to query some IDs)
+        m (FullMeasurementIP): The measurement object to convert.
+        known_server_dn (Optional[str]): The domain name of this IP address, if known.
+    Returns:
+        dict: The short summary of the measurement on an IP address.
+    """
+    nts_succeeded: bool|str = "Unknown"
+    # if we do not find any NTS measurement linked to it
+    if m.id_nts is None:
+        # check if this IP is part of a DN measurement
+        is_part_of_dn = db.query(DNIPLink).filter_by(id_ip=m.id_m_ip).first()
+        if is_part_of_dn is not None:
+            # try to ge the DN measurement
+            m_dn = db.query(FullMeasurementDN).filter_by(id_m_dn=is_part_of_dn.id_dn).first()
+            print(m_dn.id_m_dn)
+            # check if the measurement on the DN says that "this is the IP that was checked and that supports NTS".
+
+            # if other IP was used in the NTS measurement on the DN, and the domain name supports NTS,
+            # unfortunately, we do not have enough data
+            # to see if this IP supported NTS (at that moment in time).
+            #     but you can perform an NTS measurement on this IP to find out (in present).
+            if m_dn is not None:
+                # take the NTS measurement of this DN measurement
+                m_dn_nts = db.query(NTSMeasurement).filter(
+                    NTSMeasurement.id_nts == m_dn.id_nts
+                ).first()
+                if m_dn_nts is not None:
+                    if m_dn_nts.succeeded == True:
+                        if m_dn_nts.measured_server_ip == m.server_ip: # we found it explicitly on our IP address
+                            nts_succeeded = True
+                        # otherwise, we do not know if it succeeded on this IP, we cannot be sure
+                    else: # if it fails, we can get extra information
+                        # if the whole measurement on DN failed, there is no IP address that supports NTS in that measurement
+                        nts_succeeded = False
+
+                # besides, add the domain name, as we found it
+                known_server_dn = m_dn.server
+    else:
+        # we can get the NTS measurement directly from the IP measurement
+        m_nts = db.query(NTSMeasurement).filter_by(id_nts=m.id_nts).first()
+        nts_succeeded = m_nts.succeeded if m_nts is not None else "Unknown"
+    
+    m_main: Optional[dict] = ntpv4_or_v5_measurement_to_dict(db, m.id_main_measurement, m.response_version)
+    m_vs: Optional[NTPVersions] = db.query(NTPVersions).filter_by(id_vs=m.id_vs).first()
+    return {
+        "search_id": "ip" + str(m.id_m_ip),
+        "server": known_server_dn if known_server_dn is not None else "Unknown",
+        "server_ip": m.server_ip,
+        "created_at_time": m.created_at_time.isoformat() if m.created_at_time else None,
+        "nts_succeeded": nts_succeeded,
+        "response_version": m.response_version,
+        "offset": m_main.get("offset") if m_main is not None else None,
+        "rtt": m_main.get("rtt") if m_main is not None else None,
+        "stratum": m_main.get("stratum") if m_main is not None else None,
+        "ntpv1_supported_conf": str(m_vs.ntpv1_supported_conf) if m_vs is not None else "Unknown", # the "None" means that we did not measure that version in this measurement
+        "ntpv2_supported_conf": str(m_vs.ntpv2_supported_conf) if m_vs is not None else "Unknown",
+        "ntpv3_supported_conf": str(m_vs.ntpv3_supported_conf) if m_vs is not None else "Unknown",
+        "ntpv4_supported_conf": str(m_vs.ntpv4_supported_conf) if m_vs is not None else "Unknown",
+        "ntpv5_supported_conf": str(m_vs.ntpv5_supported_conf) if m_vs is not None else "Unknown",
+        "asn": "1000", #dummy data
+        "country": "UU", #dummy data
+    }
+
+def short_format_measurement_dn(db: Session, m: FullMeasurementDN) -> dict:
+    m_nts: Optional[NTSMeasurement] = db.query(NTSMeasurement).filter_by(id_nts=m.id_nts).first()
+    m_vs: Optional[NTPVersions] = db.query(NTPVersions).filter_by(id_vs=m.id_vs).first()
+    return {
+        "search_id": "dn" + str(m.id_m_dn),
+        "server": m.server,
+        "created_at_time": m.created_at_time.isoformat() if m.created_at_time else None,
+        "nts_succeeded": m_nts.succeeded if m_nts is not None else False,
+        "ntpv1_supported_conf": str(m_vs.ntpv1_supported_conf) if m_vs is not None else "Unknown", # the "None" means that we did not measure that version in this measurement
+        "ntpv2_supported_conf": str(m_vs.ntpv2_supported_conf) if m_vs is not None else "Unknown",
+        "ntpv3_supported_conf": str(m_vs.ntpv3_supported_conf) if m_vs is not None else "Unknown",
+        "ntpv4_supported_conf": str(m_vs.ntpv4_supported_conf) if m_vs is not None else "Unknown",
+        "ntpv5_supported_conf": str(m_vs.ntpv5_supported_conf) if m_vs is not None else "Unknown",
+        "ip_addresses": [str(m_ip.server_ip) for m_ip in m.ip_measurements],
     }
