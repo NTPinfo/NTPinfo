@@ -9,13 +9,16 @@ from sqlalchemy.orm import Session, Mapped
 from sqlalchemy import func, and_
 from starlette.responses import HTMLResponse
 
+from server.app.services.search_services import search_server
+from server.app.dtos.SearchRequest import SearchRequest
 from server.app.db.db_interaction import get_ntp_v4_historical_measurements
 # from server.app.db.db_interaction import get_historical_measurements
 from server.app.utils.convert_measurement_to_format import full_measurement_dn_to_dict, full_measurement_ip_to_dict, \
     partial_measurement_dn_to_dict, ntp_versions_to_dict, partial_measurement_ip_to_dict
 from server.app.utils.domain_name_to_ip import domain_name_to_ip_list
 from server.app.utils.validate import sanitize_string
-from server.app.dtos.full_ntp_measurement import FullMeasurementIP, FullMeasurementDN, NTPVersions, NTSMeasurement
+from server.app.dtos.full_ntp_measurement import FullMeasurementIP, FullMeasurementDN, NTPVersions, NTSMeasurement, \
+    NTPv4Measurement, NTPv5Measurement, NTPv4ServerInfo, NTPv5ServerInfo
 from server.app.utils.validate import is_ip_address
 from server.app.dtos.AdvancedSettings import AdvancedSettings
 from server.app.utils.nts_check import perform_nts_measurement_domain_name, perform_nts_measurement_ip
@@ -343,7 +346,7 @@ It is recommended to be used only on FullMeasurementIP, or only when the measure
     }
 )
 @limiter.limit(get_rate_limit_per_client_ip())
-async def poll_full_measurement(m_id: Optional[str], request: Request, background_tasks: BackgroundTasks,
+async def poll_full_measurement(m_id: Optional[str], request: Request,
                                 session: Session = Depends(get_db)) -> JSONResponse:
     """
     This method polls the whole measurement.
@@ -616,6 +619,7 @@ async def trigger_ripe_measurement(payload: MeasurementRequest, request: Request
 
     Notes:
         - This endpoint is also limited to <`see config file`> to prevent abuse and reduce server load.
+        - This endpoint is NOT currently used.
     """
     server = payload.server
     wanted_ip_type = 6 if payload.ipv6_measurement else 4
@@ -785,7 +789,7 @@ async def get_ripe_measurement_result(measurement_id: str, request: Request) -> 
     }
 )
 @limiter.limit(get_rate_limit_per_client_ip())
-async def get_this_server_details(request: Request, session: Session = Depends(get_db)) -> JSONResponse:
+async def get_basic_statistics(request: Request, session: Session = Depends(get_db)) -> JSONResponse:
     """
     Get statistics about measurements in the database.
     Returns counts for domain name measurements, IP measurements, NTS measurements,
@@ -826,7 +830,7 @@ async def get_this_server_details(request: Request, session: Session = Depends(g
 
         # success is determined by supported_conf >= 50 (received a valid NTP response, even if it has a wrong version)
         # 0% = no response, 25% = invalid format, 50%+ = valid response (even if it has a wrong version)
-        def calculate_success_rate(version_field:  Mapped[int | None]):
+        def calculate_success_rate(version_field:  Mapped[int | None]) -> float:
             """
             This method calculates the success rate of an NTP measurement on a specific version.
             Success is determined by supported_conf >= 50
@@ -890,4 +894,43 @@ async def get_this_server_details(request: Request, session: Session = Depends(g
             }
         )
     except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
+@router.get(
+    "/measurements/data/",
+    summary="search for results",
+    description="Search for measurements based on various filters",
+    response_model=MeasurementResponse,
+    responses={
+        200: {"description": "Measurements successfully returned"},
+        400: {"description": "Bad request"},
+    }
+)
+@limiter.limit(get_rate_limit_per_client_ip())
+async def search_for_measurements(payload: SearchRequest, request: Request,
+                                   session: Session = Depends(get_db)) -> JSONResponse:
+    """
+    Search for measurements in the database based on various filters.
+    
+    If measurement_id is provided, returns the full measurement for that ID.
+    Otherwise, searches through FullMeasurementIP and FullMeasurementDN.
+    Args:
+        payload (SearchRequest): The search request with filters
+        request (Request): FastAPI request object
+        session (Session): Database session
+        
+    Returns:
+        JSONResponse: List of measurement results matching the search criteria
+    """
+    if payload.measurement_id is not None:  # search by ID
+        return await poll_full_measurement(payload.measurement_id, request, session)
+    
+    try:
+        results_list: list[dict] = search_server(payload, session)
+        return JSONResponse(
+            status_code=200,
+            content=results_list)
+
+    except Exception as e:
+        print(f"Error in searching for_measurements: {e}")
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
