@@ -80,13 +80,14 @@
   flex-wrap: wrap;
   padding: 1rem;
   width: 100%;
-  align-items: stretch;
+  align-items: flex-start;
 }
 
 @media (min-width: 700px) {
   .results-and-graph {
     display: flex;
     padding: 0.25rem;
+    align-items: flex-start;
   }
 }
 
@@ -126,7 +127,7 @@
   flex: 1 1 50%;
   /* min-width: 50%; */
   height: 100%;
-  margin-top: 2.4rem;
+  margin-top: 7rem;
   max-width: 500px;
 }
 
@@ -145,7 +146,7 @@
 
   margin-left: 1.5rem;
   margin-right: 1rem;
-  margin-top: 2.4rem;
+  margin-top: 0;
   grid-area: summary;
   background-color: var(--bg-clr-secondary);
   color: var(--text-dark);
@@ -158,12 +159,6 @@
   gap: 0.75rem;
 
   border: 1px solid var(--clr-btn-border);
-}
-
-@media (max-width: 1246px) {
-  .graph-box {
-    margin-top: 0;
-  }
 }
 
 @media (max-width: 700px) {

@@ -28,6 +28,7 @@ export const usePollIncrementalMeasurement = (
   const [status, setStatus] = useState<MeasurementStep | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ntpVerLoading, setNtpVerLoading] = useState(false);
+  const [expectedIpCount, setExpectedIpCount] = useState<number>(0);
 
   // Track what we've already fetched to avoid duplicate requests
   const fetchedNtpVersionsIdRef = useRef<number | null>(null);
@@ -106,6 +107,42 @@ export const usePollIncrementalMeasurement = (
       fetchedIpMeasurementsRef.current.clear();
     }
 
+    // Helper function to create error entry from failed IP measurement
+    const createErrorEntry = (ipMeasurement: any): NTPData => {
+      return {
+        ntp_version: 0,
+        vantage_point_ip: "",
+        ip: ipMeasurement.server || "",
+        server_name: "",
+        is_anycast: false,
+        country_code: "",
+        coordinates: [0, 0],
+        ntp_server_ref_parent_ip: null,
+        ref_id: "",
+        client_sent_time: -1,
+        server_recv_time: -1,
+        server_sent_time: -1,
+        client_recv_time: -1,
+        offset: -1,
+        RTT: -1,
+        stratum: -1,
+        precision: 0,
+        root_delay: 0,
+        poll: 0,
+        root_dispersion: 0,
+        ntp_last_sync_time: -1,
+        leap: 0,
+        jitter: null,
+        nr_measurements_jitter: 0,
+        asn_ntp_server: "",
+        time: Date.now(),
+        measurement_id: ipMeasurement.search_id || null,
+        hasError: true,
+        errorMessage: ipMeasurement.response_error || null,
+        response_version: ipMeasurement.response_version || null,
+      };
+    };
+
     // Fetch IP measurements separately to avoid abort controller conflicts
     const fetchIpMeasurement = async (ipMeasurementId: string) => {
       try {
@@ -116,11 +153,16 @@ export const usePollIncrementalMeasurement = (
         if (!isMountedRef.current) return;
         
         const ipData = ipRes.data;
+        
+        // Handle successful measurement
         if (ipData.main_measurement) {
           const transformed = transformFullMeasurementMainToNTPData(ipData.main_measurement) ||
                              transformJSONDataToNTPData(ipData.main_measurement);
           
           if (transformed) {
+            // Always set response_version from IP measurement (can be null/undefined)
+            transformed.response_version = ipData.response_version;
+            
             setNtpData(prev => {
               const existing = prev || [];
               // Avoid duplicates
@@ -132,6 +174,19 @@ export const usePollIncrementalMeasurement = (
             });
           }
         }
+        // Handle failed measurement
+        else if (ipData.response_error) {
+          const errorEntry = createErrorEntry(ipData);
+          setNtpData(prev => {
+            const existing = prev || [];
+            // Avoid duplicates
+            const exists = existing.some(
+              item => item.measurement_id === errorEntry.measurement_id
+            );
+            if (exists) return existing;
+            return [...existing, errorEntry];
+          });
+        }
 
         // Check for NTP versions in IP measurement
         if (ipData.ntp_versions_id && 
@@ -141,6 +196,51 @@ export const usePollIncrementalMeasurement = (
       } catch (err: any) {
         if (err.name !== 'AbortError' && err.name !== 'CanceledError' && isMountedRef.current) {
           console.warn(`Failed to fetch IP measurement ${ipMeasurementId}:`, err);
+        }
+      }
+    };
+
+    // Fetch full results when measurement is finished to get all IP measurements (including failed ones)
+    const fetchFullResultsForDomain = async (dnMeasurementId: string) => {
+      try {
+        const fullRes = await axios.get(
+          `${SERVER}/measurements/results/${dnMeasurementId}`
+        );
+        
+        if (!isMountedRef.current) return;
+        
+        const fullData = fullRes.data;
+        
+        // Process all IP measurements (successful and failed)
+        if (fullData.ip_measurements && Array.isArray(fullData.ip_measurements)) {
+          const allMeasurements: NTPData[] = [];
+          
+          for (const ipMeasurement of fullData.ip_measurements) {
+            if (ipMeasurement.main_measurement) {
+              // Successful measurement
+              const transformed = transformFullMeasurementMainToNTPData(ipMeasurement.main_measurement) ||
+                                 transformJSONDataToNTPData(ipMeasurement.main_measurement);
+              if (transformed) {
+                // Always set response_version from IP measurement (can be null/undefined)
+                transformed.response_version = ipMeasurement.response_version;
+                allMeasurements.push(transformed);
+              }
+            } else if (ipMeasurement.response_error) {
+              // Failed measurement
+              const errorEntry = createErrorEntry(ipMeasurement);
+              allMeasurements.push(errorEntry);
+            }
+          }
+          
+          // Update with all measurements, preserving order
+          if (allMeasurements.length > 0) {
+            setNtpData(allMeasurements);
+            setExpectedIpCount(allMeasurements.length);
+          }
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError' && err.name !== 'CanceledError' && isMountedRef.current) {
+          console.warn(`Failed to fetch full results for ${dnMeasurementId}:`, err);
         }
       }
     };
@@ -172,6 +272,11 @@ export const usePollIncrementalMeasurement = (
           const transformed = transformFullMeasurementMainToNTPData(partialData.main_measurement) ||
                              transformJSONDataToNTPData(partialData.main_measurement);
           if (transformed) {
+            // Add response_version if available
+            if (partialData.response_version) {
+              transformed.response_version = partialData.response_version;
+            }
+            
             setNtpData(prev => {
               // For IP measurements, replace the array
               if (prev && prev.length > 0 && prev[0].ip === transformed.ip) {
@@ -195,6 +300,12 @@ export const usePollIncrementalMeasurement = (
 
         // Handle IP measurements for domain name measurements
         if (partialData.ip_measurements_ids && Array.isArray(partialData.ip_measurements_ids)) {
+          // Track expected IP count for navigation arrows
+          const ipIds = partialData.ip_measurements_ids.map((id: any) => 
+            typeof id === 'string' ? id : (id?.search_id || String(id))
+          ).filter(Boolean);
+          setExpectedIpCount(ipIds.length);
+          
           for (const ipMeasurementId of partialData.ip_measurements_ids) {
             // Handle both string format ("ip123") and object format ({search_id: "ip123"})
             const idStr = typeof ipMeasurementId === 'string' 
@@ -207,6 +318,9 @@ export const usePollIncrementalMeasurement = (
               fetchIpMeasurement(idStr);
             }
           }
+        } else {
+          // If no ip_measurements_ids, it's a single IP measurement
+          setExpectedIpCount(1);
         }
 
         // Handle errors
@@ -217,11 +331,16 @@ export const usePollIncrementalMeasurement = (
           console.warn("RIPE error:", partialData.ripe_error);
         }
 
-        // Stop polling if finished or failed
+        // When finished, fetch full results to get all IP measurements (including failed ones)
         if (currentStatus === "finished" || currentStatus === "failed") {
           if (intervalRef.current) {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
+          }
+          
+          // Fetch full results for domain name measurements to get all IP measurements
+          if (measurementId?.startsWith("dn")) {
+            fetchFullResultsForDomain(measurementId);
           }
         }
       } catch (err: any) {
@@ -266,5 +385,6 @@ export const usePollIncrementalMeasurement = (
     ripeError,
     ripeId,
     ntpVerLoading,
+    expectedIpCount,
   };
 };

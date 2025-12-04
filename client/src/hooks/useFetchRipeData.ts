@@ -66,7 +66,7 @@ export const useFetchRIPEData = (measurementId: string | null, intervalMs = 3000
                 } else if (res.data.status === "pending") {
                     setStatus("pending")
                 } else if (res.data.status === "error") {
-                    setError(new Error(res.data.message || "Unknown error"))
+                    setError(new Error(res.data.message || "Error occurred"))
                     setStatus("error")
                     if (intervalRef.current) clearInterval(intervalRef.current)
                 }

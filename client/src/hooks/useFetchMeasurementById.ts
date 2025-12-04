@@ -51,11 +51,21 @@ export const useFetchMeasurementById = () => {
       if (respData.ip_measurements && respData.ip_measurements?.length > 0) {
         const ipMeasurements = respData.ip_measurements;
         const mapped = ipMeasurements
-          .map((ip: any) => transformFullMeasurementMainToNTPData(ip.main_measurement) || transformJSONDataToNTPData(ip.main_measurement))
+          .map((ip: any) => {
+            const transformed = transformFullMeasurementMainToNTPData(ip.main_measurement) || transformJSONDataToNTPData(ip.main_measurement);
+            if (transformed) {
+              // Always set response_version from IP measurement
+              transformed.response_version = ip.response_version;
+            }
+            return transformed;
+          })
           .filter((x: any): x is NTPData => Boolean(x));
         result.ntpData = mapped.length ? mapped : null;
       } else if (respData.main_measurement) {
         const transformed = transformFullMeasurementMainToNTPData(respData.main_measurement) || transformJSONDataToNTPData(respData.main_measurement);
+        if (transformed && respData.response_version) {
+          transformed.response_version = respData.response_version;
+        }
         result.ntpData = transformed ? [transformed] : null;
       }
 

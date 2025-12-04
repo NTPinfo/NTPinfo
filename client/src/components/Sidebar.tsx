@@ -32,11 +32,12 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedTab, setSelectedTab, open, se
       label: 'Compare',
       icon: <img src={compareIcon} alt="Compare" className="sidebar__icon" />,
     },
-    {
-      id: 4,
-      label: 'Search',
-      icon: <SearchIcon className="sidebar__icon" />,
-    },
+    // SearchTab temporarily hidden - will be updated in future
+    // {
+    //   id: 4,
+    //   label: 'Search',
+    //   icon: <SearchIcon className="sidebar__icon" />,
+    // },
     {
       id: 5,
       label: 'About',

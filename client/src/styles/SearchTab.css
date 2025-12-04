@@ -634,6 +634,76 @@
   opacity: 0.7;
 }
 
+.nts-badge.unknown {
+  background-color: rgba(255, 193, 7, 0.15);
+  color: #d4a017;
+}
+
+.type-cell {
+  text-align: center;
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 0.25em 0.5em;
+  border-radius: 8px;
+  font-size: 0.75em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.type-badge.ip-badge {
+  background-color: rgba(33, 150, 243, 0.15);
+  color: #2196F3;
+}
+
+.type-badge.dn-badge {
+  background-color: rgba(156, 39, 176, 0.15);
+  color: #9C27B0;
+}
+
+.ip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.ip-tag {
+  display: inline-block;
+  padding: 0.2em 0.4em;
+  background-color: var(--bg-clr-primary);
+  border: 1px solid var(--clr-btn-border);
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.85em;
+  color: var(--text-dark);
+}
+
+.ip-tag-more {
+  display: inline-block;
+  padding: 0.2em 0.4em;
+  color: var(--text-dark);
+  font-size: 0.85em;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.no-ip {
+  color: var(--text-dark);
+  opacity: 0.5;
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+.no-versions {
+  color: var(--text-dark);
+  opacity: 0.5;
+  font-style: italic;
+  font-size: 0.85em;
+}
+
 .view-button {
   padding: 0.4em 0.8em;
   background-color: var(--text-blue);

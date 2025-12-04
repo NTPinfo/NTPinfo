@@ -1,22 +1,25 @@
 import React, { useState, useMemo } from 'react';
+import axios from 'axios';
 import '../styles/SearchTab.css';
 import Header from '../components/Header';
 
 interface SearchResult {
   id: string;
   server: string;
-  ip: string;
-  asn: string;
-  country: string;
-  offset: number;
-  rtt: number;
-  stratum: number;
+  ip?: string; // Optional for DN measurements
+  ipAddresses?: string[]; // For DN measurements - list of IPs
+  asn?: string;
+  country?: string;
+  offset?: number;
+  rtt?: number;
+  stratum?: number;
   lastMeasured: string;
   measurementId: string;
-  hasNTS: boolean;
+  hasNTS: boolean | string; // Can be boolean or "Unknown"
   supportedVersions: string[];
   measurementType: string;
-  ipVersion: 4 | 6;
+  ipVersion?: 4 | 6; // Optional for DN measurements
+  resultType: 'ip' | 'dn'; // Distinguish between IP and DN results
 }
 
 type SortField = 'offset' | 'rtt' | 'stratum' | 'lastMeasured' | 'server';
@@ -82,31 +85,170 @@ const SearchTab: React.FC = () => {
     }));
   };
 
+  // Transform API response to SearchResult format
+  const transformApiResult = (apiResult: any): SearchResult => {
+    const isIP = apiResult.search_id?.startsWith('ip');
+    const isDN = apiResult.search_id?.startsWith('dn');
+    
+    // Extract supported versions from confidence scores
+    const supportedVersions: string[] = [];
+    if (apiResult.ntpv1_supported_conf && apiResult.ntpv1_supported_conf !== 'Unknown' && parseInt(apiResult.ntpv1_supported_conf) >= 50) {
+      supportedVersions.push('NTPv1');
+    }
+    if (apiResult.ntpv2_supported_conf && apiResult.ntpv2_supported_conf !== 'Unknown' && parseInt(apiResult.ntpv2_supported_conf) >= 50) {
+      supportedVersions.push('NTPv2');
+    }
+    if (apiResult.ntpv3_supported_conf && apiResult.ntpv3_supported_conf !== 'Unknown' && parseInt(apiResult.ntpv3_supported_conf) >= 50) {
+      supportedVersions.push('NTPv3');
+    }
+    if (apiResult.ntpv4_supported_conf && apiResult.ntpv4_supported_conf !== 'Unknown' && parseInt(apiResult.ntpv4_supported_conf) >= 50) {
+      supportedVersions.push('NTPv4');
+    }
+    if (apiResult.ntpv5_supported_conf && apiResult.ntpv5_supported_conf !== 'Unknown' && parseInt(apiResult.ntpv5_supported_conf) >= 50) {
+      supportedVersions.push('NTPv5');
+    }
+
+    // Determine IP version from server_ip (IPv6 contains colons)
+    const ipVersion: 4 | 6 | undefined = apiResult.server_ip 
+      ? (apiResult.server_ip.includes(':') ? 6 : 4)
+      : undefined;
+
+    return {
+      id: apiResult.search_id || '',
+      server: apiResult.server || 'Unknown',
+      ip: apiResult.server_ip,
+      ipAddresses: apiResult.ip_addresses,
+      asn: apiResult.asn,
+      country: apiResult.country,
+      offset: apiResult.offset !== null && apiResult.offset !== undefined ? apiResult.offset : undefined,
+      rtt: apiResult.rtt !== null && apiResult.rtt !== undefined ? apiResult.rtt : undefined,
+      stratum: apiResult.stratum !== null && apiResult.stratum !== undefined ? apiResult.stratum : undefined,
+      lastMeasured: apiResult.created_at_time ? apiResult.created_at_time.split('T')[0] : '',
+      measurementId: apiResult.search_id || '',
+      hasNTS: apiResult.nts_succeeded !== undefined ? apiResult.nts_succeeded : false,
+      supportedVersions,
+      measurementType: apiResult.response_version || 'Unknown',
+      ipVersion,
+      resultType: isIP ? 'ip' : (isDN ? 'dn' : 'ip'), // Default to 'ip' if unclear
+    };
+  };
+
   const handleSearch = async () => {
     setLoading(true);
     setHasSearched(true);
     setCurrentPage(1);
     
-    setTimeout(() => {
-      let resultCount = 150;
-      if (searchType === 'ip-domain') {
-        if (searchQuery.trim()) {
-          resultCount = Math.floor(Math.random() * 100) + 10;
-        } else if (hasActiveFilters()) {
-          // search by filters only
-          resultCount = Math.floor(Math.random() * 200) + 50;
-        } else {
-          // no query and no filters (shouldn't happen due to disabled button, but handle it)
-          resultCount = 0;
+    try {
+      const API_URL = `${import.meta.env.VITE_SERVER_HOST_ADDRESS}/measurements/data/`;
+      
+      // Build search payload - matching SearchRequest.py structure exactly
+      const payload: any = {};
+      
+      if (searchType === 'id' && measurementIdQuery.trim()) {
+        payload.measurement_id = measurementIdQuery.trim();
+      } else {
+        // IP/Domain search with filters
+        if (searchQuery && searchQuery.trim()) {
+          payload.server = searchQuery.trim();
         }
-      } else if (searchType === 'id' && measurementIdQuery.trim()) {
-        resultCount = 1;
+        
+        if (measurementType && measurementType.trim()) {
+          payload.measurement_type = measurementType.trim();
+        }
+        
+        if (referenceIdFilter && referenceIdFilter.trim()) {
+          payload.reference_id = referenceIdFilter.trim();
+        }
+        
+        if (ntpv5DraftFilter) {
+          if (customDraftFilter.trim() && ntpv5DraftFilter === 'custom') {
+            payload.ntpv5_draft = customDraftFilter.trim();
+          } else if (ntpv5DraftFilter !== 'custom') {
+            payload.ntpv5_draft = ntpv5DraftFilter;
+          }
+        }
+        
+        if (ipVersionFilter) {
+          payload.wanted_ip_type = parseInt(ipVersionFilter, 10);
+        }
+        
+        if (asnFilter && asnFilter.trim()) {
+          payload.asn = asnFilter.trim();
+        }
+        
+        if (countryFilter && countryFilter.trim()) {
+          payload.country_code = countryFilter.trim().toUpperCase();
+        }
+        
+        if (stratumFilter && stratumFilter.trim()) {
+          payload.stratum = stratumFilter.trim();
+        }
+        
+        if (ntsFilter && ntsFilter !== '') {
+          // For FastAPI GET with query params, boolean values are sent as strings
+          // FastAPI's Pydantic will parse them automatically
+          payload.nts_support = ntsFilter === 'yes';
+        }
+        
+        if (versionFilter && versionFilter.length > 0) {
+          // For query parameters, send as array - axios will handle multiple params
+          payload.ntp_versions_supported = versionFilter;
+        }
+        
+        if (offsetMin && offsetMin.trim()) {
+          const offsetMinVal = parseFloat(offsetMin);
+          if (!isNaN(offsetMinVal)) {
+            payload.offset_mins = offsetMinVal; // SearchRequest expects Optional[float]
+          }
+        }
+        
+        if (offsetMax && offsetMax.trim()) {
+          const offsetMaxVal = parseFloat(offsetMax);
+          if (!isNaN(offsetMaxVal)) {
+            payload.offset_max = offsetMaxVal; // SearchRequest expects Optional[float]
+          }
+        }
+        
+        if (dateFrom) {
+          // For datetime in query params, send as ISO string
+          payload.date_range_start = new Date(dateFrom + 'T00:00:00Z').toISOString();
+        }
+        
+        if (dateTo && !usePresent) {
+          // For datetime in query params, send as ISO string
+          payload.date_range_end = new Date(dateTo + 'T23:59:59Z').toISOString();
+        }
+        // If usePresent is true, don't set date_range_end (backend will treat it as "present")
       }
       
-      const allResults = resultCount > 0 ? generateDummyResults(resultCount) : [];
-      setResults(allResults);
+      // Clean payload - remove undefined/null/empty values
+      const cleanPayload: any = {};
+      Object.keys(payload).forEach(key => {
+        const value = payload[key];
+        // Skip undefined, null, and empty strings (but allow 0 and false)
+        if (value !== undefined && value !== null && value !== '') {
+          cleanPayload[key] = value;
+        }
+      });
+      
+      // Make API call - using POST with JSON body (much better for complex queries)
+      const response = await axios.post(API_URL, cleanPayload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      // Handle response - backend returns list directly (not wrapped in object)
+      const apiResults = Array.isArray(response.data) ? response.data : [];
+      const transformedResults = apiResults.map(transformApiResult);
+      setResults(transformedResults);
+    } catch (error: any) {
+      console.error('Search error:', error);
+      setResults([]);
+      // You might want to show an error message to the user here
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   const handleVersionToggle = (version: string) => {
@@ -179,7 +321,24 @@ const SearchTab: React.FC = () => {
       let aVal: any = a[sortField];
       let bVal: any = b[sortField];
 
+      // Handle optional numeric fields (offset, rtt, stratum)
+      if ((sortField === 'offset' || sortField === 'rtt' || sortField === 'stratum')) {
+        // Treat undefined/null as -Infinity for ascending, Infinity for descending
+        if (aVal === undefined || aVal === null) {
+          aVal = sortOrder === 'asc' ? -Infinity : Infinity;
+        }
+        if (bVal === undefined || bVal === null) {
+          bVal = sortOrder === 'asc' ? -Infinity : Infinity;
+        }
+      }
+
       if (sortField === 'lastMeasured') {
+        // Handle empty dates
+        if (!a.lastMeasured || !b.lastMeasured) {
+          if (!a.lastMeasured && !b.lastMeasured) return 0;
+          if (!a.lastMeasured) return sortOrder === 'asc' ? -1 : 1;
+          if (!b.lastMeasured) return sortOrder === 'asc' ? 1 : -1;
+        }
         aVal = new Date(a.lastMeasured).getTime();
         bVal = new Date(b.lastMeasured).getTime();
       }
@@ -664,8 +823,9 @@ const SearchTab: React.FC = () => {
                   <table className="results-table">
                     <thead>
                       <tr>
+                        <th>Type</th>
                         <th>Server</th>
-                        <th>IP Address</th>
+                        <th>IP Address(es)</th>
                         <th>ASN</th>
                         <th>Country</th>
                         <th>Offset (ms)</th>
@@ -680,41 +840,82 @@ const SearchTab: React.FC = () => {
                     <tbody>
                       {paginatedResults.map((result) => (
                         <tr key={result.id}>
+                          <td className="type-cell">
+                            <span className={`type-badge ${result.resultType === 'dn' ? 'dn-badge' : 'ip-badge'}`}>
+                              {result.resultType === 'dn' ? 'DN' : 'IP'}
+                            </span>
+                          </td>
                           <td className="server-cell">
                             <strong>{result.server}</strong>
                           </td>
-                          <td className="ip-cell">{result.ip}</td>
-                          <td className="asn-cell">{result.asn}</td>
+                          <td className="ip-cell">
+                            {result.resultType === 'dn' && result.ipAddresses ? (
+                              <div className="ip-list">
+                                {result.ipAddresses.length > 0 ? (
+                                  result.ipAddresses.length <= 3 ? (
+                                    result.ipAddresses.map((ip, idx) => (
+                                      <span key={idx} className="ip-tag">{ip}</span>
+                                    ))
+                                  ) : (
+                                    <>
+                                      {result.ipAddresses.slice(0, 2).map((ip, idx) => (
+                                        <span key={idx} className="ip-tag">{ip}</span>
+                                      ))}
+                                      <span className="ip-tag-more">+{result.ipAddresses.length - 2} more</span>
+                                    </>
+                                  )
+                                ) : (
+                                  <span className="no-ip">No IPs</span>
+                                )}
+                              </div>
+                            ) : (
+                              <span>{result.ip || 'N/A'}</span>
+                            )}
+                          </td>
+                          <td className="asn-cell">{result.asn || 'N/A'}</td>
                           <td className="country-cell">
-                            <span className="country-flag">{result.country}</span>
+                            <span className="country-flag">{result.country || 'N/A'}</span>
                           </td>
-                          <td className={`offset-cell ${Math.abs(result.offset) > 50 ? 'warning' : ''}`}>
-                            {result.offset.toFixed(3)}
+                          <td className={`offset-cell ${result.offset !== undefined && Math.abs(result.offset) > 50 ? 'warning' : ''}`}>
+                            {result.offset !== undefined ? result.offset.toFixed(3) : 'N/A'}
                           </td>
-                          <td className="rtt-cell">{result.rtt.toFixed(2)}</td>
+                          <td className="rtt-cell">
+                            {result.rtt !== undefined ? result.rtt.toFixed(2) : 'N/A'}
+                          </td>
                           <td className="stratum-cell">
-                            <span className="stratum-badge">S{result.stratum}</span>
+                            {result.stratum !== undefined ? (
+                              <span className="stratum-badge">S{result.stratum}</span>
+                            ) : (
+                              'N/A'
+                            )}
                           </td>
                           <td className="versions-cell">
                             <div className="version-tags">
-                              {result.supportedVersions.map(v => (
-                                <span key={v} className="version-tag">{v}</span>
-                              ))}
+                              {result.supportedVersions.length > 0 ? (
+                                result.supportedVersions.map(v => (
+                                  <span key={v} className="version-tag">{v}</span>
+                                ))
+                              ) : (
+                                <span className="no-versions">None</span>
+                              )}
                             </div>
                           </td>
                           <td className="nts-cell">
-                            {result.hasNTS ? (
+                            {result.hasNTS === true ? (
                               <span className="nts-badge supported">✓ Yes</span>
-                            ) : (
+                            ) : result.hasNTS === false ? (
                               <span className="nts-badge not-supported">✗ No</span>
+                            ) : (
+                              <span className="nts-badge unknown">? Unknown</span>
                             )}
                           </td>
-                          <td className="date-cell">{result.lastMeasured}</td>
+                          <td className="date-cell">{result.lastMeasured || 'N/A'}</td>
                           <td className="actions-cell">
                             <button
                               className="view-button"
                               onClick={() => {
                                 console.log('View measurement:', result.measurementId);
+                                // TODO: Navigate to measurement detail page
                               }}
                             >
                               View
