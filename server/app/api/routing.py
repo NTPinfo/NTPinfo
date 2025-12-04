@@ -2,7 +2,7 @@ from fastapi import HTTPException, APIRouter, Request, Depends, BackgroundTasks
 from fastapi.responses import HTMLResponse
 
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, cast
 from fastapi.responses import JSONResponse
 
 from sqlalchemy.orm import Session, Mapped
@@ -12,7 +12,6 @@ from starlette.responses import HTMLResponse
 from server.app.services.search_services import search_server
 from server.app.dtos.SearchRequest import SearchRequest
 from server.app.db.db_interaction import get_ntp_v4_historical_measurements
-# from server.app.db.db_interaction import get_historical_measurements
 from server.app.utils.convert_measurement_to_format import full_measurement_dn_to_dict, full_measurement_ip_to_dict, \
     partial_measurement_dn_to_dict, ntp_versions_to_dict, partial_measurement_ip_to_dict
 from server.app.utils.domain_name_to_ip import domain_name_to_ip_list
@@ -896,11 +895,11 @@ async def get_basic_statistics(request: Request, session: Session = Depends(get_
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
-@router.get(
+@router.post(
     "/measurements/data/",
     summary="search for results",
     description="Search for measurements based on various filters",
-    response_model=MeasurementResponse,
+    # response_model=JSONResponse,
     responses={
         200: {"description": "Measurements successfully returned"},
         400: {"description": "Bad request"},
@@ -923,7 +922,8 @@ async def search_for_measurements(payload: SearchRequest, request: Request,
         JSONResponse: List of measurement results matching the search criteria
     """
     if payload.measurement_id is not None:  # search by ID
-        return await poll_full_measurement(payload.measurement_id, request, session)
+        resp = await poll_full_measurement(payload.measurement_id, request, session)
+        return cast(JSONResponse, resp)
     
     try:
         results_list: list[dict] = search_server(payload, session)

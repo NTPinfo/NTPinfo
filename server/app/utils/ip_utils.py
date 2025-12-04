@@ -428,6 +428,18 @@ def is_this_ip_anycast(searched_ip: Optional[str]) -> bool:
         print(f"Error (safe) in is_anycast: {e}")
         return False
 
+def is_ip_or_dn(server: Optional[str]) -> str:
+    """
+    This method checks whether a server is an IP or DN.
+
+    Args:
+        server (Optional[str]): The server to check.
+    Returns:
+        str: Whether the server is an IP or DN (str).
+    """
+    if is_ip_address(server) is None:
+        return "server"
+    return "IP"
 
 def randomize_ip(ip: IPv4Address | IPv6Address) -> IPv4Address | IPv6Address | None:
     """

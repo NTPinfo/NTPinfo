@@ -380,7 +380,7 @@ def short_format_measurement_ip(db: Session, m: FullMeasurementIP, known_server_
         if is_part_of_dn is not None:
             # try to ge the DN measurement
             m_dn = db.query(FullMeasurementDN).filter_by(id_m_dn=is_part_of_dn.id_dn).first()
-            print(m_dn.id_m_dn)
+            # print(m_dn.id_m_dn)
             # check if the measurement on the DN says that "this is the IP that was checked and that supports NTS".
 
             # if other IP was used in the NTS measurement on the DN, and the domain name supports NTS,
@@ -406,7 +406,7 @@ def short_format_measurement_ip(db: Session, m: FullMeasurementIP, known_server_
     else:
         # we can get the NTS measurement directly from the IP measurement
         m_nts = db.query(NTSMeasurement).filter_by(id_nts=m.id_nts).first()
-        nts_succeeded = m_nts.succeeded if m_nts is not None else "Unknown"
+        nts_succeeded = bool(m_nts.succeeded) if m_nts is not None else "Unknown"
     
     m_main: Optional[dict] = ntpv4_or_v5_measurement_to_dict(db, m.id_main_measurement, m.response_version)
     m_vs: Optional[NTPVersions] = db.query(NTPVersions).filter_by(id_vs=m.id_vs).first()
@@ -430,6 +430,16 @@ def short_format_measurement_ip(db: Session, m: FullMeasurementIP, known_server_
     }
 
 def short_format_measurement_dn(db: Session, m: FullMeasurementDN) -> dict:
+    """
+    This method returns a shorter version of the FullMeasurementDN.
+
+    Args:
+        db (Session): A connection to the database (we need to query some IDs)
+        m (FullMeasurementDN): The measurement object to convert.
+
+    Returns:
+        dict: The short summary of the measurement on an IP address.
+    """
     m_nts: Optional[NTSMeasurement] = db.query(NTSMeasurement).filter_by(id_nts=m.id_nts).first()
     m_vs: Optional[NTPVersions] = db.query(NTPVersions).filter_by(id_vs=m.id_vs).first()
     return {
