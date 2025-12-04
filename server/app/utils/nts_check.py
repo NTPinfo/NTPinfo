@@ -4,6 +4,7 @@ import pprint
 import subprocess
 from typing import Tuple
 
+from server.app.utils.ip_utils import is_ip_or_dn
 from server.app.dtos.AdvancedSettings import AdvancedSettings
 from server.app.utils.load_config_data import get_timeout_measurement_s
 from server.app.utils.load_config_data import get_right_ntp_nts_binary_tool_for_your_os
@@ -102,7 +103,7 @@ def perform_nts_measurement_domain_name(server_domain_name: str, settings: Advan
         if result.returncode == 0:  # it succeeded
             nts_result_short["NTS succeeded"] = True
             nts_data = parse_nts_response_to_dict(result.stdout.strip())
-            nts_result_short["NTS analysis"] = f"It is NTS. One NTS IP is {nts_data.get('Measured server IP')}"
+            nts_result_short["NTS analysis"] = f"It is NTS. One NTS {is_ip_or_dn(nts_data.get('Measured server IP'))} is {nts_data.get('Measured server IP')}"
             # put the result data in the output
             nts_result_full = nts_data.copy()
             nts_result_full.update(nts_result_short)
