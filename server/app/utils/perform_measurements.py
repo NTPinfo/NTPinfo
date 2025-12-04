@@ -259,7 +259,7 @@ def print_ntp_measurement(measurement: NtpMeasurement) -> bool:
         return False
 
 
-def perform_ripe_measurement_domain_name(server_name: str, client_ip: str, wanted_ip_type: int,
+def perform_ripe_measurement_domain_name(server_name: str, settings: AdvancedSettings,
                                          probes_requested: int =
                                          get_ripe_number_of_probes_per_measurement()) -> int:
     """
@@ -269,8 +269,7 @@ def perform_ripe_measurement_domain_name(server_name: str, client_ip: str, wante
 
     Args:
         server_name (str): The domain name of the NTP server.
-        client_ip (str): The IP address of the NTP server.
-        wanted_ip_type (int): The IP type that we want to measure.
+        settings (AdvancedSettings): The settings to use.
         probes_requested (int): The number of probes requested.
 
     Returns:
@@ -282,6 +281,7 @@ def perform_ripe_measurement_domain_name(server_name: str, client_ip: str, wante
         RipeMeasurementError: If the ripe measurement could not be performed.
     """
 
+    client_ip = settings.custom_client_ip
     if probes_requested <= 0:
         raise InputError("Probes requested must be greater than 0.")
 
@@ -290,7 +290,7 @@ def perform_ripe_measurement_domain_name(server_name: str, client_ip: str, wante
 
     # measurement settings
     # we use wanted_ip_type to force to search this type
-    headers, request_content = get_request_settings(ip_family_of_ntp_server=wanted_ip_type, ntp_server=server_name,
+    headers, request_content = get_request_settings(ip_family_of_ntp_server=settings.wanted_ip_type, ntp_server=server_name,
                                                     client_ip=client_ip, probes_requested=probes_requested)
     # perform the measurement
     response = requests.post(
@@ -311,14 +311,14 @@ def perform_ripe_measurement_domain_name(server_name: str, client_ip: str, wante
     return ans
 
 
-def perform_ripe_measurement_ip(ntp_server_ip: str, client_ip: str,
+def perform_ripe_measurement_ip(ntp_server_ip: str, settings: AdvancedSettings,
                                 probes_requested: int = get_ripe_number_of_probes_per_measurement()) -> int:
     """
     This method performs a RIPE measurement and returns the ID of the measurement.
 
     Args:
         ntp_server_ip (str): The NTP server IP.
-        client_ip (str): The IP of the client.
+        settings (AdvancedSettings): The settings to use.
         probes_requested (int): The number of probes requested.
 
     Returns:
@@ -328,7 +328,7 @@ def perform_ripe_measurement_ip(ntp_server_ip: str, client_ip: str,
         InputError: If the NTP server IP is not valid, probe requested is negative.
         RipeMeasurementError: If the ripe measurement could not be performed.
     """
-
+    client_ip = settings.custom_client_ip
     if probes_requested <= 0:
         raise InputError("Probes requested must be greater than 0.")
     get_ip_family(client_ip)  # this will throw an exception if the client_ip is not an IP address

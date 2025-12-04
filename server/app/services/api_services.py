@@ -815,7 +815,7 @@ def add_ripe_measurement_id_to_db_measurement(db: Session, server: str, settings
         None: nothing
     """
     try:
-        ripe_measurement_id = perform_ripe_measurement(server, settings.custom_client_ip, settings.wanted_ip_type)
+        ripe_measurement_id = perform_ripe_measurement(server, settings)
         m.id_ripe = int(ripe_measurement_id)
         db.commit()
     except RipeMeasurementError as e:
@@ -890,7 +890,7 @@ def fetch_ripe_data(measurement_id: str) -> tuple[list[dict], str]:
     return measurements_formated, status
 
 
-def perform_ripe_measurement(ntp_server: str, client_ip: Optional[str], wanted_ip_type: int) -> str:
+def perform_ripe_measurement(ntp_server: str, settings: AdvancedSettings) -> str:
     """
     Initiate a RIPE Atlas measurement for a given server (IP address or domain name).
 
@@ -899,8 +899,7 @@ def perform_ripe_measurement(ntp_server: str, client_ip: Optional[str], wanted_i
 
     Args:
         ntp_server (str): The IP address or domain name of the target NTP server.
-        client_ip (Optional[str]): The IP address of the client requesting the measurement.
-        wanted_ip_type (int): The IP type that we want to measure. (4 or 6)
+        settings (AdvancedSettings): The settings to use.
 
     Returns:
         str: The RIPE measurement ID. (as a string)
@@ -909,16 +908,17 @@ def perform_ripe_measurement(ntp_server: str, client_ip: Optional[str], wanted_i
         Exception: If the server string is invalid or the measurement failed.
     """
     # use our server as the client if the client IP is not provided
+    client_ip = settings.custom_client_ip
     if client_ip is None:
-        client_ip = ip_to_str(get_server_ip(wanted_ip_type))
+        client_ip = ip_to_str(get_server_ip(settings.wanted_ip_type))
         if client_ip is None:
             raise InputError("Could not determine IP address of neither server nor client")
     try:
         if is_ip_address(ntp_server) is not None:
-            measurement_id = perform_ripe_measurement_ip(ntp_server, client_ip)
+            measurement_id = perform_ripe_measurement_ip(ntp_server, settings)
             return str(measurement_id)
         else:
-            measurement_id = perform_ripe_measurement_domain_name(ntp_server, client_ip, wanted_ip_type)
+            measurement_id = perform_ripe_measurement_domain_name(ntp_server, settings)
             return str(measurement_id)
     except InputError as e:
         raise e
