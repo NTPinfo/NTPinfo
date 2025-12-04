@@ -31,6 +31,10 @@ export type NTPData = {
   asn_ntp_server: string
   time: number
   measurement_id: string | null
+  // Error state fields (when measurement failed)
+  hasError?: boolean
+  errorMessage?: string | null
+  response_version?: string | null  // NTP version that was attempted
 }
 
 /**

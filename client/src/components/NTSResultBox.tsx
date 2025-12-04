@@ -1,5 +1,6 @@
 import React from 'react';
 import { NTSResult } from '../utils/types';
+import { formatNtpTimestampToUTC } from '../utils/formatNtpTimestamp';
 import '../styles/NTSResultBox.css';
 
 interface NTSResultBoxProps {
@@ -29,6 +30,10 @@ const NTSResultBox: React.FC<NTSResultBoxProps> = ({ ntsResult, loading, error }
         </div>
       </div>
     );
+  }
+
+  if (!ntsResult) {
+    return null;
   }
 
   // Normalize keys to support both backend snake_case and display Title Case keys
@@ -63,12 +68,37 @@ const NTSResultBox: React.FC<NTSResultBoxProps> = ({ ntsResult, loading, error }
 
   const data = normalize(ntsResult);
 
-  const formatNTSValue = (value: any): string => {
+  const formatNTSValue = (value: any, key?: string): string => {
     if (typeof value === 'boolean') {
       return value ? 'Yes' : 'No';
     }
     if (typeof value === 'object' && value !== null) {
       return JSON.stringify(value, null, 2);
+    }
+    if (typeof value === 'number') {
+      // Handle timestamps - convert to UTC
+      if (key && (key.includes('time') || key === 'ref_time' || 
+                  key === 'client_sent_time' || key === 'server_recv_time' || 
+                  key === 'server_sent_time' || key === 'client_recv_time')) {
+        return formatNtpTimestampToUTC(value);
+      }
+      // Handle scientific notation for precision
+      if (key === 'precision' && Math.abs(value) < 0.001) {
+        return value.toExponential(2);
+      }
+      // Format floats with appropriate precision
+      if (key === 'offset' || key === 'Offset (s)') {
+        return `${(value * 1000).toFixed(3)} ms`;
+      }
+      if (key === 'rtt' || key === 'RTT (s)') {
+        return `${(value * 1000).toFixed(3)} ms`;
+      }
+      if (key === 'root_delay' || key === 'Root delay' || 
+          key === 'root_disp' || key === 'Root dispersion' || 
+          key === 'root_dist' || key === 'Root distance' || 
+          key === 'min_error') {
+        return `${value.toFixed(6)} s`;
+      }
     }
     return String(value);
   };
@@ -115,12 +145,11 @@ const NTSResultBox: React.FC<NTSResultBoxProps> = ({ ntsResult, loading, error }
             .map((key) => (
               <div key={key} className="nts-metric">
                 <span className="nts-key">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                <span className="nts-value">{formatNTSValue(data[key])}</span>
+                <span className="nts-value">{formatNTSValue(data[key], key)}</span>
               </div>
             ))}
         </div>
 
-        {/* Show additional details in a collapsible section if there are more fields */}
         {hasMoreFields && (
           <details className="nts-other-details">
             <summary>More Details</summary>
@@ -130,7 +159,7 @@ const NTSResultBox: React.FC<NTSResultBoxProps> = ({ ntsResult, loading, error }
                 .map((key) => (
                   <div key={key} className="nts-metric">
                     <span className="nts-key">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                    <span className="nts-value">{formatNTSValue(data[key])}</span>
+                    <span className="nts-value">{formatNTSValue(data[key], key)}</span>
                   </div>
                 ))}
             </div>

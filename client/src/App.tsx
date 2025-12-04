@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import HomeTab from './tabs/HomeTab';
 import CompareTab from './tabs/CompareTab';
 import HistoricalDataTab from './tabs/HistoricalDataTab';
+import SearchTab from './tabs/SearchTab';
 import AboutTab from './tabs/AboutTab';
 // import { NTPData } from './utils/types';
 import { NTPData, HomeCacheState } from './utils/types';
@@ -12,6 +13,7 @@ import './App.css';
 
 function App() {
   const [selectedTab, setSelectedTab] = useState(1);
+  const [previousTab, setPreviousTab] = useState(1);
   const [visualizationData, setVisualizationData] = useState<Map<string, NTPData[]> | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -46,10 +48,23 @@ function App() {
   // Check if any measurement is currently running
   const isMeasurementRunning = homeCache.measurementSessionActive;
 
-  // Reload measurement results when switching to home tab
+  // Track previous tab and reset cache when returning to HomeTab from another tab
+  useEffect(() => {
+    if (selectedTab !== previousTab) {
+      // Tab changed
+      if (selectedTab === 1 && previousTab !== 1 && !homeCache.measurementSessionActive) {
+        // Coming back to HomeTab from another tab, and no measurement is running
+        // Reset the cache to initial state for a clean page
+        setHomeCache(initialCache);
+      }
+      setPreviousTab(selectedTab);
+    }
+  }, [selectedTab, previousTab, homeCache.measurementSessionActive]);
+
+  // Reload measurement results when switching to home tab (only if measurement is still active)
   useEffect(() => {
     const reloadMeasurementResults = async () => {
-      if (selectedTab === 1 && homeCache.measured && homeCache.measurementId) {
+      if (selectedTab === 1 && homeCache.measured && homeCache.measurementId && homeCache.measurementSessionActive) {
         try {
           // Fetch main measurement results
           const measurementResult = await fetchMeasurementById(homeCache.measurementId);
@@ -98,7 +113,7 @@ function App() {
     };
 
     reloadMeasurementResults();
-  }, [selectedTab, homeCache.measured, homeCache.measurementId, homeCache.ripeMeasurementId, fetchMeasurementById, fetchRipeMeasurementById]);
+  }, [selectedTab, homeCache.measured, homeCache.measurementId, homeCache.ripeMeasurementId, homeCache.measurementSessionActive, fetchMeasurementById, fetchRipeMeasurementById]);
 
   return (
 
@@ -121,7 +136,9 @@ function App() {
         )}
         {selectedTab === 2 && <HistoricalDataTab data={visualizationData} />}
         {selectedTab === 3 && <CompareTab />}
-        {selectedTab === 4 && <AboutTab />}
+        {/* SearchTab temporarily hidden - will be updated in future */}
+        {/* {selectedTab === 4 && <SearchTab />} */}
+        {selectedTab === 5 && <AboutTab />}
       </main>
     </div>
   );
