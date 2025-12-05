@@ -376,7 +376,11 @@ def test_get_request_settings_ok(mock_ripe_api_token, mock_packets, mock_timeout
         "requested": 4
     }]
 
-    (h, c) = get_request_settings(4, "ntp.server.com", "74.22.34.47",28)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "74.22.34.47"
+    settings.wanted_ip_type = 4
+
+    (h, c) = get_request_settings("ntp.server.com", settings,28)
     assert h == {
         "Authorization": "Key token",
         "Content-Type": "application/json"
@@ -417,10 +421,21 @@ def test_get_request_settings_exception(mock_ripe_api_token, mock_packets, mock_
     mock_timeout.return_value = 3400
     mock_email.return_value = "email@email.com"
     mock_probes.side_effect = InputError("exc")
+
+
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "74.22.34.47"
+    settings.wanted_ip_type = 4
+
     with pytest.raises(Exception):
-        get_request_settings(4, "ntp.server.com", "74.22.34.47", 28)
+        get_request_settings("ntp.server.com", settings, 28)
 
     mock_timeout.reset_mock()
     mock_timeout.side_effect = ValueError("env problem")
+
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "74.22.34.47"
+    settings.wanted_ip_type = 4
+
     with pytest.raises(ValueError):
-        get_request_settings(4, "ntp.server.com", "74.22.34.47", 28)
+        get_request_settings("ntp.server.com", settings, 28)
