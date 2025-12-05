@@ -24,6 +24,7 @@ export const usePollIncrementalMeasurement = (
   const [ntpData, setNtpData] = useState<NTPData[] | null>(null);
   const [ntsData, setNtsData] = useState<any>(null);
   const [ripeId, setRipeId] = useState<string | null>(null);
+  const [ripeInitError, setRipeInitError] = useState<string | null>(null);
   const [versionData, setVersionData] = useState<any>(null);
   const [status, setStatus] = useState<MeasurementStep | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +73,7 @@ export const usePollIncrementalMeasurement = (
       setNtsData(null);
       setVersionData(null);
       setRipeId(null);
+      setRipeInitError(null);
       setStatus(null);
       setError(null);
       setNtpVerLoading(false);
@@ -100,6 +102,7 @@ export const usePollIncrementalMeasurement = (
       setNtsData(null);
       setVersionData(null);
       setRipeId(null);
+      setRipeInitError(null);
       setStatus(null);
       setError(null);
       setNtpVerLoading(false);
@@ -257,7 +260,7 @@ export const usePollIncrementalMeasurement = (
         const currentStatus = partialData.status as MeasurementStep;
         setStatus(currentStatus);
 
-        // Update RIPE ID if available
+        // Update RIPE ID if available, or track error if id_ripe is null
         if (partialData.id_ripe) {
           setRipeId(prev => {
             if (prev !== partialData.id_ripe) {
@@ -265,6 +268,11 @@ export const usePollIncrementalMeasurement = (
             }
             return prev;
           });
+          setRipeInitError(null); // Clear error if we got an ID
+        } else if (partialData.id_ripe === null && partialData.ripe_error) {
+          // Whole RIPE measurement failed
+          setRipeInitError(partialData.ripe_error);
+          setRipeId(null);
         }
 
         // Handle main measurement (for IP measurements)
@@ -327,9 +335,6 @@ export const usePollIncrementalMeasurement = (
         if (partialData.response_error) {
           setError(partialData.response_error);
         }
-        if (partialData.ripe_error) {
-          console.warn("RIPE error:", partialData.ripe_error);
-        }
 
         // When finished, fetch full results to get all IP measurements (including failed ones)
         if (currentStatus === "finished" || currentStatus === "failed") {
@@ -382,7 +387,7 @@ export const usePollIncrementalMeasurement = (
     status,
     error,
     ripeStatus,
-    ripeError,
+    ripeError: ripeInitError || ripeError, // Prioritize init error (when id_ripe is null) over probe errors - can be string or Error
     ripeId,
     ntpVerLoading,
     expectedIpCount,

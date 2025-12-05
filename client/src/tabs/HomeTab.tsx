@@ -116,15 +116,19 @@ const ripeTriggerErr = null;
                                   ripeMeasurementStatus === 'timeout' ||
                                   ripeMeasurementStatus === 'error';
       
+      // Check if RIPE failed completely (id_ripe is null with error message)
+      const ripeFailedCompletely = (fullRipeId === null || ripeMeasurementId === null) && 
+                                   (typeof ripeMeasurementError === 'string' ? ripeMeasurementError : (ripeMeasurementError?.message || null));
+      
       // End session if:
       // 1. Main measurement failed (don't wait for RIPE if main measurement failed)
-      // 2. OR main measurement finished AND RIPE is done (or never started)
+      // 2. OR main measurement finished AND (RIPE is done OR RIPE failed completely OR RIPE never started OR RIPE is still pending after main finished)
       if (measurementStatus === 'failed' || 
-          (mainMeasurementDone && (ripeMeasurementDone || !ripeMeasurementStatus || ripeMeasurementStatus === null))) {
+          (mainMeasurementDone && (ripeMeasurementDone || ripeFailedCompletely || !ripeMeasurementStatus || ripeMeasurementStatus === null || ripeMeasurementStatus === 'pending'))) {
         updateCache({ measurementSessionActive: false });
       }
     }
-  }, [measurementStatus, ripeMeasurementStatus, measurementSessionActive, updateCache]);
+  }, [measurementStatus, ripeMeasurementStatus, measurementSessionActive, updateCache, fullRipeId, ripeMeasurementId, ripeMeasurementError]);
 
   useEffect(() => {
     if (!fetchedRIPEStatus) return;
@@ -133,6 +137,17 @@ const ripeTriggerErr = null;
       ripeMeasurementStatus: fetchedRIPEStatus,
     });
   }, [ripeData, fetchedRIPEStatus, updateCache]);
+
+  // Handle case when RIPE measurement fails completely (id_ripe is null with error)
+  useEffect(() => {
+    // If RIPE ID is null and we have an error message, mark RIPE as failed
+    if ((fullRipeId === null && ripeMeasurementId === null) && 
+        (typeof ripeMeasurementError === 'string' ? ripeMeasurementError : (ripeMeasurementError?.message || null))) {
+      updateCache({
+        ripeMeasurementStatus: 'error',
+      });
+    }
+  }, [fullRipeId, ripeMeasurementId, ripeMeasurementError, updateCache]);
 
   // Ensure RIPE index stays within bounds when array updates
   useEffect(() => {
@@ -502,6 +517,8 @@ const ripeTriggerErr = null;
             onRipeIndexChange={(index) => updateCache({ currentRipeIndex: index })}
             expectedIpCount={expectedIpCount}
             isLoading={measurementSessionActive || triggerLoading}
+            ripeId={fullRipeId || ripeMeasurementId || null}
+            ripeErrorMessage={typeof ripeMeasurementError === 'string' ? ripeMeasurementError : (ripeMeasurementError?.message || null)}
           />
 
           {/* Div for the visualization graph, and the radios for setting the what measurement to show */}

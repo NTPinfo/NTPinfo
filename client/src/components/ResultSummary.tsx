@@ -64,13 +64,13 @@ function formatRootValue(value: number | string | undefined): string {
 
 function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, errMessage, measurementId,
         allNtpMeasurements, allRipeMeasurements, currentNtpIndex, currentRipeIndex, onNtpIndexChange, onRipeIndexChange,
-        expectedIpCount, isLoading} :
+        expectedIpCount, isLoading, ripeId, ripeErrorMessage} :
     {data : NTPData | null, ripeData: RIPEData | null, ripeErr: Error | null, ripeStatus: RipeStatus | null, 
         httpStatus: number, err: Error | null, errMessage: string | null, measurementId: string | null,
         allNtpMeasurements: NTPData[] | null, allRipeMeasurements: RIPEData[] | null,
         currentNtpIndex: number, currentRipeIndex: number,
         onNtpIndexChange: (index: number) => void, onRipeIndexChange: (index: number) => void,
-        expectedIpCount?: number, isLoading?: boolean}) {
+        expectedIpCount?: number, isLoading?: boolean, ripeId?: string | null, ripeErrorMessage?: string | null}) {
 
     const [serverStatus, setServerStatus] = useState<string | null>(null)
     const [statusMessage, setStatusMessage] = useState<string | null>("")   
@@ -249,7 +249,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                                 <div className="metric"><span title='The total round-trip delay to the primary reference source'>Root delay</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
                                 <div className="metric"><span title='The poll interval used during the measurement'>Poll interval</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
                                 <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
-                                <div className="metric"><span>ASN</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                                <div className="metric"><span title='The ASN of the server'>ASN</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
                                 <div className="metric"><span title='The NTP version used for this measurement'>NTP Version</span><span style={{ color: '#dc2626', fontWeight: 'bold' }}>N/A</span></div>
                                 <div className="metric"><span>Measurement ID</span><span>{measurementId ?? 'N/A'}</span></div>
                                 <div className="metric" style={{ marginTop: '8px', padding: '6px 8px', backgroundColor: '#fef2f2', borderRadius: '4px', border: '1px solid #fca5a5', whiteSpace: 'normal' }}>
@@ -271,7 +271,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                             <div className="metric"><span title='The total round-trip delay to the primary reference source'>Root delay</span><span>{data?.root_delay !== undefined ? formatRootValue(data.root_delay) : 'N/A'}</span></div>
                             <div className="metric"><span title='The poll interval used by the probe during the measurement'>Poll interval</span><span>{data?.poll !== undefined ? `${Math.pow(2, data.poll)} s` : 'N/A'}</span></div>
                             <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span>{data?.root_dispersion !== undefined ? `${formatRootValue(data.root_dispersion)} s` : 'N/A'} {rootDispIconNTP && <img src={rootDispIconNTP} alt="root dispersion performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
-                            <div className="metric"><span>ASN</span><span>{data?.asn_ntp_server !== undefined ? data.asn_ntp_server : "N/A"}</span></div>
+                            <div className="metric"><span title='The ASN of the server'>ASN</span><span>{data?.asn_ntp_server !== undefined ? data.asn_ntp_server : "N/A"}</span></div>
                             <div className="metric"><span title='The NTP version used for this measurement'>NTP Version</span><span>{data?.response_version || 'N/A'}</span></div>
                             <div className="metric"><span>Measurement ID</span><span>{measurementId ?? 'N/A'}</span></div>
                         </div>
@@ -289,7 +289,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                             <div className="metric"><span title='The total round-trip delay to the primary reference source'>Root delay</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
                             <div className="metric"><span title='The poll interval used by the probe during the measurement'>Poll interval</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
                             <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
-                            <div className="metric"><span>ASN</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                            <div className="metric"><span title='The ASN of the server'>ASN</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
                             <div className="metric"><span title='The NTP version used for this measurement'>NTP Version</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
                             <div className="metric"><span>Measurement ID</span><span>{measurementId ?? 'N/A'}</span></div>
                         </div>
@@ -351,7 +351,29 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                         </div>
                     </div>
 
-                        { ((ripeStatus === "complete" || ripeStatus === "timeout") &&
+                        { (ripeId === null && ripeErrorMessage) ? (
+                    <div className="result-box" id="ripe-details">
+                        <div className="metric"><span title='The difference between the time reported by the like an NTP server and your local clock'>Offset</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                        <div className="metric"><span title='The total time taken for a request to travel from the client to the server and back.'>Round-trip time</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                        <div className="metric"><span title='The variability in delay times between successive NTP messages, calculated as std. dev. of offsets'>Jitter</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                        <div className="metric"><span title='The smallest time unit that the NTP server can measure or represent'>Precision</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                        <div className="metric"><span title='A hierarchical level number indicating the distance from the reference clock'>Stratum</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                        <div className="metric"><span title='The IP address of the NTP server'>IP address</span><span>{data?.ip || 'N/A'}</span></div>
+                        <div className="metric"><span>Vantage point IP</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                        <div className="metric"><span>Country</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                        <div className="metric"><span>Reference ID</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                        <div className="metric"><span title='The total round-trip delay to the primary reference source'>Root delay</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                        <div className="metric"><span title='The poll interval used by the probe during the measurement'>Poll interval</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                        <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                        <div className="metric"><span title='The ASN of the server'>ASN</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                        <div className="metric"><span title='The NTP version used for this measurement'>NTP Version</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                        <div className="metric"><span>Measurement ID</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
+                        <div className="metric" style={{ marginTop: '8px', padding: '6px 8px', backgroundColor: '#fef2f2', borderRadius: '4px', border: '1px solid #fca5a5', whiteSpace: 'normal' }}>
+                            <span style={{ color: '#dc2626', fontWeight: 'bold' }}>Error</span>
+                            <span style={{ color: '#dc2626', fontSize: '0.9rem', wordBreak: 'break-word', overflowWrap: 'break-word', maxWidth: 'calc(100% - 2rem)' }}>{simplifyErrorMessage(ripeErrorMessage) || 'RIPE measurement failed'}</span>
+                        </div>
+                    </div>
+                        ) : ((ripeStatus === "complete" || ripeStatus === "timeout") &&
                     (
                     <div className="result-box" id="ripe-details">
                         <div className="metric"><span title='The difference between the time reported by the like an NTP server and your local clock'>Offset</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.offset !== undefined ? `${(ripeData.measurementData.offset).toFixed(3)} ms` : 'N/A'} {!isRipeMeasurementFailed && offsetIconRIPE && <img src={offsetIconRIPE} alt="offset performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
@@ -366,7 +388,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                         <div className="metric"><span title='The total round-trip delay to the primary reference source'>Root delay</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.root_delay !== undefined ? formatRootValue(ripeData.measurementData.root_delay) : 'N/A'}</span></div>
                         <div className="metric"><span title='The poll interval used by the probe during the measurement'>Poll interval</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.poll !== undefined ? `${ripeData.measurementData.poll} s` : 'N/A'}</span></div>
                         <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.root_dispersion !== undefined ? `${formatRootValue(ripeData.measurementData.root_dispersion)} s` : 'N/A'} {!isRipeMeasurementFailed && rootDispIconRIPE && <img src={rootDispIconRIPE} alt="root dispersion performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
-                        <div className="metric"><span>ASN</span><span>{ripeData?.measurementData.asn_ntp_server !== undefined ? ripeData.measurementData.asn_ntp_server : 'N/A' }</span></div>
+                        <div className="metric"><span title='The ASN of the server'>ASN</span><span>{ripeData?.measurementData.asn_ntp_server !== undefined ? ripeData.measurementData.asn_ntp_server : 'N/A' }</span></div>
                         <div className="metric"><span title='The NTP version used for this measurement'>NTP Version</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.ntp_version !== undefined && ripeData.measurementData.ntp_version !== -1 ? ripeData.measurementData.ntp_version : 'N/A'}</span></div>
                         <div className="metric"><span>Measurement ID</span><span>
                             {ripeData?.measurement_id ? (
@@ -404,7 +426,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                         <div className="metric"><span title='The total round-trip delay to the primary reference source'>Root delay</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.root_delay !== undefined ? formatRootValue(ripeData.measurementData.root_delay) : 'N/A'}</span></div>
                         <div className="metric"><span title='The poll interval used by the probe during the measurement'>Poll interval</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.poll !== undefined ? `${ripeData.measurementData.poll} s` : 'N/A'}</span></div>
                         <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.root_dispersion !== undefined ? `${formatRootValue(ripeData.measurementData.root_dispersion)} s` : 'N/A'} {!isRipeMeasurementFailed && rootDispIconRIPE && <img src={rootDispIconRIPE} alt="root dispersion performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
-                        <div className="metric"><span>ASN</span><span>{ripeData?.measurementData.asn_ntp_server !== undefined ? ripeData.measurementData.asn_ntp_server : 'N/A' }</span></div>
+                        <div className="metric"><span title='The ASN of the server'>ASN</span><span>{ripeData?.measurementData.asn_ntp_server !== undefined ? ripeData.measurementData.asn_ntp_server : 'N/A' }</span></div>
                         <div className="metric"><span title='The NTP version used for this measurement'>NTP Version</span><span>{!isRipeMeasurementFailed && ripeData?.measurementData.ntp_version !== undefined && ripeData.measurementData.ntp_version !== -1 ? ripeData.measurementData.ntp_version : 'N/A'}</span></div>
                         <div className="metric"><span>Measurement ID</span><span>
                             {ripeData?.measurement_id ? (
