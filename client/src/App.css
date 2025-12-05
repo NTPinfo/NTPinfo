@@ -26,7 +26,7 @@ body,
 body {
   /* instead of html */
 
-  /* global variables */
+  /* global variables - these are overridden by :root in index.css */
   --bg-clr-primary: #f0f0f0;
   --bg-clr-secondary: white;
   --crl-accent: #002154;
@@ -40,6 +40,7 @@ body {
   --clr-btn-sel: #002154;
   /**/
   background-color: var(--bg-clr-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .logo {
@@ -123,6 +124,12 @@ body {
   object-fit: contain;
   display: block;
   filter: var(--img-invert);
+  transition: filter 0.3s ease;
+}
+
+/* Dark mode for RIPE logo - make it white/visible */
+[data-theme="dark"] .footer-logo-ripe {
+  filter: brightness(0) invert(1);
 }
 
 @keyframes logo-spin {
@@ -207,9 +214,9 @@ body {
   width: 100%;
   max-width: 100%;
   overflow-y: auto;
-  background: var(--clr-bg-primary);
+  background: var(--bg-clr-primary);
   margin-left: 55px;
-  transition: margin-left 0.2s ease;
+  transition: margin-left 0.2s ease, background-color 0.3s ease;
   /* Ensure no horizontal scrollbar */
   overflow-x: hidden;
 }

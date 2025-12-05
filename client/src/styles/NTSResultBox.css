@@ -90,6 +90,36 @@
   min-width: 85px;
 }
 
+/* Dark mode styles for NTS result box */
+[data-theme="dark"] .nts-result-box {
+  background-color: #161b22;
+  border-color: #30363d;
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .nts-label {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .nts-key {
+  color: #8b949e;
+}
+
+[data-theme="dark"] .nts-value {
+  color: #c9d1d9;
+}
+
+/* Dark mode for NTS status badges */
+[data-theme="dark"] .nts-status-warning {
+  background-color: #d29922;
+  color: #0d1117;
+}
+
+[data-theme="dark"] .nts-status-info {
+  background-color: #6e7681;
+  color: #c9d1d9;
+}
+
 .nts-value {
   font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
   font-feature-settings: "tnum";

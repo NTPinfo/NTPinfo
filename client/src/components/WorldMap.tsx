@@ -4,6 +4,7 @@ import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import { useEffect, useState, useRef } from 'react'
 import { NTPData, RIPEData } from '../utils/types'
+import { useTheme } from '../contexts/ThemeContext'
 import greenProbeImg from '../assets/green-probe.png'
 import yellowProbeImg from '../assets/yellow-probe.png'
 import redProbeImg from '../assets/red-probe.png'
@@ -192,22 +193,51 @@ const FitMapBounds = ({probes, ripeNtpServers, measurementNtpServers, intersecti
 const DrawConnectingLines = ({probes, measurementNtpServers, intersectionNtpServers, unavailableNtpServers, vantagePoint}: {probes: RIPEData[] | null,
   measurementNtpServers: LatLngTuple[], intersectionNtpServers: LatLngTuple[], unavailableNtpServers: LatLngTuple[], vantagePoint: LatLngTuple}) => {
   const map = useMap()
+  const { theme } = useTheme()
+  const polylinesRef = useRef<L.Polyline[]>([])
+  
+  // Use different colors for dark mode
+  const lineColor = theme === 'dark' ? '#58a6ff' : '#1961ac'
 
   useEffect(() => {
-    measurementNtpServers.map(x => {
-      L.polyline([x,vantagePoint], {color:'#1961ac', opacity: 0.8, weight: 1}).addTo(map)
+    // Remove all existing polylines
+    polylinesRef.current.forEach(polyline => {
+      map.removeLayer(polyline)
     })
-    intersectionNtpServers.map(x => {
-      L.polyline([x,vantagePoint], {color:'#1961ac', opacity: 0.8, weight: 1}).addTo(map)
+    polylinesRef.current = []
+
+    // Add new polylines with current color
+    measurementNtpServers.forEach(x => {
+      const polyline = L.polyline([x,vantagePoint], {color: lineColor, opacity: 0.8, weight: 1})
+      polyline.addTo(map)
+      polylinesRef.current.push(polyline)
     })
-    unavailableNtpServers.map(x => {
-      L.polyline([x,vantagePoint], {color:'#1961ac', opacity: 0.8, weight: 1}).addTo(map)
+    intersectionNtpServers.forEach(x => {
+      const polyline = L.polyline([x,vantagePoint], {color: lineColor, opacity: 0.8, weight: 1})
+      polyline.addTo(map)
+      polylinesRef.current.push(polyline)
     })
-    if (!vantagePoint || !probes|| probes.length === 0) return
-    probes.map(x => {
-      L.polyline([x.probe_location,x.measurementData.coordinates], {color: '#1961ac', opacity: 0.8, weight: 1}).addTo(map)
+    unavailableNtpServers.forEach(x => {
+      const polyline = L.polyline([x,vantagePoint], {color: lineColor, opacity: 0.8, weight: 1})
+      polyline.addTo(map)
+      polylinesRef.current.push(polyline)
     })
-  },[map, probes, measurementNtpServers, intersectionNtpServers, unavailableNtpServers, vantagePoint])
+    if (vantagePoint && probes && probes.length > 0) {
+      probes.forEach(x => {
+        const polyline = L.polyline([x.probe_location,x.measurementData.coordinates], {color: lineColor, opacity: 0.8, weight: 1})
+        polyline.addTo(map)
+        polylinesRef.current.push(polyline)
+      })
+    }
+
+    // Cleanup function
+    return () => {
+      polylinesRef.current.forEach(polyline => {
+        map.removeLayer(polyline)
+      })
+      polylinesRef.current = []
+    }
+  },[map, probes, measurementNtpServers, intersectionNtpServers, unavailableNtpServers, vantagePoint, lineColor])
 
   return null
 }
@@ -264,6 +294,44 @@ const LegendControl = () => {
 
     return cleanup
   }, [map])
+
+  return null
+}
+
+/**
+ * Component to switch tile layers based on theme
+ */
+const ThemeTileLayer = () => {
+  const map = useMap()
+  const { theme } = useTheme()
+  const [tileLayer, setTileLayer] = useState<L.TileLayer | null>(null)
+
+  useEffect(() => {
+    // Remove old tile layer
+    if (tileLayer) {
+      map.removeLayer(tileLayer)
+    }
+
+    // Add new tile layer based on theme
+    const url = theme === 'dark' 
+      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+      : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+    
+    const newTileLayer = L.tileLayer(url, {
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: ['a', 'b', 'c', 'd'],
+      maxZoom: 19
+    })
+    
+    newTileLayer.addTo(map)
+    setTileLayer(newTileLayer)
+
+    return () => {
+      if (newTileLayer) {
+        map.removeLayer(newTileLayer)
+      }
+    }
+  }, [map, theme])
 
   return null
 }
@@ -489,12 +557,7 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
         <h2>{statusMessage}</h2>
         {isAnycast && <h2>This server uses Anycast. Server Geolocation might be inaccurate</h2>}
         <MapContainer style={{height: '100%', width: '100%'}}>
-            <TileLayer
-                url = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                attribution= '&copy; <a href="https://carto.com/">CARTO</a>'
-                subdomains={['a', 'b', 'c', 'd']}
-                maxZoom={19}
-            />
+            <ThemeTileLayer />
 
             {probes && (
             <>

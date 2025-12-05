@@ -114,11 +114,108 @@
   --sidn-lichtoranje: #e59236;
   --sidn-blauw: #1961ac;
 
+  --clr-btn-selected-purple: #bfbfbf;
 
   --link-hover: #282828;
   --img-invert: invert(.6);
 
 }
+
+/* Dark mode - beautiful theme */
+[data-theme="dark"] {
+  background-color: #0d1117;
+  color: #c9d1d9;
+  
+  /* Image invert for dark mode - make icons white */
+  --img-invert: invert(1) brightness(1.2);
+}
+
+[data-theme="dark"] body {
+  background-color: #0d1117;
+  color: #c9d1d9;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[data-theme="dark"] .app-content {
+  background-color: #0d1117;
+  transition: background-color 0.3s ease;
+}
+
+[data-theme="dark"] .app-container {
+  background-color: #0d1117;
+  transition: background-color 0.3s ease;
+}
+
+/* Dark mode text colors */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] p,
+[data-theme="dark"] span,
+[data-theme="dark"] label {
+  color: #c9d1d9;
+  transition: color 0.3s ease;
+}
+
+/* Dark mode links */
+[data-theme="dark"] a {
+  color: #58a6ff;
+  transition: color 0.2s ease;
+}
+
+[data-theme="dark"] a:hover {
+  color: #79c0ff;
+}
+
+/* Dark mode buttons */
+[data-theme="dark"] button {
+  background-color: #21262d;
+  color: #c9d1d9;
+  border-color: #30363d;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+[data-theme="dark"] button:hover {
+  background-color: #30363d;
+  border-color: #484f58;
+}
+
+[data-theme="dark"] button:disabled {
+  background-color: #161b22;
+  color: #6e7681;
+  border-color: #21262d;
+}
+
+/* Dark mode input fields */
+[data-theme="dark"] input {
+  background-color: #0d1117;
+  color: #c9d1d9;
+  border-color: #30363d;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+[data-theme="dark"] input:focus {
+  border-color: #58a6ff;
+  outline: none;
+}
+
+[data-theme="dark"] input::placeholder {
+  color: #6e7681;
+}
+
+/* Dark mode cards and boxes */
+[data-theme="dark"] .result-box,
+[data-theme="dark"] .nts-result-box,
+[data-theme="dark"] .graph-box,
+[data-theme="dark"] .popup-card,
+[data-theme="dark"] .about-project-info,
+[data-theme="dark"] .feature {
+  background-color: #161b22;
+  border-color: #30363d;
+  color: #c9d1d9;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
 *,
 *::before,
 *::after {
@@ -140,16 +237,14 @@ a {
 a:hover {
   color: var(--link-hover);
 }
-html {
-  /* background-color: var(--bg-clr-primary); */
-}
+
 body {
   margin: 0;
   display: block;
   min-width: 320px;
   min-height: 100vh;
-
-  /* background-color: var(--bg-clr-primary); */
+  background-color: var(--bg-clr-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 h1 {
@@ -166,22 +261,10 @@ button {
   font-weight: 500;
   font-family: inherit;
   background-color: var(--clr-btn-not-sel);
+  color: var(--text-dark);
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: border-color 0.25s, background-color 0.3s ease, color 0.3s ease;
 }
 button:hover {
   border-color: var(--clr-btn-hover);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: var(--link-hover);
-  }
-  button {
-    background-color: #f9f9f9;
-  }
 }

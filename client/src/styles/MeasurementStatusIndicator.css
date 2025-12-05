@@ -24,6 +24,25 @@
   color: #c62828;
 }
 
+/* Dark mode styles */
+[data-theme="dark"] .measurement-status-indicator {
+  background-color: #161b22;
+  border-left-color: #58a6ff;
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .measurement-status-indicator.complete {
+  background-color: #1a2e1a;
+  border-left-color: #3fb950;
+  color: #3fb950;
+}
+
+[data-theme="dark"] .measurement-status-indicator.failed {
+  background-color: #2e1a1a;
+  border-left-color: #f85149;
+  color: #f85149;
+}
+
 .status-icon {
   font-size: 18px;
   font-weight: bold;

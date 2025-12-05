@@ -93,6 +93,7 @@
   width: 24px;
   height: 24px;
   filter: var(--img-invert);
+  transition: filter 0.2s ease;
 }
 
 .sidebar__label {
@@ -141,6 +142,72 @@
   background: rgba(0, 0, 0, 0.3);
   z-index: 999;
   transition: opacity 0.2s ease;
+}
+
+.sidebar__footer {
+  margin-top: auto;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid var(--border-color);
+}
+
+.sidebar.closed .sidebar__footer {
+  padding: 0.75rem 0.5rem;
+  justify-content: center;
+}
+
+/* Dark mode styles for sidebar */
+[data-theme="dark"] .sidebar {
+  background: #161b22;
+  color: #c9d1d9;
+  border-right-color: #30363d;
+}
+
+[data-theme="dark"] .sidebar__item {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .sidebar__item:hover {
+  background-color: #21262d;
+}
+
+[data-theme="dark"] .sidebar__item.active {
+  background-color: #1f6feb;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .sidebar__icon {
+  filter: brightness(0) invert(1) !important;
+}
+
+[data-theme="dark"] .sidebar__item.active .sidebar__icon {
+  filter: brightness(0) invert(1) !important;
+}
+
+[data-theme="dark"] .sidebar__toggle .sidebar__icon {
+  filter: brightness(0) invert(1) !important;
+}
+
+[data-theme="dark"] .sidebar__label {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .sidebar__item.active .sidebar__label {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .sidebar__footer {
+  border-top-color: #30363d;
+}
+
+[data-theme="dark"] .sidebar__toggle {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .sidebar__toggle .sidebar__icon {
+  filter: brightness(0) invert(1) !important;
 }
 
 @media screen and (max-width: 768px) {

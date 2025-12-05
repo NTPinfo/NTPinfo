@@ -323,6 +323,15 @@
   filter: brightness(1);
 }
 
+/* Dark mode for RIPE logo */
+[data-theme="dark"] .ripe-logo {
+  filter: brightness(0) invert(1);
+}
+
+[data-theme="dark"] .ripe-logo:hover {
+  filter: brightness(0) invert(1) brightness(1.2);
+}
+
 @media (max-width: 700px) {
   .home-footer {
     margin-top: 1.5rem;
@@ -342,4 +351,24 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+
+/* Dark mode styles for home tab */
+[data-theme="dark"] .home-footer {
+  background-color: #161b22;
+  border-top-color: #30363d;
+}
+
+[data-theme="dark"] .footer-content {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .graph-box {
+  background-color: #161b22;
+  border-color: #30363d;
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .result-text p {
+  color: #c9d1d9;
 }

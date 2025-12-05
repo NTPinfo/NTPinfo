@@ -78,3 +78,33 @@
   }
 }
 
+/* Dark mode styles for statistics visualization */
+[data-theme="dark"] .statistics-card {
+  background-color: #161b22;
+  border-color: #30363d;
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .statistics-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .statistic-item {
+  background-color: #161b22;
+  border-color: #30363d;
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .statistic-label {
+  color: #8b949e;
+}
+
+[data-theme="dark"] .statistic-value {
+  color: #58a6ff;
+}
+
+[data-theme="dark"] .statistics-chart-container {
+  background-color: #161b22;
+  border-radius: var(--radius);
+}
+

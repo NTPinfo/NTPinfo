@@ -1,10 +1,35 @@
 @import "../index.css";
 
+/* Error banner styles */
+.error-banner {
+  background-color: #fee;
+  border: 2px solid #f88;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  color: #c33;
+}
+
+[data-theme="dark"] .error-banner {
+  background-color: #2e1a1a !important;
+  border-color: #f85149 !important;
+  color: #f85149 !important;
+}
+
+[data-theme="dark"] .error-banner h3,
+[data-theme="dark"] .error-banner p {
+  color: #f85149 !important;
+}
+
 h2#not-found {
   font-weight: 400;
   text-align: left;
   padding-inline: 2rem;
   color: var(--font-dark);
+}
+
+[data-theme="dark"] h2#not-found {
+  color: #c9d1d9;
 }
 @media (max-width: 700px) {
   h2#not-found {
@@ -192,6 +217,39 @@ h2#not-found {
   text-decoration: underline;
 }
 
+/* Dark mode styles for result summary */
+[data-theme="dark"] .result-box {
+  background-color: #161b22;
+  border-color: #30363d;
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .metric {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .metric-label {
+  color: #8b949e;
+}
+
+[data-theme="dark"] .metric-value {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .tooltip-text {
+  background-color: #161b22;
+  border-color: #30363d;
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .measurement-link {
+  color: #58a6ff;
+}
+
+[data-theme="dark"] .measurement-link:hover {
+  color: #79c0ff;
+}
+
 .ripe-err {
   font-weight: 600;
   font-size: 1.1rem;
@@ -302,4 +360,39 @@ h2#not-found {
   padding: 0 0.35rem;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.01em;
+}
+
+/* Dark mode styles for navigation container and buttons */
+[data-theme="dark"] .measurement-navigation {
+  background-color: #161b22;
+  border-color: #30363d;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .nav-button {
+  background-color: #21262d;
+  border-color: #30363d;
+  color: #c9d1d9;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .nav-button:hover:not(:disabled) {
+  background-color: #30363d;
+  color: #ffffff;
+  border-color: #484f58;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .nav-button:focus-visible {
+  outline-color: #58a6ff;
+}
+
+[data-theme="dark"] .nav-button:disabled {
+  background-color: #161b22;
+  border-color: #21262d;
+  color: #6e7681;
+}
+
+[data-theme="dark"] .nav-counter {
+  color: #c9d1d9;
 }

@@ -287,3 +287,75 @@
   }
 }
 
+/* Dark mode styles for Measurement Settings */
+[data-theme="dark"] .measurement-settings {
+  background-color: #161b22;
+  border-color: #30363d;
+}
+
+[data-theme="dark"] .settings-toggle {
+  color: #c9d1d9;
+  border-bottom-color: #30363d;
+}
+
+[data-theme="dark"] .settings-toggle:hover:not(:disabled) {
+  background-color: #21262d;
+}
+
+[data-theme="dark"] .settings-toggle-icon {
+  color: #58a6ff;
+}
+
+[data-theme="dark"] .settings-label-compact {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .settings-input-compact,
+[data-theme="dark"] .settings-select-compact,
+[data-theme="dark"] .settings-input,
+[data-theme="dark"] .settings-select {
+  background-color: #0d1117;
+  color: #c9d1d9;
+  border-color: #30363d;
+}
+
+[data-theme="dark"] .settings-input-compact:focus,
+[data-theme="dark"] .settings-select-compact:focus,
+[data-theme="dark"] .settings-input:focus,
+[data-theme="dark"] .settings-select:focus {
+  border-color: #58a6ff;
+}
+
+[data-theme="dark"] .settings-input-compact::placeholder,
+[data-theme="dark"] .settings-input::placeholder {
+  color: #6e7681;
+}
+
+[data-theme="dark"] .settings-input-compact:disabled,
+[data-theme="dark"] .settings-select-compact:disabled,
+[data-theme="dark"] .settings-input:disabled,
+[data-theme="dark"] .settings-select:disabled {
+  background-color: #161b22;
+  color: #6e7681;
+}
+
+[data-theme="dark"] .settings-checkbox-label-compact,
+[data-theme="dark"] .settings-checkbox-label {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .settings-tooltip {
+  background-color: #58a6ff;
+  color: #0d1117;
+}
+
+[data-theme="dark"] .settings-tooltip:hover::after {
+  background-color: #161b22;
+  color: #c9d1d9;
+  border: 1px solid #30363d;
+}
+
+[data-theme="dark"] .settings-tooltip:hover::before {
+  border-top-color: #161b22;
+}
+

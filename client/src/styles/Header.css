@@ -99,10 +99,44 @@ a {
     /* margin-right: -10%; */
     margin-left: 5%;
     filter: var(--img-invert);
+    transition: filter 0.3s ease;
 }
 
 .sidn-logo {
     filter: none !important;
+}
+
+/* Dark mode styles for header */
+[data-theme="dark"] .header {
+    background-color: #161b22;
+    border-bottom-color: #30363d;
+}
+
+[data-theme="dark"] .text-header > h1,
+[data-theme="dark"] .text-header > p {
+    color: #c9d1d9;
+}
+
+[data-theme="dark"] .navbar a {
+    color: #c9d1d9;
+}
+
+[data-theme="dark"] .navbar a:hover {
+    color: #58a6ff;
+}
+
+[data-theme="dark"] .navbar .img-and-text img {
+    filter: brightness(0) invert(1);
+    transition: filter 0.3s ease;
+}
+
+[data-theme="dark"] .navbar .img-and-text img:hover {
+    filter: brightness(0) invert(1) brightness(1.2);
+}
+
+/* Dark mode for NTPinfo logo */
+[data-theme="dark"] .ntpinfo-logo {
+    filter: brightness(0) invert(1);
 }
 
 /* Media Queries */

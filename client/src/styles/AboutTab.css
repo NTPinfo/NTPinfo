@@ -101,6 +101,7 @@
     max-width: 48px;
     height: auto;
     filter: var(--img-invert);
+    transition: filter 0.3s ease;
 }
 
 .feature h3 {
@@ -188,4 +189,92 @@
     .statistics-description {
         font-size: 1em;
     }
+}
+
+/* Dark mode styles for About Tab */
+[data-theme="dark"] .about-tab {
+    color: #c9d1d9;
+    background-color: #0d1117;
+}
+
+[data-theme="dark"] .about-section {
+    color: #c9d1d9;
+}
+
+[data-theme="dark"] .about-section h1 {
+    background: linear-gradient(135deg, #58a6ff 0%, #79c0ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+[data-theme="dark"] .about-subtitle {
+    color: #8b949e;
+}
+
+[data-theme="dark"] .about-project-info {
+    background-color: #161b22;
+    border-color: #30363d;
+    color: #c9d1d9;
+}
+
+[data-theme="dark"] .about-project-info h2 {
+    color: #58a6ff;
+}
+
+[data-theme="dark"] .about-project-info p {
+    color: #c9d1d9;
+}
+
+[data-theme="dark"] .about-project-info strong {
+    color: #58a6ff;
+}
+
+[data-theme="dark"] .about-project-info a {
+    color: #58a6ff;
+}
+
+[data-theme="dark"] .about-project-info a:hover {
+    color: #79c0ff;
+}
+
+[data-theme="dark"] .feature {
+    background-color: #161b22;
+    border-color: #30363d;
+    color: #c9d1d9;
+}
+
+[data-theme="dark"] .feature:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .feature h3 {
+    color: #58a6ff;
+}
+
+[data-theme="dark"] .feature p {
+    color: #8b949e;
+}
+
+[data-theme="dark"] .feature-icon img {
+    filter: brightness(0) invert(1) !important;
+}
+
+[data-theme="dark"] .statistics-section h2 {
+    color: #58a6ff;
+}
+
+[data-theme="dark"] .statistics-description {
+    color: #8b949e;
+}
+
+[data-theme="dark"] .statistics-error {
+    background-color: #161b22;
+    border-color: #30363d;
+    color: #c9d1d9;
+}
+
+[data-theme="dark"] .statistics-error p {
+    color: #f85149;
 }

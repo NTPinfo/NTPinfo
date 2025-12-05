@@ -2,11 +2,17 @@
 
 .ntp-container {
   margin-top: 1rem;
-  width: 100%;
-  background-color: var(--clr-bg-primary);
+  margin-left: 1.5rem;
+  /* width: calc(100% - 1.5rem); */
+  /* margin: 0.5rem 0; */
+  /* max-width: 100%; */
+  margin-left: 1.75rem;
+  margin-right: 1.75rem;
+  background-color: var(--bg-clr-primary);
+  /* background-color: var(--bg-clr-secondary); */
   border-radius: 0.5rem;
-  color: var(--font-dark);
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  color: var(--text-dark);
+  box-shadow: var(--shadow-lg);
   padding: 2rem;
 }
 
@@ -14,7 +20,7 @@
   font-size: 1.875rem;
   font-weight: 700;
   text-align: center;
-  color: var(--font-dark);
+  color: var(--text-dark);
   margin-bottom: 2rem;
 }
 
@@ -48,24 +54,50 @@
 
 .ntp-version-button.supported {
   border-color: #16a34a;
-  background-color: var(--clr-font-white);
+  background-color: var(--bg-clr-secondary);
   color: #15803d;
+}
+
+[data-theme="dark"] .ntp-version-button.supported {
+  border-color: #3fb950;
+  background-color: var(--bg-clr-secondary);
+  color: #3fb950;
 }
 
 .ntp-version-button.not-supported {
   border-color: #dc2626;
-  background-color: var(--clr-font-white);
+  background-color: var(--bg-clr-secondary);
   color: #b91c1c;
 }
+
+[data-theme="dark"] .ntp-version-button.not-supported {
+  border-color: #f85149;
+  background-color: var(--bg-clr-secondary);
+  color: #f85149;
+}
+
 .ntp-version-button.not-measured {
   border-color: gray;
-  background-color: var(--clr-font-white);
+  background-color: var(--bg-clr-secondary);
   color: gray;
 }
+
+[data-theme="dark"] .ntp-version-button.not-measured {
+  border-color: #6e7681;
+  background-color: var(--bg-clr-secondary);
+  color: #6e7681;
+}
+
 .ntp-version-button.partial {
   border-color: #d97706;
-  background-color: var(--clr-font-white);
+  background-color: var(--bg-clr-secondary);
   color: #b45309;
+}
+
+[data-theme="dark"] .ntp-version-button.partial {
+  border-color: #d29922;
+  background-color: var(--bg-clr-secondary);
+  color: #d29922;
 }
 
 .ntp-tooltip-extra {
@@ -105,6 +137,26 @@
   padding: 1rem;
   z-index: 10;
   animation: fadeIn 0.2s ease-in;
+}
+
+/* Dark mode styles for tooltip */
+[data-theme="dark"] .ntp-tooltip {
+  background-color: #161b22;
+  border-color: #30363d;
+  color: #c9d1d9;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .ntp-tooltip-title {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .ntp-tooltip-description {
+  color: #8b949e;
+}
+
+[data-theme="dark"] .ntp-tooltip-extra {
+  color: #8b949e;
 }
 
 @keyframes fadeIn {
@@ -166,4 +218,97 @@
 
 .ntp-legend-label {
   color: inherit;
+}
+
+/* Dark mode styles for NTP container */
+[data-theme="dark"] .ntp-container {
+  background-color: #161b22;
+  color: #c9d1d9;
+  /* border: none;   */
+  border: 1px solid #30363d;
+
+}
+
+[data-theme="dark"] .ntp-title {
+  color: #c9d1d9;
+}
+
+/* Dark mode for version buttons - ensure dark background */
+[data-theme="dark"] .ntp-version-button {
+  background-color: #0d1117;
+  border-style: solid;
+}
+
+[data-theme="dark"] .ntp-version-button.supported {
+  background-color: #0d1117;
+  border-color: #3fb950;
+  color: #3fb950;
+}
+
+[data-theme="dark"] .ntp-version-button.not-supported {
+  background-color: #0d1117;
+  border-color: #f85149;
+  color: #f85149;
+}
+
+[data-theme="dark"] .ntp-version-button.not-measured {
+  background-color: #0d1117;
+  border-color: #6e7681;
+  color: #6e7681;
+}
+
+[data-theme="dark"] .ntp-version-button.partial {
+  background-color: #0d1117;
+  border-color: #d29922;
+  color: #d29922;
+}
+
+/* Dark mode for icons */
+[data-theme="dark"] .ntp-icon.supported {
+  color: #3fb950;
+}
+
+[data-theme="dark"] .ntp-icon.not-measured {
+  color: #6e7681;
+}
+
+[data-theme="dark"] .ntp-icon.not-supported {
+  color: #f85149;
+}
+
+[data-theme="dark"] .ntp-icon.partial {
+  color: #d29922;
+}
+
+/* Dark mode for legend */
+[data-theme="dark"] .ntp-legend {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .ntp-legend-item {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .ntp-legend-label {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .ntp-legend-icon.supported {
+  color: #3fb950;
+}
+
+[data-theme="dark"] .ntp-legend-icon.not-measured {
+  color: #6e7681;
+}
+
+[data-theme="dark"] .ntp-legend-icon.not-supported {
+  color: #f85149;
+}
+
+[data-theme="dark"] .ntp-legend-icon.partial {
+  color: #d29922;
+}
+
+[data-theme="dark"] .ntp-tooltip-extra {
+  color: #8b949e;
 }

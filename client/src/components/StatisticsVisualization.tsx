@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,6 +11,7 @@ import {
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 import { StatisticsData } from '../hooks/useFetchStatistics';
+import { useTheme } from '../contexts/ThemeContext';
 import '../styles/StatisticsVisualization.css';
 
 ChartJS.register(
@@ -23,13 +24,19 @@ ChartJS.register(
   Legend
 );
 
-ChartJS.defaults.color = 'rgba(70, 70, 70)';
-
 interface StatisticsVisualizationProps {
   data: StatisticsData;
 }
 
 const StatisticsVisualization: React.FC<StatisticsVisualizationProps> = ({ data }) => {
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+
+  // Chart colors based on theme
+  const textColor = isDarkMode ? '#c9d1d9' : 'rgba(70, 70, 70)';
+  const gridColor = isDarkMode ? '#30363d' : 'rgba(0, 0, 0, 0.1)';
+  const backgroundColor = isDarkMode ? '#161b22' : 'transparent';
+
   // Bar chart data for measurement counts
   const measurementCountsData = {
     labels: ['Domain Name', 'IP Address', 'NTS', 'RIPE Atlas'],
@@ -74,14 +81,26 @@ const StatisticsVisualization: React.FC<StatisticsVisualizationProps> = ({ data 
           size: 16,
           weight: 'bold' as const,
         },
-        color: 'rgba(70, 70, 70)',
+        color: textColor,
       },
     },
     scales: {
+      x: {
+        ticks: {
+          color: textColor,
+        },
+        grid: {
+          color: gridColor,
+        },
+      },
       y: {
         beginAtZero: true,
         ticks: {
           precision: 0,
+          color: textColor,
+        },
+        grid: {
+          color: gridColor,
         },
       },
     },
@@ -136,14 +155,26 @@ const StatisticsVisualization: React.FC<StatisticsVisualizationProps> = ({ data 
           size: 16,
           weight: 'bold' as const,
         },
-        color: 'rgba(70, 70, 70)',
+        color: textColor,
       },
     },
     scales: {
+      x: {
+        ticks: {
+          color: textColor,
+        },
+        grid: {
+          color: gridColor,
+        },
+      },
       y: {
         beginAtZero: true,
         ticks: {
           precision: 0,
+          color: textColor,
+        },
+        grid: {
+          color: gridColor,
         },
       },
     },
@@ -192,6 +223,7 @@ const StatisticsVisualization: React.FC<StatisticsVisualizationProps> = ({ data 
           font: {
             size: 12,
           },
+          color: textColor,
         },
       },
       title: {
@@ -201,9 +233,14 @@ const StatisticsVisualization: React.FC<StatisticsVisualizationProps> = ({ data 
           size: 16,
           weight: 'bold' as const,
         },
-        color: 'rgba(70, 70, 70)',
+        color: textColor,
       },
       tooltip: {
+        backgroundColor: isDarkMode ? '#161b22' : 'rgba(255, 255, 255, 0.95)',
+        titleColor: textColor,
+        bodyColor: textColor,
+        borderColor: isDarkMode ? '#30363d' : 'rgba(0, 0, 0, 0.1)',
+        borderWidth: 1,
         callbacks: {
           label: function(context: any) {
             return `${context.label}: ${context.parsed.toFixed(1)}%`;

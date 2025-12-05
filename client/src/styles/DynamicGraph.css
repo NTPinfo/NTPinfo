@@ -122,6 +122,15 @@
     opacity: 0.9;
 }
 
+/* Dark mode styles for DynamicGraph */
+[data-theme="dark"] .error-div {
+    color: #c9d1d9;
+}
+
+[data-theme="dark"] .error-div p {
+    color: #c9d1d9;
+}
+
 @media screen and (max-width: 768px) {
     .historical-data-chart {
         gap: 0.5rem;
