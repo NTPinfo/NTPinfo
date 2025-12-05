@@ -181,6 +181,22 @@
   background: var(--border-color);
 }
 
+/* Dark mode for "More Details" dropdown */
+[data-theme="dark"] .nts-other-details summary {
+  background: #21262d !important;
+  border-color: #30363d !important;
+  color: #c9d1d9 !important;
+}
+
+[data-theme="dark"] .nts-other-details summary:hover {
+  background: #30363d !important;
+}
+
+[data-theme="dark"] .nts-other-details .nts-details {
+  background: #21262d !important;
+  border-color: #30363d !important;
+}
+
 .nts-section {
   background: var(--bg-primary);
   border-radius: var(--radius);
