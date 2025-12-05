@@ -114,7 +114,7 @@ async def read_data_measurement(payload: MeasurementRequest, request: Request,
     Notes:
         - This endpoint is also limited to <`see config file`> to prevent abuse and reduce server load.
     """
-    server = payload.server
+    server = payload.server.lower()
     if len(server) == 0:
         raise HTTPException(status_code=400, detail="Either 'ip' or 'dn' must be provided.")
 
@@ -215,7 +215,7 @@ async def read_historic_data_time(server: str,
     try:
         # result = fetch_historic_data_with_timestamps(server, start, end, session)
         # formatted_results = [get_format(entry, nr_jitter_measurements=0) for entry in result]
-        result = get_ntp_v4_historical_measurements(session, host=server, start_time=start, end_time=end)
+        result = get_ntp_v4_historical_measurements(session, host=server.lower(), start_time=start, end_time=end)
         return JSONResponse(
             status_code=200,
             content={
@@ -258,7 +258,7 @@ async def trigger_full_measurement(payload: MeasurementRequest, request: Request
         JSONResponse: Response object.
 
     """
-    server = sanitize_string(payload.server)
+    server = sanitize_string(payload.server.lower())
     if server is None or len(server) == 0:
         raise HTTPException(status_code=400, detail="Either an 'ip' or a 'dn' must be provided.")
 
