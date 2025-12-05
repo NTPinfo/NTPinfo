@@ -590,6 +590,7 @@ Initiate a RIPE Atlas NTP measurement for the specified server.
 async def trigger_ripe_measurement(payload: MeasurementRequest, request: Request) -> JSONResponse:
     """
     Trigger a RIPE Atlas NTP measurement for a specified server.
+    NO LONGER IN USE
 
     This endpoint initiates a RIPE Atlas measurement for the given NTP server
     (IP address or domain name) provided in the payload. Once the measurement
@@ -628,7 +629,12 @@ async def trigger_ripe_measurement(payload: MeasurementRequest, request: Request
     client_ip: Optional[str] = client_ip_fetch(request=request, wanted_ip_type=wanted_ip_type)
     print("client IP is: ", client_ip)
     try:
-        measurement_id = perform_ripe_measurement(server, client_ip=client_ip, wanted_ip_type=wanted_ip_type)
+        settings = AdvancedSettings()
+        if client_ip is not None:
+            settings.custom_client_ip = client_ip
+        settings.wanted_ip_type = wanted_ip_type
+
+        measurement_id = perform_ripe_measurement(server, settings=settings)
         this_server_ip = get_server_ip_if_possible(wanted_ip_type)  # this does not affect the measurement
         return JSONResponse(
             status_code=200,

@@ -204,7 +204,7 @@ def analyze_supported_ntp_versions(server: str, settings: AdvancedSettings) -> d
              # settings.ntpv5_draft will be considered if and only if the ntp_version is "ntpv5"
              ntp_versions_analysis[ntp_version + "_m_result"]) = run_tool_on_ntp_version(server, str(binary_nts_tool),
                                                                                                    ntp_version, settings.ntpv5_draft)
-            time.sleep(0.7) # to not get RATE from the server
+            time.sleep(1) # to not get RATE from the server
     return ntp_versions_analysis
 
 
@@ -290,8 +290,8 @@ def perform_ripe_measurement_domain_name(server_name: str, settings: AdvancedSet
 
     # measurement settings
     # we use wanted_ip_type to force to search this type
-    headers, request_content = get_request_settings(ip_family_of_ntp_server=settings.wanted_ip_type, ntp_server=server_name,
-                                                    client_ip=client_ip, probes_requested=probes_requested)
+    headers, request_content = get_request_settings(ntp_server=server_name,
+                                                    settings=settings, probes_requested=probes_requested)
     # perform the measurement
     response = requests.post(
         "https://atlas.ripe.net/api/v2/measurements/",
@@ -334,10 +334,10 @@ def perform_ripe_measurement_ip(ntp_server_ip: str, settings: AdvancedSettings,
     get_ip_family(client_ip)  # this will throw an exception if the client_ip is not an IP address
 
     ip_family = get_ip_family(ntp_server_ip)  # this will throw an exception if the ntp_server_ip is not an IP address
-
+    settings.wanted_ip_type = ip_family
     # measurement settings
-    headers, request_content = get_request_settings(ip_family_of_ntp_server=ip_family, ntp_server=ntp_server_ip,
-                                                    client_ip=client_ip, probes_requested=probes_requested)
+    headers, request_content = get_request_settings(ntp_server=ntp_server_ip,
+                                                    settings=settings, probes_requested=probes_requested)
     # perform the measurement
     response = requests.post(
         "https://atlas.ripe.net/api/v2/measurements/",
@@ -357,14 +357,13 @@ def perform_ripe_measurement_ip(ntp_server_ip: str, settings: AdvancedSettings,
     return ans
 
 
-def get_request_settings(ip_family_of_ntp_server: int, ntp_server: str, client_ip: str,
+def get_request_settings(ntp_server: str, settings: AdvancedSettings,
                          probes_requested: int = get_ripe_number_of_probes_per_measurement()) -> tuple[dict, dict]:
     """
     This method gets the RIPE measurement settings for the performing a RIPE measurement.
     Args:
-        ip_family_of_ntp_server (int): The IP family of the NTP server. (4 or 6)
         ntp_server (str): The NTP server IP address or domain name.
-        client_ip (str): The IP address of the client.
+        settings (AdvancedSettings): The settings to use, including client_ip, and The IP family of the NTP server. (4 or 6))
         probes_requested (int): The number of probes requested.
 
     Returns:
@@ -382,7 +381,7 @@ def get_request_settings(ip_family_of_ntp_server: int, ntp_server: str, client_i
     request_content = {"definitions": [
         {
             "type": "ntp",
-            "af": ip_family_of_ntp_server,
+            "af": settings.wanted_ip_type,
             "resolve_on_probe": True,
             "description": f"NTP measurement to {ntp_server}",
             "packets": get_ripe_packets_per_probe(),
@@ -393,7 +392,7 @@ def get_request_settings(ip_family_of_ntp_server: int, ntp_server: str, client_i
     ],
         "is_oneoff": True,
         "bill_to": get_ripe_account_email(),
-        "probes": get_probes(client_ip, ip_family_of_ntp_server, probes_requested)  # we want probes close to the client
+        "probes": get_probes(settings, probes_requested)  # we want probes close to the client
     }
     return headers, request_content
 

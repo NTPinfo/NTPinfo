@@ -1,6 +1,7 @@
 from typing import TypeVar
 from typing import Optional
 
+from server.app.dtos.AdvancedSettings import AdvancedSettings
 from server.app.utils.location_resolver import get_coordinates_for_ip
 from server.app.utils.calculations import calculate_haversine_distance
 from server.app.models.CustomError import InputError
@@ -11,8 +12,9 @@ from ripe.atlas.cousteau import ProbeRequest
 T = TypeVar('T', int, float)  # float or int
 
 
-def get_probes(client_ip: str, ip_family_of_ntp_server: int,
-               probes_requested: int = get_ripe_number_of_probes_per_measurement()) -> list[dict]:
+def get_probes(settings: AdvancedSettings,
+               probes_requested: int = get_ripe_number_of_probes_per_measurement(),
+               has_current_probes_set: Optional[set[int]] = None) -> list[dict]:
     """
     This method handles all cases regarding what probes we should send.
     This method assumes all inputs are either valid or None. (If there is a typo in the input, the measurement
@@ -20,9 +22,9 @@ def get_probes(client_ip: str, ip_family_of_ntp_server: int,
     It will try to return the best probes near the client.
 
     Args:
-        client_ip (str): The IP address of the client.
-        ip_family_of_ntp_server (int): The IP family of the NTP server. (4 or 6)
+        settings (AdvancedSettings): The settings to use, including client_ip, and The IP family of the NTP server. (4 or 6))
         probes_requested (int): The total number of probes that we will request.
+        has_current_probes_set (Optional[set[int]]): The set of probes that we will already use for the measurement. (to be sure that we do not include duplicates)
 
     Returns:
         list[dict]: The list of probes that we will use for the measurement.
@@ -31,24 +33,33 @@ def get_probes(client_ip: str, ip_family_of_ntp_server: int,
         InputError: If the client IP address is invalid.
     """
     # get the details about the client IP.
-    ip_family: int = get_ip_family(client_ip)
-    ip_asn, ip_country, ip_area = get_ip_network_details(client_ip)
+    ip_family: int = get_ip_family(settings.custom_client_ip)
+    ip_asn, ip_country, ip_area = get_ip_network_details(settings.custom_client_ip)
+
+    if settings.custom_probes_asn != "": #override ASN if the settings want this
+        ip_asn = settings.custom_probes_asn
+    if settings.custom_probes_country != "": #override country if the settings want this
+        ip_country = settings.custom_probes_country
+    # but keep the area
+
     ip_prefix = None
     # the prefix is relevant if and only if the client has the same IP type as the NTP server.
     # Otherwise, we won't "find probes with the same prefix as the client that can perform NTP measurements for that server"
 
     # If we do not have this check, "get available" methods that involves prefix will fail
-    if ip_family == ip_family_of_ntp_server:
-        ip_prefix = get_prefix_from_ip(client_ip)
+    if ip_family == settings.wanted_ip_type:
+        ip_prefix = get_prefix_from_ip(settings.custom_client_ip)
 
     # settings:
     probes: list[dict] = []
     current_probes_set: set[int] = set()
+    if has_current_probes_set is not None:
+        current_probes_set = has_current_probes_set
     # Try to see if we have probes with the same ASN and prefix OR same ASN and same country. They have the highest priority.
     probes_requested, current_probes_set = (
-        get_best_probes_with_multiple_attributes(client_ip=client_ip, current_probes_set=current_probes_set,
+        get_best_probes_with_multiple_attributes(client_ip=settings.custom_client_ip, current_probes_set=current_probes_set,
                                                  ip_asn=ip_asn, ip_prefix=ip_prefix,
-                                                 ip_country=ip_country, ip_family=ip_family_of_ntp_server,
+                                                 ip_country=ip_country, ip_family=settings.wanted_ip_type,
                                                  probes_requested=probes_requested))
 
     if probes_requested <= 0:
@@ -58,9 +69,9 @@ def get_probes(client_ip: str, ip_family_of_ntp_server: int,
 
     # if we still need more probes or if the method above failed, continue trying with filters by a single attributes.
     probes_requested, current_probes_set = (
-        get_best_probes_matched_by_single_attribute(client_ip=client_ip, current_probes_set=current_probes_set,
+        get_best_probes_matched_by_single_attribute(client_ip=settings.custom_client_ip, current_probes_set=current_probes_set,
                                                     ip_asn=ip_asn, ip_prefix=ip_prefix,
-                                                    ip_country=ip_country, ip_family=ip_family_of_ntp_server,
+                                                    ip_country=ip_country, ip_family=settings.wanted_ip_type,
                                                     probes_requested=probes_requested))
     # add the IDs of the probes
     if len(current_probes_set) > 0:

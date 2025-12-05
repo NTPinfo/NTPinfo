@@ -1,5 +1,6 @@
 import pprint
 import time
+from copy import copy
 
 from sqlalchemy.orm import Session
 
@@ -908,11 +909,14 @@ def perform_ripe_measurement(ntp_server: str, settings: AdvancedSettings) -> str
         Exception: If the server string is invalid or the measurement failed.
     """
     # use our server as the client if the client IP is not provided
-    client_ip = settings.custom_client_ip
-    if client_ip is None:
-        client_ip = ip_to_str(get_server_ip(settings.wanted_ip_type))
-        if client_ip is None:
+    settings = copy(settings)
+    # client_ip = settings.custom_client_ip
+    if settings.custom_client_ip is None or settings.custom_client_ip == "":
+        c = ip_to_str(get_server_ip(settings.wanted_ip_type))
+        if c is None:
             raise InputError("Could not determine IP address of neither server nor client")
+        else:
+            settings.custom_client_ip = c
     try:
         if is_ip_address(ntp_server) is not None:
             measurement_id = perform_ripe_measurement_ip(ntp_server, settings)
