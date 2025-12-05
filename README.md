@@ -99,8 +99,7 @@ To set up and run the back-end server, follow these steps:
    2.5 You can use tools like `psql` or GUI tools such as **pgAdmin** to manage your database.
    > The necessary tables will be created automatically when running the server.
 
-
-4. **Create a `.env` file** in the `root` directory with your accounts credentials in the following format:
+3. **Create a `.env` file** in the `root` directory with your accounts credentials in the following format:
 
     ```dotenv
     # needed for back-end (server)
@@ -318,9 +317,16 @@ To run the full stack (server + client + database) using `docker-compose`, follo
    sudo apt install docker-compose
    ```
 
-3. **Clone the project with the new module that was added**
+3. **Clone the project**
+   
+   The project includes a submodule (`tools/ntp-nts-tool`), so you need to clone with the `--recurse-submodules` flag:
    ```bash
-   git clone --branch client-theme --recurse-submodules https://github.com/NTPinfo/NTPinfo.git
+   git clone --recurse-submodules https://github.com/NTPinfo/NTPinfo.git
+   ```
+   
+   If you already cloned the project without `--recurse-submodules`, you can initialize the submodule by running:
+   ```bash
+   git submodule update --init --recursive
    ```
 
 3. **Add a .env file in the root directory**
