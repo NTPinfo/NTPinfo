@@ -4,14 +4,12 @@ import { RipeStatus } from '../utils/types';
 
 interface InputProps {
     onClick: (query: string, useIPv6: boolean) => void;
-    loading: boolean;
     ipv6Selected: boolean;
     onIPv6Toggle: (value: boolean) => void;
-    ripeMeasurementStatus?: RipeStatus | null;
     measurementSessionActive?: boolean;
 }
 
-const InputSection: React.FC<InputProps> = ({ onClick, loading, ipv6Selected, onIPv6Toggle, ripeMeasurementStatus, measurementSessionActive }) => {
+const InputSection: React.FC<InputProps> = ({ onClick, ipv6Selected, onIPv6Toggle, measurementSessionActive }) => {
     const [query, setQuery] = useState('');
     const useIPv6 = ipv6Selected;
 

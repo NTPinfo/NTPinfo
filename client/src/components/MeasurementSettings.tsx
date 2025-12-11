@@ -235,7 +235,7 @@ export default function MeasurementSettings({ settings, onSettingsChange, disabl
             <div className="settings-row">
               <label htmlFor="custom_probes_asn" className="settings-label-compact">
                 Probe ASN
-                <span className="settings-tooltip" title="Autonomous System Number (ASN) for RIPE Atlas probes.">?</span>
+                <span className="settings-tooltip" title="PreferredAutonomous System Number (ASN) for RIPE Atlas probes.">?</span>
               </label>
               <input
                 id="custom_probes_asn"
@@ -251,7 +251,7 @@ export default function MeasurementSettings({ settings, onSettingsChange, disabl
             <div className="settings-row">
               <label htmlFor="custom_probes_country" className="settings-label-compact">
                 Probe Country
-                <span className="settings-tooltip" title="Country code (ISO 3166-1 alpha-2) for RIPE Atlas probes.">?</span>
+                <span className="settings-tooltip" title="Preferred Country code (ISO 3166-1 alpha-2) for RIPE Atlas probes.">?</span>
               </label>
               <input
                 id="custom_probes_country"

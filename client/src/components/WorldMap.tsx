@@ -1,7 +1,7 @@
 import L, { LatLngTuple } from 'leaflet'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
-import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
+import { MapContainer, Marker, Popup, useMap } from 'react-leaflet'
 import { useEffect, useState, useRef } from 'react'
 import { NTPData, RIPEData } from '../utils/types'
 import { useTheme } from '../contexts/ThemeContext'

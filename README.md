@@ -17,6 +17,27 @@ of the **BSc Computer Science and Engineering** program.
 
 ---
 
+## RIPE Atlas Probe Selection
+
+When performing measurements, the system automatically selects RIPE Atlas probes to use based on several criteria. The selection process follows a priority-based approach:
+
+1. **Highest Priority**: Probes matching both ASN and prefix (if applicable), or both ASN and country
+2. **Medium Priority**: Probes matching by single attribute in this order:
+   - ASN match
+   - Prefix match (if applicable)
+   - Country match
+3. **Fallback**: If not enough probes are found with the above criteria, the system uses probes from the same geographic area or random probes
+
+The probes are selected to be as close as possible to your vantage point (client IP) using geographic distance calculations.
+
+<p align="center">
+  <img src="assets/SelectingRipeProbes.png" alt="RIPE Probe Selection Flow" style="width:100%; max-width:800px;"/>
+</p>
+
+**Note on Advanced Settings**: In the advanced measurement settings, you can specify a custom country or ASN for probe selection. However, please note that when multiple criteria are available, **ASN and prefix matches take higher priority than country matches**. This means if probes matching your specified ASN/prefix are available, they will be selected first, even if they don't match your specified country.
+
+---
+
 ## Cloning the project
 
 Please use `git clone --recurse-submodules https://github.com/NTPinfo/NTPinfo.git` because the project has a submodule.
@@ -49,6 +70,7 @@ The product is split into 2 parts:
 
 ## Table of Contents
 
+- [RIPE Atlas Probe Selection](#ripe-atlas-probe-selection)
 - [Server Setup and Running](#server-setup-and-running)
 - [Client Setup and Running](#client-setup-and-running)
 - [Docker Setup](#docker-setup)

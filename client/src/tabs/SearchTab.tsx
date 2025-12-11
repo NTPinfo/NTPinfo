@@ -58,32 +58,32 @@ const SearchTab: React.FC = () => {
   const [offsetMax, setOffsetMax] = useState('');
 
   // it is just a method to generate dummy data, as we are testing the UI (will remove it soon)
-  const generateDummyResults = (count: number = 150): SearchResult[] => {
-    const countries = ['NL', 'US', 'DE', 'GB', 'FR', 'JP', 'CA', 'AU', 'SE', 'CH', 'IT', 'ES', 'BR', 'IN', 'CN'];
-    const versions = ['NTPv1', 'NTPv2', 'NTPv3', 'NTPv4', 'NTPv5'];
-    const servers = [
-      'time.google.com', 'time.cloudflare.com', 'time.windows.com', 
-      'pool.ntp.org', 'ntp.example.com', 'time.nist.gov', 'ntp1.inrim.it'
-    ];
-    const measurementTypes = ['ntpv1', 'ntpv2', 'ntpv3', 'ntpv4', 'ntpv5'];
+  // const generateDummyResults = (count: number = 150): SearchResult[] => {
+  //   const countries = ['NL', 'US', 'DE', 'GB', 'FR', 'JP', 'CA', 'AU', 'SE', 'CH', 'IT', 'ES', 'BR', 'IN', 'CN'];
+  //   const versions = ['NTPv1', 'NTPv2', 'NTPv3', 'NTPv4', 'NTPv5'];
+  //   const servers = [
+  //     'time.google.com', 'time.cloudflare.com', 'time.windows.com', 
+  //     'pool.ntp.org', 'ntp.example.com', 'time.nist.gov', 'ntp1.inrim.it'
+  //   ];
+  //   const measurementTypes = ['ntpv1', 'ntpv2', 'ntpv3', 'ntpv4', 'ntpv5'];
     
-    return Array.from({ length: count }, (_, i) => ({
-      id: `result-${i + 1}`,
-      server: `${servers[i % servers.length]}${i > servers.length ? `-${i}` : ''}`,
-      ip: `203.0.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
-      asn: `AS${Math.floor(Math.random() * 90000) + 1000}`,
-      country: countries[Math.floor(Math.random() * countries.length)],
-      offset: parseFloat((Math.random() * 200 - 100).toFixed(3)),
-      rtt: parseFloat((Math.random() * 100 + 10).toFixed(2)),
-      stratum: Math.floor(Math.random() * 4) + 1,
-      lastMeasured: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      measurementId: Math.random() > 0.5 ? `dn${Math.floor(Math.random() * 10000)}` : `ip${Math.floor(Math.random() * 10000)}`,
-      hasNTS: Math.random() > 0.5,
-      supportedVersions: versions.slice(0, Math.floor(Math.random() * 4) + 1),
-      measurementType: measurementTypes[Math.floor(Math.random() * measurementTypes.length)],
-      ipVersion: Math.random() > 0.5 ? 4 : 6,
-    }));
-  };
+  //   return Array.from({ length: count }, (_, i) => ({
+  //     id: `result-${i + 1}`,
+  //     server: `${servers[i % servers.length]}${i > servers.length ? `-${i}` : ''}`,
+  //     ip: `203.0.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+  //     asn: `AS${Math.floor(Math.random() * 90000) + 1000}`,
+  //     country: countries[Math.floor(Math.random() * countries.length)],
+  //     offset: parseFloat((Math.random() * 200 - 100).toFixed(3)),
+  //     rtt: parseFloat((Math.random() * 100 + 10).toFixed(2)),
+  //     stratum: Math.floor(Math.random() * 4) + 1,
+  //     lastMeasured: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  //     measurementId: Math.random() > 0.5 ? `dn${Math.floor(Math.random() * 10000)}` : `ip${Math.floor(Math.random() * 10000)}`,
+  //     hasNTS: Math.random() > 0.5,
+  //     supportedVersions: versions.slice(0, Math.floor(Math.random() * 4) + 1),
+  //     measurementType: measurementTypes[Math.floor(Math.random() * measurementTypes.length)],
+  //     ipVersion: Math.random() > 0.5 ? 4 : 6,
+  //   }));
+  // };
 
   // Transform API response to SearchResult format
   const transformApiResult = (apiResult: any): SearchResult => {

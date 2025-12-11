@@ -444,10 +444,8 @@ const ripeTriggerErr = null;
       <div className="input-wrapper">
         <InputSection
           onClick={handleInput}
-          loading={triggerLoading || (!fullNTP && measurementSessionActive)}
           ipv6Selected={ipv6Selected}
           onIPv6Toggle={handleIPv6Toggle}
-          ripeMeasurementStatus={ripeMeasurementStatus}
           measurementSessionActive={measurementSessionActive}
         />
         <MeasurementSettings
@@ -493,7 +491,7 @@ const ripeTriggerErr = null;
           <ResultSummary 
             data={ntpData}
             ripeData={ripeMeasurementResp && ripeMeasurementResp.length > 0 ? ripeMeasurementResp[currentRipeIndex] : null}
-            ripeErr={ripeTriggerErr ?? ripeMeasurementError}
+            ripeErr={ripeTriggerErr ?? (ripeMeasurementError ? (typeof ripeMeasurementError === 'string' ? new Error(ripeMeasurementError) : ripeMeasurementError) : null)}
             err={error || (pollingError ? new Error(pollingError) : null)}
             errMessage={errorMessage || pollingError || null}
             httpStatus={httpStatus}

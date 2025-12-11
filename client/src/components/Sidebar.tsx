@@ -4,7 +4,7 @@ import houseIcon from '../assets/house-svgrepo-com.png';
 import compareIcon from '../assets/scale-unbalanced-svgrepo-com.png';
 import graphIcon from '../assets/graph-svgrepo-com.png';
 import aboutIcon from '../assets/info-square-svgrepo-com.png';
-import SearchIcon from './SearchIcon';
+// import SearchIcon from './SearchIcon';
 import hamburgerIcon from '../assets/hamburger-md-svgrepo-com.png';
 import ThemeToggle from './ThemeToggle';
 

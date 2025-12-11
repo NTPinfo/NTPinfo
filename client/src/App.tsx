@@ -3,7 +3,7 @@ import Sidebar from './components/Sidebar';
 import HomeTab from './tabs/HomeTab';
 import CompareTab from './tabs/CompareTab';
 import HistoricalDataTab from './tabs/HistoricalDataTab';
-import SearchTab from './tabs/SearchTab';
+// import SearchTab from './tabs/SearchTab';
 import AboutTab from './tabs/AboutTab';
 // import { NTPData } from './utils/types';
 import { NTPData, HomeCacheState } from './utils/types';

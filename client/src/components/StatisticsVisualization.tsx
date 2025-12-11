@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -35,7 +35,7 @@ const StatisticsVisualization: React.FC<StatisticsVisualizationProps> = ({ data 
   // Chart colors based on theme
   const textColor = isDarkMode ? '#c9d1d9' : 'rgba(70, 70, 70)';
   const gridColor = isDarkMode ? '#30363d' : 'rgba(0, 0, 0, 0.1)';
-  const backgroundColor = isDarkMode ? '#161b22' : 'transparent';
+  // const backgroundColor = isDarkMode ? '#161b22' : 'transparent';
 
   // Bar chart data for measurement counts
   const measurementCountsData = {
