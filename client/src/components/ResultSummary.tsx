@@ -250,7 +250,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                                 <div className="metric"><span title='The poll interval used during the measurement'>Poll interval</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
                                 <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
                                 <div className="metric"><span title='The ASN of the server'>ASN</span><span style={{ color: '#c33', fontWeight: 'bold' }}>N/A</span></div>
-                                <div className="metric"><span title='The NTP version used for this measurement'>NTP Version</span><span style={{ color: '#dc2626', fontWeight: 'bold' }}>N/A</span></div>
+                                <div className="metric"><span title='The NTP response version received for this measurement'>NTP Version</span><span style={{ color: '#dc2626', fontWeight: 'bold' }}>N/A</span></div>
                                 <div className="metric"><span>Measurement ID</span><span>{measurementId ?? 'N/A'}</span></div>
                                 <div className="metric" style={{ marginTop: '8px', padding: '6px 8px', backgroundColor: '#fef2f2', borderRadius: '4px', border: '1px solid #fca5a5', whiteSpace: 'normal' }}>
                                     <span style={{ color: '#dc2626', fontWeight: 'bold' }}>Error</span>
@@ -272,7 +272,7 @@ function ResultSummary({data, ripeData, ripeErr, ripeStatus, httpStatus, err, er
                             <div className="metric"><span title='The poll interval used by the probe during the measurement'>Poll interval</span><span>{data?.poll !== undefined ? `${Math.pow(2, data.poll)} s` : 'N/A'}</span></div>
                             <div className="metric"><span title='An estimate of the maximum error due to clock frequency stability'>Root dispersion</span><span>{data?.root_dispersion !== undefined ? `${formatRootValue(data.root_dispersion)} s` : 'N/A'} {rootDispIconNTP && <img src={rootDispIconNTP} alt="root dispersion performance" style={{width:'14px',verticalAlign:'middle'}}/>}</span></div>
                             <div className="metric"><span title='The ASN of the server'>ASN</span><span>{data?.asn_ntp_server !== undefined ? data.asn_ntp_server : "N/A"}</span></div>
-                            <div className="metric"><span title='The NTP version used for this measurement'>NTP Version</span><span>{data?.response_version || 'N/A'}</span></div>
+                            <div className="metric"><span title='The NTP response version received for this measurement'>NTP Version</span><span>{data?.response_version || 'N/A'}</span></div>
                             <div className="metric"><span>Measurement ID</span><span>{measurementId ?? 'N/A'}</span></div>
                         </div>
                         ) : (isLoading && !allNtpMeasurements && !expectedIpCount && !err && !errMessage) ? null : (

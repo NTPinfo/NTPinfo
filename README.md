@@ -29,7 +29,7 @@ The product is split into 2 parts:
 ### Server Side
 
 - Handles time measurement logic and API interactions.
-- Uses `ntplib` and the **RIPE Atlas API** for performing measurements.
+- Uses nts-ntp-tool written in Go and the **RIPE Atlas API** for performing measurements.
 - Stores results in a PostgreSQL database.
 - Provides an API to:
     - Trigger and manage measurements

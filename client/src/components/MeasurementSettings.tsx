@@ -259,7 +259,7 @@ export default function MeasurementSettings({ settings, onSettingsChange, disabl
                 value={settings.custom_probes_country || ''}
                 onChange={(e) => updateSetting('custom_probes_country', e.target.value || undefined)}
                 disabled={disabled}
-                placeholder="NL, US, DE"
+                placeholder="NL"
                 className="settings-input-compact"
                 maxLength={2}
               />

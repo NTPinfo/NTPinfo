@@ -482,19 +482,9 @@ const ripeTriggerErr = null;
         </div> */}
       {/* Check if this is any server error (400, 404, 422, 500, 503, etc.) - show only error message, no sections */}
       {(httpStatus >= 400 && errorMessage && !fullMeasurementId && !measurementId && !fullNTP && !allNtpMeasurements && !triggerLoading && !measurementSessionActive) ? (
-        <div className="error-only-message" style={{
-          backgroundColor: '#fee',
-          border: '2px solid #f88',
-          borderRadius: '8px',
-          padding: '24px',
-          margin: '20px 0 20px 40px',
-          color: '#c33',
-          textAlign: 'left',
-          maxWidth: '600px',
-          width: 'fit-content'
-        }}>
-          <h2 style={{ margin: '0 0 12px 0', fontSize: '20px' }}>⚠️ Error {httpStatus || 'Unknown'}</h2>
-          <p style={{ margin: 0, fontSize: '16px' }}>
+        <div className="error-only-message">
+          <h2>⚠️ Error {httpStatus || 'Unknown'}</h2>
+          <p>
             {simplifyErrorMessage(errorMessage) || errorMessage || 'An error occurred while processing the measurement.'}
           </p>
         </div>

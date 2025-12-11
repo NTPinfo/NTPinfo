@@ -372,3 +372,43 @@
 [data-theme="dark"] .result-text p {
   color: #c9d1d9;
 }
+
+/* Error-only message styling */
+.error-only-message {
+  background-color: #fee;
+  border: 2px solid #f88;
+  border-radius: 8px;
+  padding: 24px;
+  margin: 20px 0 20px 40px;
+  color: #c33;
+  text-align: left;
+  max-width: 600px;
+  width: fit-content;
+}
+
+.error-only-message h2 {
+  margin: 0 0 12px 0;
+  font-size: 20px;
+  color: inherit;
+}
+
+.error-only-message p {
+  margin: 0;
+  font-size: 16px;
+  color: inherit;
+}
+
+/* Dark mode styles for error-only-message */
+[data-theme="dark"] .error-only-message {
+  background-color: #3d1f1f;
+  border-color: #f85149;
+  color: #ff7b72;
+}
+
+[data-theme="dark"] .error-only-message h2 {
+  color: #ff7b72;
+}
+
+[data-theme="dark"] .error-only-message p {
+  color: #ff7b72;
+}
