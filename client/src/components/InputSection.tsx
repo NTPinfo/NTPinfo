@@ -1,6 +1,5 @@
 import '../styles/InputSection.css'
 import React, { useState } from 'react';
-import { RipeStatus } from '../utils/types';
 
 interface InputProps {
     onClick: (query: string, useIPv6: boolean) => void;
