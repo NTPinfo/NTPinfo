@@ -11,10 +11,8 @@ describe('InputSection', () => {
 
     const props = {
       onClick,
-      loading: false,
       ipv6Selected: false,
       onIPv6Toggle,
-      ripeMeasurementStatus: null,
       measurementSessionActive: false,
       ...propsOverride,
     };
@@ -76,7 +74,6 @@ describe('InputSection', () => {
      const { rerender } = render(
       <InputSection
         onClick={() => {}}
-        loading={false}
         ipv6Selected={ipv6Selected}
         onIPv6Toggle={(val) => {
           onIPv6Toggle(val);
@@ -84,15 +81,12 @@ describe('InputSection', () => {
           rerender(
             <InputSection
               onClick={() => {}}
-              loading={false}
               ipv6Selected={ipv6Selected}
               onIPv6Toggle={onIPv6Toggle}
-              ripeMeasurementStatus={null}
               measurementSessionActive={false}
             />
           );
         }}
-        ripeMeasurementStatus={null}
         measurementSessionActive={false}
       />
     );
@@ -109,7 +103,7 @@ describe('InputSection', () => {
   });
 
   test('Disable button while loading', () => {
-    setup({ loading: true , measurementSessionActive: true});
+    setup({ measurementSessionActive: true});
 
     const input = screen.getByPlaceholderText(/time\.google\.com/i);
     const button = screen.getByRole('button', { name: /measure/i });
