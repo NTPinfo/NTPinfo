@@ -175,6 +175,25 @@
     <span class="k">return</span> <span class="mi">6</span></div>
 
 
+<div class="viewcode-block" id="get_ip_family_with_default">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ip_utils.get_ip_family_with_default">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_ip_family_with_default</span><span class="p">(</span><span class="n">ip_str</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">default_value</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method returns the IP family of the given IP address. It returns 4 if we have an IPv4, and</span>
+<span class="sd">    it returns 6 if we have an IPv6 address. Otherwise, it returns the default value.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        ip_str (Optional[str]): The IP address</span>
+<span class="sd">        default_value (int): The default value to return if the ip_str is not an IPv4 or IPv6 string address.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        int: The ip family or &quot;default&quot; if we do not get an IP address</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ans</span> <span class="o">=</span> <span class="n">is_ip_address</span><span class="p">(</span><span class="n">ip_str</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ans</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">default_value</span>
+    <span class="k">if</span> <span class="n">ans</span> <span class="o">==</span> <span class="s2">&quot;ipv4&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">4</span>
+    <span class="k">return</span> <span class="mi">6</span></div>
+
 
 <div class="viewcode-block" id="get_ip_network_details">
 <a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ip_utils.get_ip_network_details">[docs]</a>
@@ -529,6 +548,21 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error (safe) in is_anycast: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span></div>
 
+
+<div class="viewcode-block" id="is_ip_or_dn">
+<a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.ip_utils.is_ip_or_dn">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_ip_or_dn</span><span class="p">(</span><span class="n">server</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This method checks whether a server is an IP or DN.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        server (Optional[str]): The server to check.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        str: Whether the server is an IP or DN (str).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">is_ip_address</span><span class="p">(</span><span class="n">server</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;server&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;IP&quot;</span></div>
 
 
 <div class="viewcode-block" id="randomize_ip">

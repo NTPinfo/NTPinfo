@@ -72,6 +72,7 @@
              
   <h1>Source code for server.app.utils.perform_measurements</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pprint</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">ntplib</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ipaddress</span><span class="w"> </span><span class="kn">import</span> <span class="n">ip_address</span>
@@ -287,6 +288,7 @@
              <span class="c1"># settings.ntpv5_draft will be considered if and only if the ntp_version is &quot;ntpv5&quot;</span>
              <span class="n">ntp_versions_analysis</span><span class="p">[</span><span class="n">ntp_version</span> <span class="o">+</span> <span class="s2">&quot;_m_result&quot;</span><span class="p">])</span> <span class="o">=</span> <span class="n">run_tool_on_ntp_version</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">binary_nts_tool</span><span class="p">),</span>
                                                                                                    <span class="n">ntp_version</span><span class="p">,</span> <span class="n">settings</span><span class="o">.</span><span class="n">ntpv5_draft</span><span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># to not get RATE from the server</span>
     <span class="k">return</span> <span class="n">ntp_versions_analysis</span></div>
 
 
@@ -347,7 +349,7 @@
 
 <div class="viewcode-block" id="perform_ripe_measurement_domain_name">
 <a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.perform_measurements.perform_ripe_measurement_domain_name">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">perform_ripe_measurement_domain_name</span><span class="p">(</span><span class="n">server_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">wanted_ip_type</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">perform_ripe_measurement_domain_name</span><span class="p">(</span><span class="n">server_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">AdvancedSettings</span><span class="p">,</span>
                                          <span class="n">probes_requested</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span>
                                          <span class="n">get_ripe_number_of_probes_per_measurement</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -357,8 +359,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        server_name (str): The domain name of the NTP server.</span>
-<span class="sd">        client_ip (str): The IP address of the NTP server.</span>
-<span class="sd">        wanted_ip_type (int): The IP type that we want to measure.</span>
+<span class="sd">        settings (AdvancedSettings): The settings to use.</span>
 <span class="sd">        probes_requested (int): The number of probes requested.</span>
 
 <span class="sd">    Returns:</span>
@@ -370,6 +371,7 @@
 <span class="sd">        RipeMeasurementError: If the ripe measurement could not be performed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="n">client_ip</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">custom_client_ip</span>
     <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Probes requested must be greater than 0.&quot;</span><span class="p">)</span>
 
@@ -378,8 +380,8 @@
 
     <span class="c1"># measurement settings</span>
     <span class="c1"># we use wanted_ip_type to force to search this type</span>
-    <span class="n">headers</span><span class="p">,</span> <span class="n">request_content</span> <span class="o">=</span> <span class="n">get_request_settings</span><span class="p">(</span><span class="n">ip_family_of_ntp_server</span><span class="o">=</span><span class="n">wanted_ip_type</span><span class="p">,</span> <span class="n">ntp_server</span><span class="o">=</span><span class="n">server_name</span><span class="p">,</span>
-                                                    <span class="n">client_ip</span><span class="o">=</span><span class="n">client_ip</span><span class="p">,</span> <span class="n">probes_requested</span><span class="o">=</span><span class="n">probes_requested</span><span class="p">)</span>
+    <span class="n">headers</span><span class="p">,</span> <span class="n">request_content</span> <span class="o">=</span> <span class="n">get_request_settings</span><span class="p">(</span><span class="n">ntp_server</span><span class="o">=</span><span class="n">server_name</span><span class="p">,</span>
+                                                    <span class="n">settings</span><span class="o">=</span><span class="n">settings</span><span class="p">,</span> <span class="n">probes_requested</span><span class="o">=</span><span class="n">probes_requested</span><span class="p">)</span>
     <span class="c1"># perform the measurement</span>
     <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
         <span class="s2">&quot;https://atlas.ripe.net/api/v2/measurements/&quot;</span><span class="p">,</span>
@@ -402,14 +404,14 @@
 
 <div class="viewcode-block" id="perform_ripe_measurement_ip">
 <a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.perform_measurements.perform_ripe_measurement_ip">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">perform_ripe_measurement_ip</span><span class="p">(</span><span class="n">ntp_server_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">perform_ripe_measurement_ip</span><span class="p">(</span><span class="n">ntp_server_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">AdvancedSettings</span><span class="p">,</span>
                                 <span class="n">probes_requested</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_ripe_number_of_probes_per_measurement</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This method performs a RIPE measurement and returns the ID of the measurement.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        ntp_server_ip (str): The NTP server IP.</span>
-<span class="sd">        client_ip (str): The IP of the client.</span>
+<span class="sd">        settings (AdvancedSettings): The settings to use.</span>
 <span class="sd">        probes_requested (int): The number of probes requested.</span>
 
 <span class="sd">    Returns:</span>
@@ -419,16 +421,16 @@
 <span class="sd">        InputError: If the NTP server IP is not valid, probe requested is negative.</span>
 <span class="sd">        RipeMeasurementError: If the ripe measurement could not be performed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
+    <span class="n">client_ip</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">custom_client_ip</span>
     <span class="k">if</span> <span class="n">probes_requested</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="s2">&quot;Probes requested must be greater than 0.&quot;</span><span class="p">)</span>
     <span class="n">get_ip_family</span><span class="p">(</span><span class="n">client_ip</span><span class="p">)</span>  <span class="c1"># this will throw an exception if the client_ip is not an IP address</span>
 
     <span class="n">ip_family</span> <span class="o">=</span> <span class="n">get_ip_family</span><span class="p">(</span><span class="n">ntp_server_ip</span><span class="p">)</span>  <span class="c1"># this will throw an exception if the ntp_server_ip is not an IP address</span>
-
+    <span class="n">settings</span><span class="o">.</span><span class="n">wanted_ip_type</span> <span class="o">=</span> <span class="n">ip_family</span>
     <span class="c1"># measurement settings</span>
-    <span class="n">headers</span><span class="p">,</span> <span class="n">request_content</span> <span class="o">=</span> <span class="n">get_request_settings</span><span class="p">(</span><span class="n">ip_family_of_ntp_server</span><span class="o">=</span><span class="n">ip_family</span><span class="p">,</span> <span class="n">ntp_server</span><span class="o">=</span><span class="n">ntp_server_ip</span><span class="p">,</span>
-                                                    <span class="n">client_ip</span><span class="o">=</span><span class="n">client_ip</span><span class="p">,</span> <span class="n">probes_requested</span><span class="o">=</span><span class="n">probes_requested</span><span class="p">)</span>
+    <span class="n">headers</span><span class="p">,</span> <span class="n">request_content</span> <span class="o">=</span> <span class="n">get_request_settings</span><span class="p">(</span><span class="n">ntp_server</span><span class="o">=</span><span class="n">ntp_server_ip</span><span class="p">,</span>
+                                                    <span class="n">settings</span><span class="o">=</span><span class="n">settings</span><span class="p">,</span> <span class="n">probes_requested</span><span class="o">=</span><span class="n">probes_requested</span><span class="p">)</span>
     <span class="c1"># perform the measurement</span>
     <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
         <span class="s2">&quot;https://atlas.ripe.net/api/v2/measurements/&quot;</span><span class="p">,</span>
@@ -451,14 +453,13 @@
 
 <div class="viewcode-block" id="get_request_settings">
 <a class="viewcode-back" href="../../../../server.utilities.html#server.app.utils.perform_measurements.get_request_settings">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_request_settings</span><span class="p">(</span><span class="n">ip_family_of_ntp_server</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ntp_server</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">client_ip</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_request_settings</span><span class="p">(</span><span class="n">ntp_server</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="n">AdvancedSettings</span><span class="p">,</span>
                          <span class="n">probes_requested</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">get_ripe_number_of_probes_per_measurement</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This method gets the RIPE measurement settings for the performing a RIPE measurement.</span>
 <span class="sd">    Args:</span>
-<span class="sd">        ip_family_of_ntp_server (int): The IP family of the NTP server. (4 or 6)</span>
 <span class="sd">        ntp_server (str): The NTP server IP address or domain name.</span>
-<span class="sd">        client_ip (str): The IP address of the client.</span>
+<span class="sd">        settings (AdvancedSettings): The settings to use, including client_ip, and The IP family of the NTP server. (4 or 6))</span>
 <span class="sd">        probes_requested (int): The number of probes requested.</span>
 
 <span class="sd">    Returns:</span>
@@ -476,7 +477,7 @@
     <span class="n">request_content</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;definitions&quot;</span><span class="p">:</span> <span class="p">[</span>
         <span class="p">{</span>
             <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ntp&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;af&quot;</span><span class="p">:</span> <span class="n">ip_family_of_ntp_server</span><span class="p">,</span>
+            <span class="s2">&quot;af&quot;</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">wanted_ip_type</span><span class="p">,</span>
             <span class="s2">&quot;resolve_on_probe&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
             <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;NTP measurement to </span><span class="si">{</span><span class="n">ntp_server</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="s2">&quot;packets&quot;</span><span class="p">:</span> <span class="n">get_ripe_packets_per_probe</span><span class="p">(),</span>
@@ -487,7 +488,7 @@
     <span class="p">],</span>
         <span class="s2">&quot;is_oneoff&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
         <span class="s2">&quot;bill_to&quot;</span><span class="p">:</span> <span class="n">get_ripe_account_email</span><span class="p">(),</span>
-        <span class="s2">&quot;probes&quot;</span><span class="p">:</span> <span class="n">get_probes</span><span class="p">(</span><span class="n">client_ip</span><span class="p">,</span> <span class="n">ip_family_of_ntp_server</span><span class="p">,</span> <span class="n">probes_requested</span><span class="p">)</span>  <span class="c1"># we want probes close to the client</span>
+        <span class="s2">&quot;probes&quot;</span><span class="p">:</span> <span class="n">get_probes</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">probes_requested</span><span class="p">)</span>  <span class="c1"># we want probes close to the client</span>
     <span class="p">}</span>
     <span class="k">return</span> <span class="n">headers</span><span class="p">,</span> <span class="n">request_content</span></div>
 

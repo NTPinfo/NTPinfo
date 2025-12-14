@@ -428,6 +428,27 @@ it returns 6 if we have an IPv6 address. Otherwise, it raises an exception.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.get_ip_family_with_default">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">get_ip_family_with_default</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip_str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#get_ip_family_with_default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.get_ip_family_with_default" title="Link to this definition"></a></dt>
+<dd><p>This method returns the IP family of the given IP address. It returns 4 if we have an IPv4, and
+it returns 6 if we have an IPv6 address. Otherwise, it returns the default value.
+:type ip_str: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>
+:param ip_str: The IP address
+:type ip_str: Optional[str]
+:type default_value: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
+:param default_value: The default value to return if the ip_str is not an IPv4 or IPv6 string address.
+:type default_value: int</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The ip family or “default” if we do not get an IP address</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="server.app.utils.ip_utils.get_ip_network_details">
 <span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">get_ip_network_details</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#get_ip_network_details"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.get_ip_network_details" title="Link to this definition"></a></dt>
 <dd><p>This method gets the ASN, the country code and the continent code of an IP address.</p>
@@ -533,6 +554,23 @@ a string. If the input IP is <cite>None</cite>, it returns <cite>None</cite>.</p
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ip_utils.is_ip_or_dn">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ip_utils.</span></span><span class="sig-name descname"><span class="pre">is_ip_or_dn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ip_utils.html#is_ip_or_dn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ip_utils.is_ip_or_dn" title="Link to this definition"></a></dt>
+<dd><p>This method checks whether a server is an IP or DN.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>server</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The server to check.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Whether the server is an IP or DN (str).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1185,17 +1223,14 @@ with each field (even though some NTP version failed, you will still have all th
 
 <dl class="py function">
 <dt class="sig sig-object py" id="server.app.utils.perform_measurements.get_request_settings">
-<span class="sig-prename descclassname"><span class="pre">server.app.utils.perform_measurements.</span></span><span class="sig-name descname"><span class="pre">get_request_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ip_family_of_ntp_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntp_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/perform_measurements.html#get_request_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.perform_measurements.get_request_settings" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.perform_measurements.</span></span><span class="sig-name descname"><span class="pre">get_request_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ntp_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/perform_measurements.html#get_request_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.perform_measurements.get_request_settings" title="Link to this definition"></a></dt>
 <dd><p>This method gets the RIPE measurement settings for the performing a RIPE measurement.
-:type ip_family_of_ntp_server: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
-:param ip_family_of_ntp_server: The IP family of the NTP server. (4 or 6)
-:type ip_family_of_ntp_server: int
 :type ntp_server: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
 :param ntp_server: The NTP server IP address or domain name.
 :type ntp_server: str
-:type client_ip: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
-:param client_ip: The IP address of the client.
-:type client_ip: str
+:type settings: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">AdvancedSettings</span></code></span>
+:param settings: The settings to use, including client_ip, and The IP family of the NTP server. (4 or 6))
+:type settings: AdvancedSettings
 :type probes_requested: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
 :param probes_requested: The number of probes requested.
 :type probes_requested: int</p>
@@ -1263,7 +1298,7 @@ with each field (even though some NTP version failed, you will still have all th
 
 <dl class="py function">
 <dt class="sig sig-object py" id="server.app.utils.perform_measurements.perform_ripe_measurement_domain_name">
-<span class="sig-prename descclassname"><span class="pre">server.app.utils.perform_measurements.</span></span><span class="sig-name descname"><span class="pre">perform_ripe_measurement_domain_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/perform_measurements.html#perform_ripe_measurement_domain_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.perform_measurements.perform_ripe_measurement_domain_name" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.perform_measurements.</span></span><span class="sig-name descname"><span class="pre">perform_ripe_measurement_domain_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">server_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/perform_measurements.html#perform_ripe_measurement_domain_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.perform_measurements.perform_ripe_measurement_domain_name" title="Link to this definition"></a></dt>
 <dd><p>This method performs a RIPE measurement on a domain name. It lets the RIPE atlas probe to
 decide which IP of that domain name to use. (You can see this IP from the details of the
 measurement by looking at the measurement ID)</p>
@@ -1271,8 +1306,7 @@ measurement by looking at the measurement ID)</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>server_name</strong> (<em>str</em>) – The domain name of the NTP server.</p></li>
-<li><p><strong>client_ip</strong> (<em>str</em>) – The IP address of the NTP server.</p></li>
-<li><p><strong>wanted_ip_type</strong> (<em>int</em>) – The IP type that we want to measure.</p></li>
+<li><p><strong>settings</strong> (<em>AdvancedSettings</em>) – The settings to use.</p></li>
 <li><p><strong>probes_requested</strong> (<em>int</em>) – The number of probes requested.</p></li>
 </ul>
 </dd>
@@ -1297,13 +1331,13 @@ measurement by looking at the measurement ID)</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="server.app.utils.perform_measurements.perform_ripe_measurement_ip">
-<span class="sig-prename descclassname"><span class="pre">server.app.utils.perform_measurements.</span></span><span class="sig-name descname"><span class="pre">perform_ripe_measurement_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ntp_server_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/perform_measurements.html#perform_ripe_measurement_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.perform_measurements.perform_ripe_measurement_ip" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.perform_measurements.</span></span><span class="sig-name descname"><span class="pre">perform_ripe_measurement_ip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ntp_server_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/perform_measurements.html#perform_ripe_measurement_ip"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.perform_measurements.perform_ripe_measurement_ip" title="Link to this definition"></a></dt>
 <dd><p>This method performs a RIPE measurement and returns the ID of the measurement.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ntp_server_ip</strong> (<em>str</em>) – The NTP server IP.</p></li>
-<li><p><strong>client_ip</strong> (<em>str</em>) – The IP of the client.</p></li>
+<li><p><strong>settings</strong> (<em>AdvancedSettings</em>) – The settings to use.</p></li>
 <li><p><strong>probes_requested</strong> (<em>int</em>) – The number of probes requested.</p></li>
 </ul>
 </dd>
@@ -1710,6 +1744,33 @@ These probes should also support ipv4 or ipv6, it depends on the type.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_available_probes_asn_prefix_and_country">
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_available_probes_asn_prefix_and_country</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_asn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_country_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_available_probes_asn_prefix_and_country"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_available_probes_asn_prefix_and_country" title="Link to this definition"></a></dt>
+<dd><p>This method gets the probes available on RIPE Atlas that has the same ASN, prefix and country as the client IP.
+These probes should also support ipv4 or ipv6, it depends on the type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>client_ip</strong> (<em>str</em>) – The IP address of the client.</p></li>
+<li><p><strong>ip_asn</strong> (<em>str</em>) – The ASN of the searched network.</p></li>
+<li><p><strong>ip_prefix</strong> (<em>str</em>) – The prefix of the respective IP.</p></li>
+<li><p><strong>ip_country_code</strong> (<em>str</em>) – The country code of the respective IP.</p></li>
+<li><p><strong>ip_type</strong> (<em>str</em>) – The IP type (ipv4 or ipv6). (not case-sensitive)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list with the ids of the available probes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[int]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – If the input is invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_available_probes_country">
 <span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_available_probes_country</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">country_code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_available_probes_country"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_available_probes_country" title="Link to this definition"></a></dt>
 <dd><p>This method gets the probes available on RIPE Atlas that has the same country as the client IP.
@@ -1761,7 +1822,7 @@ These probes should also support ipv4 or ipv6, it depends on the type.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_best_probes_matched_by_single_attribute">
-<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_best_probes_matched_by_single_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_probes_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_asn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_country</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_family</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_best_probes_matched_by_single_attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_best_probes_matched_by_single_attribute" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_best_probes_matched_by_single_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_probes_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_asn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_country</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_family</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_this_asn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_this_country</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_best_probes_matched_by_single_attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_best_probes_matched_by_single_attribute" title="Link to this definition"></a></dt>
 <dd><p>This method is responsible for getting the best probes that has a match by a single attribute in this order: ASN, prefix, country.
 As soon as we have enough probes we return.</p>
 <dl class="field-list simple">
@@ -1774,6 +1835,8 @@ As soon as we have enough probes we return.</p>
 <li><p><strong>ip_country</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The country of the NTP server IP address.</p></li>
 <li><p><strong>ip_family</strong> (<em>int</em>) – The family of the NTP server IP address. (4 or 6)</p></li>
 <li><p><strong>probes_requested</strong> (<em>int</em>) – The number of probes that we still need to request.</p></li>
+<li><p><strong>strict_this_asn</strong> (<em>bool</em>) – if we strictly want probes with that ASN.</p></li>
+<li><p><strong>strict_this_country</strong> (<em>bool</em>) – if we strictly want probes in that country.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1799,7 +1862,7 @@ As soon as we have enough probes we return.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_best_probes_with_multiple_attributes">
-<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_best_probes_with_multiple_attributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_probes_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_asn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_country</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_family</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_best_probes_with_multiple_attributes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_best_probes_with_multiple_attributes" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_best_probes_with_multiple_attributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_probes_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_asn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_country</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_family</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict_this_country</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_best_probes_with_multiple_attributes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_best_probes_with_multiple_attributes" title="Link to this definition"></a></dt>
 <dd><p>This method tries to get probes that has the same ASN and prefix OR the same ASN and country and subtract them
 from the probes_requested. These probes have the highest priority as they have multiple attributes as the client IP
 (same ASN and same prefix OR same ASN or same country)</p>
@@ -1813,6 +1876,7 @@ from the probes_requested. These probes have the highest priority as they have m
 <li><p><strong>ip_country</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The country of the NTP server IP address.</p></li>
 <li><p><strong>ip_family</strong> (<em>int</em>) – The family of the NTP server IP address. (4 or 6)</p></li>
 <li><p><strong>probes_requested</strong> (<em>int</em>) – The number of probes that we still need to request.</p></li>
+<li><p><strong>strict_this_country</strong> (<em>bool</em>) – if we strictly want probes in that country.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1879,17 +1943,19 @@ from the probes_requested. These probes have the highest priority as they have m
 
 <dl class="py function">
 <dt class="sig sig-object py" id="server.app.utils.ripe_probes.get_probes">
-<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_probes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ip_family_of_ntp_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_probes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_probes" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">server.app.utils.ripe_probes.</span></span><span class="sig-name descname"><span class="pre">get_probes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probes_requested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_current_probes_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/utils/ripe_probes.html#get_probes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.utils.ripe_probes.get_probes" title="Link to this definition"></a></dt>
 <dd><p>This method handles all cases regarding what probes we should send.
 This method assumes all inputs are either valid or None. (If there is a typo in the input, the measurement
 may be affected)
-It will try to return the best probes near the client.</p>
+It will try to return the best probes near the client.
+Observation: The ASN and country indicated in settings will be force the measurement to use them. This may result in not finding
+enough probes with these specifications.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>client_ip</strong> (<em>str</em>) – The IP address of the client.</p></li>
-<li><p><strong>ip_family_of_ntp_server</strong> (<em>int</em>) – The IP family of the NTP server. (4 or 6)</p></li>
+<li><p><strong>settings</strong> (<em>AdvancedSettings</em>) – The settings to use, including client_ip, and The IP family of the NTP server. (4 or 6))</p></li>
 <li><p><strong>probes_requested</strong> (<em>int</em>) – The total number of probes that we will request.</p></li>
+<li><p><strong>has_current_probes_set</strong> (<em>Optional</em><em>[</em><em>set</em><em>[</em><em>int</em><em>]</em><em>]</em>) – The set of probes that we will already use for the measurement. (to be sure that we do not include duplicates)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

@@ -211,7 +211,8 @@ based on a time range (start and end datetime).</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="server.app.api.routing.trigger_ripe_measurement">
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.app.api.routing.</span></span><span class="sig-name descname"><span class="pre">trigger_ripe_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">payload</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/api/routing.html#trigger_ripe_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.api.routing.trigger_ripe_measurement" title="Link to this definition"></a></dt>
-<dd><p>Trigger a RIPE Atlas NTP measurement for a specified server.</p>
+<dd><p>Trigger a RIPE Atlas NTP measurement for a specified server.
+NO LONGER IN USE</p>
 <p>This endpoint initiates a RIPE Atlas measurement for the given NTP server
 (IP address or domain name) provided in the payload. Once the measurement
 is triggered, it returns a measurement ID which can later be used to fetch
@@ -257,6 +258,7 @@ the result using the <cite>/measurements/ripe/{measurement_id}</cite> endpoint.<
 <p class="rubric">Notes</p>
 <ul class="simple">
 <li><p>This endpoint is also limited to &lt;<cite>see config file</cite>&gt; to prevent abuse and reduce server load.</p></li>
+<li><p>This endpoint is NOT currently used.</p></li>
 </ul>
 </dd></dl>
 

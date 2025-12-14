@@ -255,6 +255,26 @@ all requested probes have been scheduled for the given RIPE measurement ID.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="server.app.services.api_services.check_ripe_settings">
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">check_ripe_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#check_ripe_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.check_ripe_settings" title="Link to this definition"></a></dt>
+<dd><p>This method checks the values of the RIPE section of the settings.
+:type settings: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">AdvancedSettings</span></code></span>
+:param settings: The parameters that the client inputted.
+:type settings: AdvancedSettings</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The settings to be used internally in the server. (valid settings)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>AdvancedSettings</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="server.app.models.html#server.app.models.CustomError.InputError" title="server.app.models.CustomError.InputError"><strong>InputError</strong></a> – If some settings are invalid.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="server.app.services.api_services.check_settings">
 <span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">check_settings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#check_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.check_settings" title="Link to this definition"></a></dt>
 <dd><p>This method checks the values in the settings.
@@ -532,7 +552,7 @@ Only for domain names, “wanted_ip_type” is considered. Otherwise, it is igno
 
 <dl class="py function">
 <dt class="sig sig-object py" id="server.app.services.api_services.perform_ripe_measurement">
-<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">perform_ripe_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ntp_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client_ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wanted_ip_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#perform_ripe_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.perform_ripe_measurement" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">server.app.services.api_services.</span></span><span class="sig-name descname"><span class="pre">perform_ripe_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ntp_server</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/server/app/services/api_services.html#perform_ripe_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#server.app.services.api_services.perform_ripe_measurement" title="Link to this definition"></a></dt>
 <dd><p>Initiate a RIPE Atlas measurement for a given server (IP address or domain name).</p>
 <p>This function determines whether the provided server is an IP address or a domain name,
 and triggers the appropriate RIPE measurement.</p>
@@ -540,8 +560,7 @@ and triggers the appropriate RIPE measurement.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>ntp_server</strong> (<em>str</em>) – The IP address or domain name of the target NTP server.</p></li>
-<li><p><strong>client_ip</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em>) – The IP address of the client requesting the measurement.</p></li>
-<li><p><strong>wanted_ip_type</strong> (<em>int</em>) – The IP type that we want to measure. (4 or 6)</p></li>
+<li><p><strong>settings</strong> (<em>AdvancedSettings</em>) – The settings to use.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
