@@ -7,8 +7,12 @@ import { useFetchIPData } from '../../hooks/useFetchIPData.ts'
 import { useFetchHistoricalIPData } from '../../hooks/useFetchHistoricalIPData.ts'
 import { useFetchRIPEData } from '../../hooks/useFetchRipeData.ts'
 import { useTriggerRipeMeasurement } from '../../hooks/useTriggerRipeMeasurement.ts'
-import { downloadJSON, downloadCSV } from '../../utils/downloadFormats.ts'
+import { useTriggerMeasurement } from '../../hooks/useTriggerFullMeasurement.ts'
+import { usePollIncrementalMeasurement } from '../../hooks/usePollIncrementalMeasurement.ts'
+import { useFetchServerDetails } from '../../hooks/useFetchServerDetails.ts'
+import { downloadCSV } from '../../utils/downloadFormats.ts'
 import { HomeCacheState, NTPData, Measurement, RIPEData } from '../../utils/types'
+import axios from 'axios'
 
 vi.mock('../../hooks/useFetchIPData.ts', () => ({
   useFetchIPData: vi.fn()
@@ -26,9 +30,27 @@ vi.mock('../../hooks/useTriggerRipeMeasurement.ts', () => ({
   useTriggerRipeMeasurement: vi.fn()
 }))
 
+vi.mock('../../hooks/useTriggerFullMeasurement.ts', () => ({
+  useTriggerMeasurement: vi.fn()
+}))
+
+vi.mock('../../hooks/usePollIncrementalMeasurement.ts', () => ({
+  usePollIncrementalMeasurement: vi.fn()
+}))
+
+vi.mock('../../hooks/useFetchServerDetails.ts', () => ({
+  useFetchServerDetails: vi.fn()
+}))
+
 vi.mock('../../utils/downloadFormats.ts', () => ({
   downloadJSON: vi.fn(),
   downloadCSV: vi.fn()
+}))
+
+vi.mock('axios', () => ({
+  default: {
+    get: vi.fn()
+  }
 }))
 
 vi.mock('../../components/WorldMap.tsx', () => ({
@@ -63,10 +85,10 @@ describe('HomeTab', () => {
         coordinates: [52.3676, 4.9041],
         ntp_server_ref_parent_ip: "203.0.113.1",
         ref_id: "GPS",
-        client_sent_time: [1687000000, 123456789],
-        server_recv_time: [1687000000, 123456999],
-        server_sent_time: [1687000000, 123457199],
-        client_recv_time: [1687000000, 123457399],
+        client_sent_time: 2121212,
+        server_recv_time: 2121212,
+        server_sent_time: 2121212,
+        client_recv_time: 2121212,
         offset: -2.345,
         RTT: 1.543,
         stratum: 2,
@@ -74,7 +96,7 @@ describe('HomeTab', () => {
         root_delay: 0.125,
         poll: 6,
         root_dispersion: 0.256,
-        ntp_last_sync_time: [1686999900, 987654321],
+        ntp_last_sync_time: 2121212,
         leap: 0,
         jitter: 0.321,
         nr_measurements_jitter: 5,
@@ -94,10 +116,10 @@ describe('HomeTab', () => {
             coordinates: [50.1109, 8.6821],
             ntp_server_ref_parent_ip: "203.0.113.1",
             ref_id: "GPS",
-            client_sent_time: [1687000050, 223456789],
-            server_recv_time: [1687000050, 223456999],
-            server_sent_time: [1687000050, 223457199],
-            client_recv_time: [1687000050, 223457399],
+            client_sent_time: 2121212,
+            server_recv_time: 2121212,
+            server_sent_time: 2121212,
+            client_recv_time: 2121212,
             offset: -1.123,
             RTT: 1.234,
             stratum: 2,
@@ -105,7 +127,7 @@ describe('HomeTab', () => {
             root_delay: 0.144,
             poll: 6,
             root_dispersion: 0.189,
-            ntp_last_sync_time: [1686999950, 876543210],
+            ntp_last_sync_time: 2121212,
             leap: 0,
             jitter: 0.210,
             nr_measurements_jitter: 6,
@@ -139,7 +161,10 @@ describe('HomeTab', () => {
         versionData: null,
         ripeMeasurementId: null,
         error: null,
-        measurementSessionActive: false
+        measurementSessionActive: false,
+        measurementSettings: null,
+        currentNtpIndex: 0,
+        currentRipeIndex: 0
     }
 
     let mockSetCache: Mock
@@ -187,6 +212,40 @@ describe('HomeTab', () => {
         ;(useTriggerRipeMeasurement as Mock).mockReturnValue({
             triggerMeasurement: mockTriggerRipeMeasurement
         })
+
+        ;(useTriggerMeasurement as Mock).mockReturnValue({
+            triggerMeasurement: vi.fn(),
+            loading: false,
+            measurementId: null,
+            httpStatus: 200,
+            error: null,
+            errorMessage: null
+        })
+
+        ;(usePollIncrementalMeasurement as Mock).mockReturnValue({
+            ntpData: null,
+            ntsData: null,
+            ripeData: null,
+            versionData: null,
+            ripeStatus: null,
+            ripeError: null,
+            ripeId: null,
+            ntpVerLoading: false,
+            status: null,
+            error: null,
+            expectedIpCount: null
+        })
+
+        ;(useFetchServerDetails as Mock).mockReturnValue({
+            fetchServerDetails: vi.fn()
+        })
+
+        // Mock window.URL methods
+        global.URL.createObjectURL = vi.fn(() => 'blob:mock-url')
+        global.URL.revokeObjectURL = vi.fn()
+        
+        // Mock window.alert
+        global.alert = vi.fn()
     })
 
     const setupTab = (cache: Partial<HomeCacheState> = {}) => {
@@ -272,6 +331,20 @@ describe('HomeTab', () => {
 
     describe('Display results', () => {
         test('Proper results and graph display after measurements', () => {
+            // Mock usePollIncrementalMeasurement to return fullNTP so download buttons are rendered
+            ;(usePollIncrementalMeasurement as Mock).mockReturnValue({
+                ntpData: [mockNTPData],
+                ntsData: null,
+                ripeData: null,
+                versionData: null,
+                ripeStatus: null,
+                ripeError: null,
+                ripeId: null,
+                ntpVerLoading: false,
+                status: null,
+                error: null,
+                expectedIpCount: null
+            })
 
             const chartData = new Map<string, NTPData[]>()
             chartData.set('time.apple.com', [mockNTPData])
@@ -283,8 +356,6 @@ describe('HomeTab', () => {
                        ripeMeasurementStatus: 'complete',
                        allNtpMeasurements: [mockNTPData],
                        vantagePointInfo: [[52.3676, 4.9041], '192.168.1.1'] })
-
-            expect(screen.getByText('Results')).toBeInTheDocument()
 
             expect(screen.getByText(`${mockNTPData.offset} ms`)).toBeInTheDocument()
             expect(screen.getByText(`${mockNTPData.RTT} ms`)).toBeInTheDocument()
@@ -307,9 +378,26 @@ describe('HomeTab', () => {
     describe('Buttons functionality', () => {
         test('Download CSV', async () => {
             const user = userEvent.setup()
+            
+            // Mock usePollIncrementalMeasurement to return fullNTP so download buttons are rendered
+            ;(usePollIncrementalMeasurement as Mock).mockReturnValue({
+                ntpData: [mockNTPData],
+                ntsData: null,
+                ripeData: null,
+                versionData: null,
+                ripeStatus: null,
+                ripeError: null,
+                ripeId: null,
+                ntpVerLoading: false,
+                status: null,
+                error: null,
+                expectedIpCount: null
+            })
+
             setupTab({
                 ntpData: mockNTPData,
-                measured: true
+                measured: true,
+                allNtpMeasurements: [mockNTPData]
             })
 
             const downloadButton = screen.getByRole('button', { name: /Download CSV/i })
@@ -320,16 +408,61 @@ describe('HomeTab', () => {
 
         test('Download JSON and include RIPE', async () => {
             const user = userEvent.setup()
+            
+            // Mock usePollIncrementalMeasurement to return fullNTP so download buttons are rendered
+            ;(usePollIncrementalMeasurement as Mock).mockReturnValue({
+                ntpData: [mockNTPData],
+                ntsData: null,
+                ripeData: null,
+                versionData: null,
+                ripeStatus: null,
+                ripeError: null,
+                ripeId: null,
+                ntpVerLoading: false,
+                status: null,
+                error: null,
+                expectedIpCount: null
+            })
+
+            // Mock axios.get for fetching measurement data
+            const mockAxiosGet = vi.fn()
+            ;(axios.get as any) = mockAxiosGet
+            mockAxiosGet.mockResolvedValue({ data: { test: 'data' } })
+
+            // Mock document.createElement to return a proper anchor element with click method
+            const mockClick = vi.fn()
+            const originalCreateElement = document.createElement.bind(document)
+            const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+                if (tagName === 'a') {
+                    const anchor = originalCreateElement('a') as HTMLAnchorElement
+                    anchor.click = mockClick
+                    return anchor
+                }
+                return originalCreateElement(tagName)
+            })
+
             setupTab({
                 ntpData: mockNTPData,
                 ripeMeasurementResp: [mockRIPEData],
-                measured: true
+                measured: true,
+                allNtpMeasurements: [mockNTPData],
+                measurementId: 'test-measurement-id',
+                ripeMeasurementId: 'test-ripe-id'
             })
 
             const downloadButton = screen.getByRole('button', { name: /Download JSON/i })
             await user.click(downloadButton)
 
-            expect(downloadJSON).toHaveBeenCalledWith([mockNTPData, mockRIPEData])
+            // Wait for async operations to complete
+            await new Promise(resolve => setTimeout(resolve, 100))
+
+            // Verify that window.URL.createObjectURL was called (indicating download was attempted)
+            expect(global.URL.createObjectURL).toHaveBeenCalled()
+            // Verify that the anchor element's click was called
+            expect(mockClick).toHaveBeenCalled()
+            
+            // Restore the original createElement
+            createElementSpy.mockRestore()
         })
     })
 })

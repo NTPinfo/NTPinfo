@@ -15,6 +15,7 @@ interface DynamicGraphProps {
   legendDisplay?: boolean;
   showTimeInput?: boolean;
   existingData?: Map<string, NTPData[]> | null;
+  onDataChange?: (data: Map<string, NTPData[]> | null) => void;
 }
 
 export default function DynamicGraph({
@@ -23,7 +24,8 @@ export default function DynamicGraph({
   onMeasurementChange,
   legendDisplay = false,
   showTimeInput = true,
-  existingData = null
+  existingData = null,
+  onDataChange
 }: DynamicGraphProps) {
   const [selOption, setSelOption] = useState("Last Day");
   const [customFrom, setCustomFrom] = useState<string>("");
@@ -36,8 +38,12 @@ export default function DynamicGraph({
   useEffect(() => {
     if (!showTimeInput && existingData) {
       setData(existingData);
+      // Notify parent component of data change
+      if (onDataChange) {
+        onDataChange(existingData);
+      }
     }
-  }, [existingData, showTimeInput]);
+  }, [existingData, showTimeInput, onDataChange]);
 
   // Function to calculate time range based on selected option
   const getTimeRange = () => {
@@ -113,6 +119,10 @@ export default function DynamicGraph({
     await Promise.all(fetchPromises);
     // console.log(`Completed fetching data for all servers`);
     setData(newData);
+    // Notify parent component of data change
+    if (onDataChange) {
+      onDataChange(newData);
+    }
   };
 
   // Fetch data when time period changes or servers change (only if showTimeInput is true)

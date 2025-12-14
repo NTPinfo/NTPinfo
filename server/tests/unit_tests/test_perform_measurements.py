@@ -227,7 +227,11 @@ def test_perform_ripe_measurement_domain_name_normal(mock_settings, mock_post):
     mock_response.json.return_value = {"measurements": [85439]}
     mock_post.return_value = mock_response
 
-    result = perform_ripe_measurement_domain_name("time.apple.com", "2.3.4.5", 4, 10)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "2.3.4.5"
+    settings.wanted_ip_type = 4
+
+    result = perform_ripe_measurement_domain_name("time.apple.com", settings, 10)
 
     assert result == 85439
 
@@ -240,7 +244,11 @@ def test_perform_ripe_measurement_domain_name_normal_want_ipv6(mock_settings, mo
     mock_response.json.return_value = {"measurements": [85439]}
     mock_post.return_value = mock_response
 
-    result = perform_ripe_measurement_domain_name("time.apple.com", "2.3.4.5", 6, 10)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "2.3.4.5"
+    settings.wanted_ip_type = 6
+
+    result = perform_ripe_measurement_domain_name("time.apple.com", settings, 10)
 
     assert result == 85439
 
@@ -252,28 +260,40 @@ def test_perform_ripe_measurement_domain_name_try_catch(mock_settings, mock_post
     mock_response.json.return_value = {"error": "not found"}
     mock_post.return_value = mock_response
 
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "2.3.4.5"
+    settings.wanted_ip_type = 4
+
     with pytest.raises(RipeMeasurementError, match="not found"):
-        perform_ripe_measurement_domain_name("time.apple.com", "2.3.4.5", 4, 10)
+        perform_ripe_measurement_domain_name("time.apple.com", settings, 10)
 
     mock_response2 = MagicMock()
     mock_response2.json.return_value = {"something": "error, not found"}
     mock_post.return_value = mock_response2
     with pytest.raises(RipeMeasurementError, match=r"Ripe measurement failed:.*"):
-        perform_ripe_measurement_domain_name("time.apple.com", "2.3.4.5", 4, 10)
+        perform_ripe_measurement_domain_name("time.apple.com", settings, 10)
 
 @patch("server.app.utils.perform_measurements.requests.post")
 @patch("server.app.utils.perform_measurements.get_request_settings")
 def test_perform_ripe_measurement_domain_name_exceptions(mock_settings, mock_post):
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "2.3.4.5"
+    settings.wanted_ip_type = 4
     # invalid "probes requested"
     with pytest.raises(InputError):
-        perform_ripe_measurement_domain_name("ntp.pool.org", "2.3.4.5", 4, -1)
+        perform_ripe_measurement_domain_name("ntp.pool.org", settings, -1)
     with pytest.raises(InputError):
-        perform_ripe_measurement_domain_name("ntp.pool.org", "2.3.4.5", 4, 0)
+        perform_ripe_measurement_domain_name("ntp.pool.org", settings, 0)
+
+    settings.custom_client_ip = "blabla"
     with pytest.raises(InputError):
-        perform_ripe_measurement_domain_name("ntp.pool.org", "2.3.4.5", 6, 0)
+        perform_ripe_measurement_domain_name("ntp.pool.org", settings, 3)
+
+    settings.custom_client_ip = "2.3.4.5"
+    settings.wanted_ip_type = 6
+    with pytest.raises(InputError):
+        perform_ripe_measurement_domain_name("ntp.pool.org", settings, 0)
     # invalid client ip
-    with pytest.raises(InputError):
-        perform_ripe_measurement_domain_name("ntp.pool.org", "blabla", 4, 3)
 
 
 @patch("server.app.utils.perform_measurements.requests.post")
@@ -284,7 +304,11 @@ def test_perform_ripe_measurement_ip_normal(mock_settings, mock_post):
     mock_response.json.return_value = {"measurements": [12412]}
     mock_post.return_value = mock_response
 
-    result = perform_ripe_measurement_ip("123.45.67.89", "2.3.4.5", 10)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "2.3.4.5"
+    settings.wanted_ip_type = 4
+
+    result = perform_ripe_measurement_ip("123.45.67.89", settings, 10)
 
     assert result == 12412
 
@@ -296,30 +320,39 @@ def test_perform_ripe_measurement_ip_try_catch(mock_settings, mock_post):
     mock_response.json.return_value = {"error": "not found"}
     mock_post.return_value = mock_response
 
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "2.3.4.5"
+    settings.wanted_ip_type = 4
+
     with pytest.raises(RipeMeasurementError, match="not found"):
-        perform_ripe_measurement_ip("123.45.67.89", "2.3.4.5", 10)
+        perform_ripe_measurement_ip("123.45.67.89", settings, 10)
 
     mock_response2 = MagicMock()
     mock_response2.json.return_value = {"something": "error, not found"}
     mock_post.return_value = mock_response2
     with pytest.raises(RipeMeasurementError, match=r"Ripe measurement failed:.*"):
-        perform_ripe_measurement_ip("123.45.67.89", "2.3.4.5", 10)
+        perform_ripe_measurement_ip("123.45.67.89", settings, 10)
 
 
 @patch("server.app.utils.perform_measurements.requests.post")
 @patch("server.app.utils.perform_measurements.get_request_settings")
 def test_perform_ripe_measurement_ip_exceptions(mock_settings, mock_post):
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "2.3.4.5"
+    settings.wanted_ip_type = 4
     # invalid "probes requested"
     with pytest.raises(InputError):
-        perform_ripe_measurement_ip("123.45.67.89", "2.3.4.5", -1)
+        perform_ripe_measurement_ip("123.45.67.89", settings, -1)
     with pytest.raises(InputError):
-        perform_ripe_measurement_ip("123.45.67.89", "2.3.4.5", 0)
+        perform_ripe_measurement_ip("123.45.67.89", settings, 0)
     # invalid client ip
+    settings.custom_client_ip = "blabla"
     with pytest.raises(InputError):
-        perform_ripe_measurement_ip("123.45.67.89", "blabla", 3)
+        perform_ripe_measurement_ip("123.45.67.89", settings, 3)
     # invalid ntp server IP
+    settings.custom_client_ip = "2.3.4.5"
     with pytest.raises(InputError):
-        perform_ripe_measurement_ip("123.45aso.67.89", "2.3.4.5", 0)
+        perform_ripe_measurement_ip("123.45aso.67.89", settings, 0)
 
 
 @patch("server.app.utils.perform_measurements.get_probes")
@@ -343,7 +376,11 @@ def test_get_request_settings_ok(mock_ripe_api_token, mock_packets, mock_timeout
         "requested": 4
     }]
 
-    (h, c) = get_request_settings(4, "ntp.server.com", "74.22.34.47",28)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "74.22.34.47"
+    settings.wanted_ip_type = 4
+
+    (h, c) = get_request_settings("ntp.server.com", settings,28)
     assert h == {
         "Authorization": "Key token",
         "Content-Type": "application/json"
@@ -384,10 +421,21 @@ def test_get_request_settings_exception(mock_ripe_api_token, mock_packets, mock_
     mock_timeout.return_value = 3400
     mock_email.return_value = "email@email.com"
     mock_probes.side_effect = InputError("exc")
+
+
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "74.22.34.47"
+    settings.wanted_ip_type = 4
+
     with pytest.raises(Exception):
-        get_request_settings(4, "ntp.server.com", "74.22.34.47", 28)
+        get_request_settings("ntp.server.com", settings, 28)
 
     mock_timeout.reset_mock()
     mock_timeout.side_effect = ValueError("env problem")
+
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "74.22.34.47"
+    settings.wanted_ip_type = 4
+
     with pytest.raises(ValueError):
-        get_request_settings(4, "ntp.server.com", "74.22.34.47", 28)
+        get_request_settings("ntp.server.com", settings, 28)

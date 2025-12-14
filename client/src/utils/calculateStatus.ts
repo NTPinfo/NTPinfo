@@ -8,9 +8,10 @@ import { NTPData, RIPEData } from "./types"
  * and "FAILING" if both are above the threshold
  */
 export const calculateStatus = (ntpData: NTPData, ripeData: RIPEData): string => {
-    if (Math.max(Math.abs(ntpData.offset), Math.abs(ripeData.measurementData.offset)) < import.meta.env.VITE_STATUS_THRESHOLD)
+    const threshold = Number(import.meta.env.VITE_STATUS_THRESHOLD) || 1000
+    if (Math.max(Math.abs(ntpData.offset), Math.abs(ripeData.measurementData.offset)) < threshold)
         return "PASSING"
-    else if (Math.min(Math.abs(ntpData.offset), Math.abs(ripeData.measurementData.offset)) < import.meta.env.VITE_STATUS_THRESHOLD)
+    else if (Math.min(Math.abs(ntpData.offset), Math.abs(ripeData.measurementData.offset)) < threshold)
         return "CAUTION"
     return "FAILING"
 }

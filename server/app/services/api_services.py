@@ -1,5 +1,6 @@
 import pprint
 import time
+from copy import copy
 
 from sqlalchemy.orm import Session
 
@@ -346,6 +347,8 @@ def check_settings(settings: AdvancedSettings) -> AdvancedSettings:
         raise InputError("wanted_ip_type must be 4 or 6")
     if not settings.measurement_type in ["ntpv1", "ntpv2", "ntpv3", "ntpv4", "ntpv5"]:
         raise InputError("measurement_type must be ntpv1 or ntpv2 or ntpv3 or ntpv4 or ntpv5")
+    if settings.ntpv5_draft != "" and len(settings.ntpv5_draft) > 50:
+        raise InputError("draft name for ntpv5 is too long")
     # ntp versions settings
     if not settings.measurement_type in ["ntpv1", "ntpv2", "ntpv3", "ntpv4", "ntpv5"]:
         raise InputError("measurement_type must be either ntpv1 or ntpv2 or ntpv3 or ntpv4 or ntpv5")
@@ -355,10 +358,25 @@ def check_settings(settings: AdvancedSettings) -> AdvancedSettings:
             raise InputError(f"the version {v} must be either ntpv1 or ntpv2 or ntpv3 or ntpv4 or ntpv5")
     if settings.analyse_all_ntp_versions:  # if they want to measure everything, override the list
         settings.ntp_versions_to_analyze = ["ntpv1", "ntpv2", "ntpv3", "ntpv4", "ntpv5"]
+    return check_ripe_settings(settings)
 
+def check_ripe_settings(settings: AdvancedSettings) -> AdvancedSettings:
+    """
+    This method checks the values of the RIPE section of the settings.
+    Args:
+        settings (AdvancedSettings): The parameters that the client inputted.
+    Returns:
+        AdvancedSettings: The settings to be used internally in the server. (valid settings)
+    Raises:
+        InputError: If some settings are invalid.
+    """
     # RIPE part
     if settings.custom_client_ip != "" and is_ip_address(settings.custom_client_ip) is None:
-        raise InputError("custom_client_ip must be either null/empty or a valid IP address")
+        raise InputError("custom client ip must be either null/empty or a valid IP address")
+    if settings.custom_probes_asn != "" and len(settings.custom_probes_asn) > 20:
+        raise InputError("custom probe asn is too long")
+    if settings.custom_probes_country != "" and len(settings.custom_probes_country) != 2:
+        raise InputError("custom probe country must consist of exactly 2 letters")
     return settings
 
 
@@ -815,7 +833,7 @@ def add_ripe_measurement_id_to_db_measurement(db: Session, server: str, settings
         None: nothing
     """
     try:
-        ripe_measurement_id = perform_ripe_measurement(server, settings.custom_client_ip, settings.wanted_ip_type)
+        ripe_measurement_id = perform_ripe_measurement(server, settings)
         m.id_ripe = int(ripe_measurement_id)
         db.commit()
     except RipeMeasurementError as e:
@@ -890,7 +908,7 @@ def fetch_ripe_data(measurement_id: str) -> tuple[list[dict], str]:
     return measurements_formated, status
 
 
-def perform_ripe_measurement(ntp_server: str, client_ip: Optional[str], wanted_ip_type: int) -> str:
+def perform_ripe_measurement(ntp_server: str, settings: AdvancedSettings) -> str:
     """
     Initiate a RIPE Atlas measurement for a given server (IP address or domain name).
 
@@ -899,8 +917,7 @@ def perform_ripe_measurement(ntp_server: str, client_ip: Optional[str], wanted_i
 
     Args:
         ntp_server (str): The IP address or domain name of the target NTP server.
-        client_ip (Optional[str]): The IP address of the client requesting the measurement.
-        wanted_ip_type (int): The IP type that we want to measure. (4 or 6)
+        settings (AdvancedSettings): The settings to use.
 
     Returns:
         str: The RIPE measurement ID. (as a string)
@@ -909,16 +926,20 @@ def perform_ripe_measurement(ntp_server: str, client_ip: Optional[str], wanted_i
         Exception: If the server string is invalid or the measurement failed.
     """
     # use our server as the client if the client IP is not provided
-    if client_ip is None:
-        client_ip = ip_to_str(get_server_ip(wanted_ip_type))
-        if client_ip is None:
+    settings = copy(settings)
+    # client_ip = settings.custom_client_ip
+    if settings.custom_client_ip is None or settings.custom_client_ip == "":
+        c = ip_to_str(get_server_ip(settings.wanted_ip_type))
+        if c is None:
             raise InputError("Could not determine IP address of neither server nor client")
+        else:
+            settings.custom_client_ip = c
     try:
         if is_ip_address(ntp_server) is not None:
-            measurement_id = perform_ripe_measurement_ip(ntp_server, client_ip)
+            measurement_id = perform_ripe_measurement_ip(ntp_server, settings)
             return str(measurement_id)
         else:
-            measurement_id = perform_ripe_measurement_domain_name(ntp_server, client_ip, wanted_ip_type)
+            measurement_id = perform_ripe_measurement_domain_name(ntp_server, settings)
             return str(measurement_id)
     except InputError as e:
         raise e

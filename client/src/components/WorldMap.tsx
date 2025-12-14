@@ -1,16 +1,17 @@
 import L, { LatLngTuple } from 'leaflet'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
-import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
+import { MapContainer, Marker, Popup, useMap } from 'react-leaflet'
 import { useEffect, useState, useRef } from 'react'
 import { NTPData, RIPEData } from '../utils/types'
+import { useTheme } from '../contexts/ThemeContext'
 import greenProbeImg from '../assets/green-probe.png'
 import yellowProbeImg from '../assets/yellow-probe.png'
 import redProbeImg from '../assets/red-probe.png'
 import darkRedProbeImg from '../assets/dark-red-probe.png'
 import grayProbeImg from '../assets/gray-probe.png'
-import ntpServerImg from '../assets/ntp-server-icon.png'
-import vantagePointImg from '../assets/vantage-point-logo.png'
+import ntpServerImg from '../assets/ntp-server-icon-black.png'
+import vantagePointImg from '../assets/vantage-point-logo-black.png'
 import unavailableNtpImg from '../assets/unavailable-ntp-server-icon.png'
 
 import '../styles/WorldMap.css'
@@ -192,22 +193,51 @@ const FitMapBounds = ({probes, ripeNtpServers, measurementNtpServers, intersecti
 const DrawConnectingLines = ({probes, measurementNtpServers, intersectionNtpServers, unavailableNtpServers, vantagePoint}: {probes: RIPEData[] | null,
   measurementNtpServers: LatLngTuple[], intersectionNtpServers: LatLngTuple[], unavailableNtpServers: LatLngTuple[], vantagePoint: LatLngTuple}) => {
   const map = useMap()
+  const { theme } = useTheme()
+  const polylinesRef = useRef<L.Polyline[]>([])
+  
+  // Use different colors for dark mode
+  const lineColor = theme === 'dark' ? '#58a6ff' : '#1961ac'
 
   useEffect(() => {
-    measurementNtpServers.map(x => {
-      L.polyline([x,vantagePoint], {color:'blue', opacity: 0.8, weight: 1}).addTo(map)
+    // Remove all existing polylines
+    polylinesRef.current.forEach(polyline => {
+      map.removeLayer(polyline)
     })
-    intersectionNtpServers.map(x => {
-      L.polyline([x,vantagePoint], {color:'blue', opacity: 0.8, weight: 1}).addTo(map)
+    polylinesRef.current = []
+
+    // Add new polylines with current color
+    measurementNtpServers.forEach(x => {
+      const polyline = L.polyline([x,vantagePoint], {color: lineColor, opacity: 0.8, weight: 1})
+      polyline.addTo(map)
+      polylinesRef.current.push(polyline)
     })
-    unavailableNtpServers.map(x => {
-      L.polyline([x,vantagePoint], {color:'gray', opacity: 0.8, weight: 1}).addTo(map)
+    intersectionNtpServers.forEach(x => {
+      const polyline = L.polyline([x,vantagePoint], {color: lineColor, opacity: 0.8, weight: 1})
+      polyline.addTo(map)
+      polylinesRef.current.push(polyline)
     })
-    if (!vantagePoint || !probes|| probes.length === 0) return
-    probes.map(x => {
-      L.polyline([x.probe_location,x.measurementData.coordinates], {color: 'blue', opacity: 0.8, weight: 1}).addTo(map)
+    unavailableNtpServers.forEach(x => {
+      const polyline = L.polyline([x,vantagePoint], {color: lineColor, opacity: 0.8, weight: 1})
+      polyline.addTo(map)
+      polylinesRef.current.push(polyline)
     })
-  },[map, probes, measurementNtpServers, intersectionNtpServers, unavailableNtpServers, vantagePoint])
+    if (vantagePoint && probes && probes.length > 0) {
+      probes.forEach(x => {
+        const polyline = L.polyline([x.probe_location,x.measurementData.coordinates], {color: lineColor, opacity: 0.8, weight: 1})
+        polyline.addTo(map)
+        polylinesRef.current.push(polyline)
+      })
+    }
+
+    // Cleanup function
+    return () => {
+      polylinesRef.current.forEach(polyline => {
+        map.removeLayer(polyline)
+      })
+      polylinesRef.current = []
+    }
+  },[map, probes, measurementNtpServers, intersectionNtpServers, unavailableNtpServers, vantagePoint, lineColor])
 
   return null
 }
@@ -264,6 +294,44 @@ const LegendControl = () => {
 
     return cleanup
   }, [map])
+
+  return null
+}
+
+/**
+ * Component to switch tile layers based on theme
+ */
+const ThemeTileLayer = () => {
+  const map = useMap()
+  const { theme } = useTheme()
+  const [tileLayer, setTileLayer] = useState<L.TileLayer | null>(null)
+
+  useEffect(() => {
+    // Remove old tile layer
+    if (tileLayer) {
+      map.removeLayer(tileLayer)
+    }
+
+    // Add new tile layer based on theme
+    const url = theme === 'dark' 
+      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+      : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+    
+    const newTileLayer = L.tileLayer(url, {
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: ['a', 'b', 'c', 'd'],
+      maxZoom: 19
+    })
+    
+    newTileLayer.addTo(map)
+    setTileLayer(newTileLayer)
+
+    return () => {
+      if (newTileLayer) {
+        map.removeLayer(newTileLayer)
+      }
+    }
+  }, [map, theme])
 
   return null
 }
@@ -346,7 +414,16 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
     /**
      * Checks done in case that either RIPE or the vantage point didn't return results
      */
-    if (!probes && !ntpServers) return
+    // Reset status message and clear all locations when data is cleared
+    if ((!probes || (Array.isArray(probes) && probes.length === 0)) && 
+        (!ntpServers || (Array.isArray(ntpServers) && ntpServers.length === 0))) {
+      setStatusMessage("")
+      setRipeOnlyLocations([])
+      setNtpOnlyLocations([])
+      setIntersectedLocations([])
+      setFailedLocations([])
+      return
+    }
 
     if (!probes && ntpServers) {
       setRipeOnlyLocations([])
@@ -356,12 +433,12 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
       const failedLocations = new Map<string, LocationInfo>()
 
       for (const ntp of ntpServers) {
-        if (!ntp || !ntp.coordinates) continue
-        const locStr = ntp.coordinates.join(',')
+        if (!ntp || !ntp.coordinates || !ntp.ip) continue
+        // Use IP as key to show all unique servers
         if (ntp.RTT === -1) {
-          failedLocations.set(locStr, { location: ntp.coordinates, ip: ntp.ip, server_name: ntp.server_name })
+          failedLocations.set(ntp.ip, { location: ntp.coordinates, ip: ntp.ip, server_name: ntp.server_name })
         } else {
-          ntpLocations.set(locStr, { location: ntp.coordinates, ip: ntp.ip, server_name: ntp.server_name })
+          ntpLocations.set(ntp.ip, { location: ntp.coordinates, ip: ntp.ip, server_name: ntp.server_name })
         }
       }
 
@@ -396,36 +473,36 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
     const probeIPMap = new Map<string, RIPEData>()
 
     const ripeLocations = new Map<string, LocationInfo>()
-    const ntpLocations = new Map<string, LocationInfo>()
-    const failedLocations = new Map<string, LocationInfo>()
+    const ntpLocations = new Map<string, LocationInfo>()  // Now keyed by IP instead of location
+    const failedLocations = new Map<string, LocationInfo>()  // Now keyed by IP instead of location
 
     for (const probe of probes) {
       const ip = probe?.measurementData?.ip
       const loc = probe?.measurementData?.coordinates
       if (!ip || !loc) continue
-      const locStr = loc.join(',')
       const server_name = probe?.measurementData?.server_name ?? ""
       probeIPMap.set(ip, probe)
-      ripeLocations.set(locStr, { location: loc, ip, server_name })
+      // Use IP as key to show all unique servers, even if they share location
+      ripeLocations.set(ip, { location: loc, ip, server_name })
     }
 
     const probeIps = new Set(probeIPMap.keys())
     const inMeasurements = ntpServers.filter(x => !!x && !!x.ip && !!x.coordinates && !probeIps.has(x.ip))
     const unavailable = inMeasurements.filter(x => x.RTT === -1)
 
+    // Store all NTP servers by IP to show all unique servers
     for (const ntp of ntpServers) {
-      if (!ntp || !ntp.coordinates) continue
+      if (!ntp || !ntp.coordinates || !ntp.ip) continue
       const loc = ntp.coordinates
-      const locStr = loc.join(',')
-      ntpLocations.set(locStr, { location: loc, ip: ntp.ip, server_name: ntp.server_name })
+      ntpLocations.set(ntp.ip, { location: loc, ip: ntp.ip, server_name: ntp.server_name })
     }
 
+    // Store failed servers by IP
     for (const ntp of unavailable) {
-      if (!ntp || !ntp.coordinates) continue
+      if (!ntp || !ntp.coordinates || !ntp.ip) continue
       const loc = ntp.coordinates
-      const locStr = loc.join(',')
-      if (!ripeLocations.has(locStr)) {
-        failedLocations.set(locStr, { location: loc, ip: ntp.ip, server_name: ntp.server_name })
+      if (!ripeLocations.has(ntp.ip)) {
+        failedLocations.set(ntp.ip, { location: loc, ip: ntp.ip, server_name: ntp.server_name })
       }
     }
 
@@ -433,17 +510,18 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
     const ripeOnly = new Map<string, LocationInfo>()
     const ntpOnly = new Map<string, LocationInfo>()
 
-    for (const [locStr, info] of ripeLocations) {
-      if (ntpLocations.has(locStr)) {
-        intersected.set(locStr, info)
+    // Check intersection by IP instead of location
+    for (const [ip, info] of ripeLocations) {
+      if (ntpLocations.has(ip)) {
+        intersected.set(ip, info)
       } else {
-        ripeOnly.set(locStr, info)
+        ripeOnly.set(ip, info)
       }
     }
 
-    for (const [locStr, info] of ntpLocations) {
-      if (!ripeLocations.has(locStr)) {
-        ntpOnly.set(locStr, info)
+    for (const [ip, info] of ntpLocations) {
+      if (!ripeLocations.has(ip)) {
+        ntpOnly.set(ip, info)
       }
     }
 
@@ -457,15 +535,36 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
    * Effect to check if the NTP servers used use anycast, which would lead to less accurate geolocation data
    */
   useEffect(() => {
-    if (!probes || !ntpServers) return
+    if ((!probes || (Array.isArray(probes) && probes.length === 0)) && 
+        (!ntpServers || (Array.isArray(ntpServers) && ntpServers.length === 0))) {
+      setIsAnycast(false)
+      return
+    }
 
-    setIsAnycast(probes.some(x => x.measurementData.is_anycast === true) || ntpServers.some(x => x.is_anycast === true))
+    // Check for anycast in probes (if available)
+    const probesAnycast = probes && probes.length > 0 
+      ? probes.some(x => x.measurementData.is_anycast === true)
+      : false
+    
+    // Check for anycast in ntpServers (if available)
+    const ntpServersAnycast = ntpServers && ntpServers.length > 0
+      ? ntpServers.some(x => x.is_anycast === true)
+      : false
+
+    setIsAnycast(probesAnycast || ntpServersAnycast)
   }, [probes, ntpServers])
 
   /**
    * Effect to dynamically update the status shown depening on the progress of the RIPE measurement
    */
   useEffect(() => {
+    // Reset status message when data is cleared
+    if ((!probes || (Array.isArray(probes) && probes.length === 0)) && 
+        (!ntpServers || (Array.isArray(ntpServers) && ntpServers.length === 0))) {
+      setStatusMessage("")
+      return
+    }
+
     if (status === "pending"){
       setRipeOnlyLocations([])
       setNtpOnlyLocations([])
@@ -479,7 +578,7 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
     } else if (status === "error") {
       setStatusMessage("Error loading RIPE data")
     }
-    }, [probes, status])
+    }, [probes, ntpServers, status])
 
   const probe_locations = probes?.map(x => x.probe_location) ?? []
   const icons = probes?.map(x => getIconByRTT(x.measurementData.RTT, x.got_results)) ?? []
@@ -488,12 +587,7 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
         <h2>{statusMessage}</h2>
         {isAnycast && <h2>This server uses Anycast. Server Geolocation might be inaccurate</h2>}
         <MapContainer style={{height: '100%', width: '100%'}}>
-            <TileLayer
-                url = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                attribution= '&copy; <a href="https://carto.com/">CARTO</a>'
-                subdomains={['a', 'b', 'c', 'd']}
-                maxZoom={19}
-            />
+            <ThemeTileLayer />
 
             {probes && (
             <>

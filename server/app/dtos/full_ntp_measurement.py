@@ -186,7 +186,7 @@ class NTPv4ServerInfo(Base):
 class NTPv5ServerInfo(Base):
     __tablename__ = "ntpv5_server_info"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    m_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True) # the id of the NTPv4Measurement object
+    m_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True) # the id of the NTPv5Measurement object
     ip_is_anycast: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     asn_ntp_server: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
     country_code: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)

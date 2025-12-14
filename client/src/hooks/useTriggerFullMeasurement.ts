@@ -14,6 +14,8 @@ export const useTriggerMeasurement = () => {
   const triggerMeasurement = async (server: string, payload: MeasurementRequest) => {
     setLoading(true);
     setError(null);
+    setErrorMessage(null);
+    setHttpStatus(200);
     
     try {
       const resp = await axios.post(`${server}/measurements/trigger/`, payload, {

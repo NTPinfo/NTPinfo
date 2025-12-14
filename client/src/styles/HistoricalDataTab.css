@@ -23,7 +23,7 @@ a {
 }
 
 .historical-data-tab h2 {
-    color: var(--text-white);
+    color: var(--text-dark);
     font-size: 2em;
     margin-bottom: 1em;
 }
@@ -54,7 +54,7 @@ a {
     border-radius: 8px;
 }
 .close-btn:hover{
-    background-color: #ff6b6b;
+    background-color: var(--btn-clr-hover);
 }
 
 .checkbox-custom-label{
@@ -63,7 +63,7 @@ a {
     gap: 0.5em;
     font-size: 1.4em;
     font-weight: 500;
-    color: var(--text-white);
+    color: var(--text-dark);
 }
 
 .radio-measurement-label {
@@ -72,7 +72,7 @@ a {
     gap: 0.5em;
     font-size: 1.4em;
     font-weight: 500;
-    color: var(--text-white);
+    color: var(--text-dark);
 }
 
 .checkbox-custom-label input{
@@ -139,7 +139,7 @@ a {
 }
 
 .server-stats h3 {
-    color: var(--text-white);
+    color: var(--text-dark);
     font-size: 1.1em;
     margin: 0;
 }
@@ -159,13 +159,13 @@ a {
 }
 
 .stat-label {
-    color: var(--text-white);
+    color: var(--text-dark);
     opacity: 0.8;
     font-size: 0.85em;
 }
 
 .stat-value {
-    color: var(--text-white);
+    color: var(--text-dark);
     font-size: 1em;
     font-weight: 500;
 }
@@ -180,6 +180,7 @@ a {
     align-items: center;
     justify-content: center;
     height: 100%;
+    color: var(--text-dark);
 }
 
 .chart-box canvas {
@@ -191,8 +192,8 @@ a {
 }
 
 .dropdown-select {
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
+    background-color: var(--clr-bg-secondary);
+    border: 1px solid var(--clr-btn-border);
     border-radius: var(--radius);
 }
 
@@ -360,7 +361,7 @@ a {
     align-items: center;
     /* gap: 1em; */
     background: #1e293b;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--btn-clr-border);
     border-radius: var(--radius);
     padding: 2px;
     box-shadow: var(--shadow);
@@ -385,7 +386,7 @@ a {
     font-size: 0.95rem;
     cursor: pointer;
     user-select: none;
-    color: var(--text-white, #9fa4b9);
+    color: var(--text-dark);
     border-radius: 8px;
     transition: all 0.2s ease;
     white-space: nowrap;
@@ -393,11 +394,11 @@ a {
 
 .historical-radio-toggle input[type="radio"]:checked + label {
     background: var(--bg-primary, #020718);
-    color: var(--text-white, #fff);
+    color: var(--text-dark);
     border-radius: 6px;
 }
 
 .historical-radio-toggle input[type="radio"]:focus + label {
-    outline: 2px solid var(--clr-btn-selected-purple);
+    outline: 1px solid var(--clr-btn-border);
     outline-offset: 2px;
 }

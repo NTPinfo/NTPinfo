@@ -20,37 +20,38 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: var(--bg-secondary);
+  background-color: var(--bg-clr-secondary);
   padding: 2rem 4rem;
   gap: 2rem;
   border-radius: var(--radius);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--clr-btn-border);
   font-size: 1.2rem;
   max-width: min(550px, 90%);
 }
 
 .popup-card > h2 {
-  color: var(--text-white);
+  color: var(--text-blue);
 }
 
 .popup-card > p {
-  color: var(--text-white);
+  color: var(--text-dark);
   font-weight: 600;
 }
 
 .popup-card > button {
-  background-color: var(--bg-primary);
+  background-color: var(--clr-btn-not-sel);
   border-radius: var(--radius);
-  border: 1px solid var(--border-color) !important;
+  border: 1px solid var(--clr-btn-border) !important;
   font-size: 1.2rem;
   margin-top: 1rem;
   border: none;
   box-shadow: var(--shadow);
-  color: var(--text-white);
+  color: var(--text-dark);
 }
 
 .popup-card > button:hover {
-  background-color: var(--clr-btn-selected-purple);
+  background-color: var(--clr-btn-hover);
+  color: var(--text-white);
 }
 
 @media (max-width: 480px) {

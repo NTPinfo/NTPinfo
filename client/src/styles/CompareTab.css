@@ -15,7 +15,7 @@
 
 .compare-tab p,
 label {
-  color: var(--text-white);
+  color: var(--text-dark);
 }
 .compare-input {
   max-width: 100%;
@@ -109,10 +109,10 @@ label {
   width: 15rem;
 }
 .add-rm-btn {
-  background-color: var(--bg-secondary);
-  color: var(--text-white);
+  background-color: var(--clr-btn-not-sel);
+  color: var(--text-dark);
   border-radius: var(--radius);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--clr-btn-border);
   width: fit-content;
   cursor: pointer;
   /* font-size: 1.2rem; */
@@ -120,36 +120,37 @@ label {
 }
 .add-rm-btn.rm {
   border-radius: 0 var(--radius) var(--radius) 0;
-  border: none;
+  border: 1px solid var(--clr-btn-border);
 }
 .add-rm-btn.add {
   margin-bottom: 0.75rem;
 }
 .add-rm-btn.rm:hover,
 .add-rm-btn.rm:focus {
-  background-color: var(--clr-red-2);
+  background-color: var(--clr-btn-hover);
   border: none;
+  color: var(--text-white);
 }
 
-.add-rm-btn.add:hover {
+/* .add-rm-btn.add:hover {
   background-color: var(--clr-btn-selected-purple);
-}
+} */
 .input-and-btn {
   display: flex;
   flex-direction: row;
   gap: 1rem;
-  background-color: var(--text-white);
+  background-color: var(--bg-clr-primary);
   border-radius: 1rem;
   width: 20rem;
 }
 .compare-tab .submit-btn {
-  color: var(--text-white);
-  background-color: var(--clr-red-2);
+  color: var(--text-dark);
+  background-color: var(--clr-btn-not-sel);
   cursor: pointer;
   border-radius: var(--radius);
   font-size: 1.1rem;
-  transition: background-color 0.3s ease;
-  border: none;
+  /*transition: background-color 0.3s ease;*/
+  border: 1px solid var(--clr-btn-border);
   margin-top: 1rem;
 }
 
@@ -160,19 +161,20 @@ label {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  border: 1px solid var(--bg-clr-secondary);
-  border-radius: 8px;
+  border: 1px solid var(--clr-btn-border);
+  border-radius: var(--radius);
   width: 80%;
   padding: 1rem;
-  background-image: radial-gradient(
-    circle at 50% 250%,
-    var(--clr-font-dark),
-    transparent
-  );
+  background: var(--bg-clr-secondary);
+}
+
+.input-and-btn input {
+  background: var(--bg-clr-primary);
 }
 
 .submit-btn:hover {
-  background-color: var(--clr-red-3);
+  background-color: var(--clr-btn-hover);
+  color: var(--text-white);
 }
 
 p.error {
@@ -183,8 +185,8 @@ p.error {
 }
 
 .compare-tab .submit-btn:disabled {
-  opacity: 0.7;
-  background-color: var(--clr-red-2);
+  background-color: var(--clr-btn-not-sel);
+  color: var(--text-dark);
   cursor: auto;
 }
 
@@ -243,6 +245,7 @@ p.error {
   padding: 0;
   display: block;
   margin: 0 auto;
+  filter: var(--img-invert);
 }
 
 .placeholder-text-compare {
@@ -482,4 +485,118 @@ p.error {
     .compare-tab .dt-input:focus:not(:focus-visible) {
         outline: none !important;
     }
+}
+
+/* Dark mode styles for CompareTab */
+[data-theme="dark"] .compare-tab input {
+  background-color: #0d1117;
+  color: #c9d1d9;
+  border-color: #30363d;
+}
+
+[data-theme="dark"] .compare-tab input:-webkit-autofill,
+[data-theme="dark"] .compare-tab input:-webkit-autofill:hover,
+[data-theme="dark"] .compare-tab input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #c9d1d9;
+  -webkit-box-shadow: 0 0 0px 1000px #0d1117 inset;
+}
+
+[data-theme="dark"] .compare-tab select {
+  background-color: #0d1117;
+  color: #c9d1d9;
+  border-color: #30363d;
+}
+
+[data-theme="dark"] .compare-tab p.error {
+  color: #f85149;
+}
+
+/* Dark mode styles for CompareTab - comprehensive */
+[data-theme="dark"] .compare-tab {
+  background-color: #0d1117;
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .compare-tab p,
+[data-theme="dark"] .compare-tab label {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .server-inputs {
+  background-color: #161b22;
+  border-color: #30363d;
+}
+
+[data-theme="dark"] .input-and-btn {
+  background-color: #161b22;
+  border-color: #30363d;
+}
+
+[data-theme="dark"] .input-and-btn input {
+  background-color: #0d1117;
+  color: #c9d1d9;
+  border-color: #30363d;
+}
+
+[data-theme="dark"] .compare-tab .submit-btn {
+  background-color: #21262d;
+  color: #c9d1d9;
+  border-color: #30363d;
+}
+
+[data-theme="dark"] .compare-tab .submit-btn:hover:not(:disabled) {
+  background-color: #30363d;
+  color: #ffffff;
+  border-color: #484f58;
+}
+
+[data-theme="dark"] .compare-tab .submit-btn:disabled {
+  background-color: #161b22;
+  color: #6e7681;
+  border-color: #21262d;
+}
+
+[data-theme="dark"] .add-rm-btn {
+  background-color: #21262d;
+  color: #c9d1d9;
+  border-color: #30363d;
+}
+
+[data-theme="dark"] .add-rm-btn:hover,
+[data-theme="dark"] .add-rm-btn:focus {
+  background-color: #30363d;
+  color: #ffffff;
+  border-color: #484f58;
+}
+
+[data-theme="dark"] .radio-toggle {
+  background-color: #21262d;
+  border-color: #30363d;
+}
+
+[data-theme="dark"] .radio-toggle label {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .radio-toggle input[type="radio"]:checked + label {
+  background-color: #1f6feb;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .compare-tab .radio-measurement-label {
+  color: #c9d1d9;
+}
+
+[data-theme="dark"] .placeholder-text-compare .text-compare {
+  color: #6e7681;
+}
+
+[data-theme="dark"] .compare-tab .loading-div p {
+  color: #8b949e;
+}
+
+[data-theme="dark"] .dropdown-select {
+  background-color: #0d1117;
+  border-color: #30363d;
+  color: #c9d1d9;
 }

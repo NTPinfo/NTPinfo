@@ -4,7 +4,7 @@ import pprint
 import subprocess
 from typing import Tuple
 
-from server.app.utils.ip_utils import translate_ref_id
+from server.app.utils.ip_utils import translate_ref_id, get_ip_family_with_default
 from server.app.models.CustomError import InputError
 
 
@@ -216,7 +216,8 @@ def analyse_ntpv2_response(m_data: dict) -> Tuple[str, str]:
         conf = "50"
         analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get('version')}. Wanted ntpv2."
         try:
-            rf: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
+            ip_family = get_ip_family_with_default(m_data.get("Measured server IP", m_data.get("measured_server_ip")), 4)
+            rf: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), ip_family)
             m_data["ref_id"] = rf
         except Exception as e:
             analysis = analysis + f"\nCould not translate ref id"
@@ -226,7 +227,8 @@ def analyse_ntpv2_response(m_data: dict) -> Tuple[str, str]:
         analysis = f"It supports NTPv2."
     # update ref id to a string
     try:
-        r: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
+        ip_family = get_ip_family_with_default(m_data.get("Measured server IP", m_data.get("measured_server_ip")), 4)
+        r: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), ip_family)
         m_data["ref_id"] = r
     except Exception as e:
         if conf == "100":  # if we thought it was a good server
@@ -253,7 +255,8 @@ def analyse_ntpv3_response(m_data: dict) -> Tuple[str, str]:
         conf = "50"
         analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get('version')}. Wanted ntpv3."
         try:
-            rf: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
+            ip_family = get_ip_family_with_default(m_data.get("Measured server IP", m_data.get("measured_server_ip")), 4)
+            rf: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), ip_family)
             m_data["ref_id"] = rf
         except Exception as e:
             analysis = analysis + f"\nCould not translate ref id"
@@ -263,7 +266,8 @@ def analyse_ntpv3_response(m_data: dict) -> Tuple[str, str]:
         analysis = f"It supports NTPv3."
     # update ref id to a string
     try:
-        r: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
+        ip_family = get_ip_family_with_default(m_data.get("Measured server IP", m_data.get("measured_server_ip")), 4)
+        r: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), ip_family)
         m_data["ref_id"] = r
     except Exception as e:
         if conf == "100":  # if we thought it was a good server
@@ -290,7 +294,8 @@ def analyse_ntpv4_response(m_data: dict) -> Tuple[str, str]:
         conf = "50"
         analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get('version')}. Wanted ntpv4."
         try:
-            rf: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
+            ip_family = get_ip_family_with_default(m_data.get("Measured server IP", m_data.get("measured_server_ip")), 4)
+            rf: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), ip_family)
             m_data["ref_id"] = rf
         except Exception as e:
             analysis = analysis + f"\nCould not translate ref id"
@@ -300,7 +305,8 @@ def analyse_ntpv4_response(m_data: dict) -> Tuple[str, str]:
         analysis = f"It supports NTPv4."
     # update ref id to a string
     try:
-        r: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
+        ip_family = get_ip_family_with_default(m_data.get("Measured server IP", m_data.get("measured_server_ip")), 4)
+        r: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), ip_family)
         m_data["ref_id"] = r
     except Exception as e:
         if conf == "100":  # if we thought it was a good server
@@ -327,7 +333,8 @@ def analyse_ntpv5_response(m_data: dict) -> Tuple[str, str]:
         conf = "50"
         analysis = f"Received an NTP response, but with a different NTP version: version {m_data.get('version')}. Wanted ntpv5."
         try:
-            rf: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), 4)
+            ip_family = get_ip_family_with_default(m_data.get("Measured server IP", m_data.get("measured_server_ip")), 4)
+            rf: str = translate_ref_id(int(m_data["ref_id"]), int(m_data["stratum"]), ip_family)
             m_data["ref_id"] = rf
         except Exception as e:
             analysis = analysis + f"\nCould not translate ref id"

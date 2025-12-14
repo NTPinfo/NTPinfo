@@ -3,20 +3,21 @@
 .about-tab {
     width: 100%;
     height: 100%;
-    color: var(--clr-font-white);
+    color: var(--text-dark);
 }
 
 .about-section {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 4em 2em;
+    padding: 2em 2em 4em 2em;
     text-align: center;
 }
 
 .about-section h1 {
     font-size: 3.5em;
+    margin-top: 0;
     margin-bottom: 0.5em;
-    background: var(--clr-font-white);
+    background: var(--text-blue);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -24,9 +25,54 @@
 
 .about-subtitle {
     font-size: 1.5em;
-    color: var(--clr-font-white);
-    margin-bottom: 3em;
+    color: var(--text-dark);
+    margin-bottom: 2em;
     opacity: 0.9;
+}
+
+.about-project-info {
+    max-width: 900px;
+    margin: 0 auto 3em auto;
+    text-align: left;
+    background-color: var(--bg-clr-secondary);
+    padding: 2em;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.about-project-info h2 {
+    font-size: 2em;
+    margin-bottom: 1em;
+    color: var(--text-blue);
+    text-align: center;
+}
+
+.about-project-info p {
+    color: var(--text-dark);
+    line-height: 1.8;
+    margin-bottom: 1.5em;
+    font-size: 1.05em;
+}
+
+.about-project-info p:last-child {
+    margin-bottom: 0;
+}
+
+.about-project-info strong {
+    color: var(--text-blue);
+    font-weight: 600;
+}
+
+.about-project-info a {
+    color: var(--sidn-blauw);
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.about-project-info a:hover {
+    color: var(--clr-btn-hover);
 }
 
 .about-features {
@@ -37,7 +83,7 @@
 }
 
 .feature {
-    background-color: var(--bg-secondary);
+    background-color: var(--bg-clr-secondary);
     padding: 2em;
     border-radius: var(--radius);
     border: 1px solid var(--border-color);
@@ -54,18 +100,61 @@
 .feature-icon img {
     max-width: 48px;
     height: auto;
+    filter: var(--img-invert);
+    transition: filter 0.3s ease;
 }
 
 .feature h3 {
     font-size: 1.5em;
     margin-bottom: 0.5em;
-    color: var(--clr-font-white);
+    color: var(--text-blue);
 }
 
 .feature p {
-    color: var(--clr-font-white);
-    opacity: 0.8;
+    color: var(--text-dark);
     line-height: 1.6;
+}
+
+.statistics-section {
+    margin-top: 4em;
+    text-align: center;
+}
+
+.statistics-section h2 {
+    font-size: 2.5em;
+    margin-bottom: 0.5em;
+    color: var(--text-blue);
+}
+
+.statistics-description {
+    font-size: 1.1em;
+    color: var(--text-dark);
+    margin-bottom: 2em;
+    opacity: 0.9;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.statistics-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+}
+
+.statistics-error {
+    background-color: var(--bg-clr-secondary);
+    padding: 2em;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+    color: var(--text-dark);
+}
+
+.statistics-error p {
+    font-size: 1.1em;
+    color: var(--clr-red-2);
 }
 
 @media (max-width: 768px) {
@@ -80,4 +169,112 @@
     .about-features {
         grid-template-columns: 1fr;
     }
+
+    .about-project-info {
+        padding: 1.5em;
+    }
+
+    .about-project-info h2 {
+        font-size: 1.5em;
+    }
+
+    .about-project-info p {
+        font-size: 1em;
+    }
+
+    .statistics-section h2 {
+        font-size: 2em;
+    }
+
+    .statistics-description {
+        font-size: 1em;
+    }
+}
+
+/* Dark mode styles for About Tab */
+[data-theme="dark"] .about-tab {
+    color: #c9d1d9;
+    background-color: #0d1117;
+}
+
+[data-theme="dark"] .about-section {
+    color: #c9d1d9;
+}
+
+[data-theme="dark"] .about-section h1 {
+    background: linear-gradient(135deg, #58a6ff 0%, #79c0ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+[data-theme="dark"] .about-subtitle {
+    color: #8b949e;
+}
+
+[data-theme="dark"] .about-project-info {
+    background-color: #161b22;
+    border-color: #30363d;
+    color: #c9d1d9;
+}
+
+[data-theme="dark"] .about-project-info h2 {
+    color: #58a6ff;
+}
+
+[data-theme="dark"] .about-project-info p {
+    color: #c9d1d9;
+}
+
+[data-theme="dark"] .about-project-info strong {
+    color: #58a6ff;
+}
+
+[data-theme="dark"] .about-project-info a {
+    color: #58a6ff;
+}
+
+[data-theme="dark"] .about-project-info a:hover {
+    color: #79c0ff;
+}
+
+[data-theme="dark"] .feature {
+    background-color: #161b22;
+    border-color: #30363d;
+    color: #c9d1d9;
+}
+
+[data-theme="dark"] .feature:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .feature h3 {
+    color: #58a6ff;
+}
+
+[data-theme="dark"] .feature p {
+    color: #8b949e;
+}
+
+[data-theme="dark"] .feature-icon img {
+    filter: brightness(0) invert(1) !important;
+}
+
+[data-theme="dark"] .statistics-section h2 {
+    color: #58a6ff;
+}
+
+[data-theme="dark"] .statistics-description {
+    color: #8b949e;
+}
+
+[data-theme="dark"] .statistics-error {
+    background-color: #161b22;
+    border-color: #30363d;
+    color: #c9d1d9;
+}
+
+[data-theme="dark"] .statistics-error p {
+    color: #f85149;
 }

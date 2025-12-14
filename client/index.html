@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NTPinfo</title>
     <script>
+      // Set initial theme before React loads to prevent flash
+      (function() {
+        const storedTheme = localStorage.getItem('ntpinfo-theme');
+        const theme = storedTheme === 'dark' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+      
       function updateFavicon() {
         const favicon = document.getElementById('favicon');
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {

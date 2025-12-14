@@ -31,6 +31,10 @@ export type NTPData = {
   asn_ntp_server: string
   time: number
   measurement_id: string | null
+  // Error state fields (when measurement failed)
+  hasError?: boolean
+  errorMessage?: string | null
+  response_version?: string | null  // NTP version that was attempted
 }
 
 /**
@@ -125,6 +129,11 @@ export interface HomeCacheState {
   isLoading: boolean                    // Track when NTP measurement is loading
   measurementSessionActive: boolean     // Track when any measurement session is active
   error: any
+  measurementSettings: MeasurementRequest | null  // Advanced measurement settings
+  
+  // Navigation indices for multiple measurements
+  currentNtpIndex: number              // Current index in allNtpMeasurements array
+  currentRipeIndex: number             // Current index in ripeMeasurementResp array
 
 }
 

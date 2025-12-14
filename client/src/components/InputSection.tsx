@@ -1,24 +1,19 @@
 import '../styles/InputSection.css'
 import React, { useState } from 'react';
-import { RipeStatus } from '../utils/types';
 
 interface InputProps {
     onClick: (query: string, useIPv6: boolean) => void;
-    loading: boolean;
     ipv6Selected: boolean;
     onIPv6Toggle: (value: boolean) => void;
-    ripeMeasurementStatus?: RipeStatus | null;
     measurementSessionActive?: boolean;
 }
 
-const InputSection: React.FC<InputProps> = ({ onClick, loading, ipv6Selected, onIPv6Toggle, ripeMeasurementStatus, measurementSessionActive }) => {
+const InputSection: React.FC<InputProps> = ({ onClick, ipv6Selected, onIPv6Toggle, measurementSessionActive }) => {
     const [query, setQuery] = useState('');
     const useIPv6 = ipv6Selected;
 
-    // Check if any measurement is in progress
-    const isMeasurementInProgress = (loading ||
-        ripeMeasurementStatus === "pending" ||
-        ripeMeasurementStatus === "partial_results") && measurementSessionActive;
+    // Disable button whenever a measurement session is active (until it finishes or fails)
+    const isMeasurementInProgress = measurementSessionActive === true;
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setQuery(event.target.value);
@@ -42,7 +37,7 @@ const InputSection: React.FC<InputProps> = ({ onClick, loading, ipv6Selected, on
                         value={query}
                         onChange={handleInputChange}
                         onKeyDown={(e) => {
-                            if (e.key === "Enter") {handleClick()}
+                            if (e.key === "Enter" && !isMeasurementInProgress) {handleClick()}
                         }}
                         placeholder="time.google.com"
                         disabled={isMeasurementInProgress}

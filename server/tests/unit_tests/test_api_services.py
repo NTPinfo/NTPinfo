@@ -352,8 +352,10 @@ def test_get_ripe_format():
 def test_perform_ripe_measurement_with_dn_with_client_ip(mock_m_ip, mock_m_dn):
     mock_m_ip.return_value = 0
     mock_m_dn.return_value = 123456
-
-    m_id = perform_ripe_measurement("time.some_server.com", "82.211.23.56", 4)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "82.211.23.56"
+    settings.wanted_ip_type = 4
+    m_id = perform_ripe_measurement("time.some_server.com", settings)
 
     mock_m_ip.assert_not_called()
     mock_m_dn.assert_called_once()
@@ -366,8 +368,11 @@ def test_perform_ripe_measurement_with_dn_with_client_ip(mock_m_ip, mock_m_dn):
 def test_perform_ripe_measurement_with_dn_without_client_ip(mock_m_ip, mock_m_dn):
     mock_m_ip.return_value = 0
     mock_m_dn.return_value = 123456
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "82.211.23.56"
+    settings.wanted_ip_type = 4
 
-    m_id = perform_ripe_measurement("time.some_server.com", "82.211.23.56", 4)
+    m_id = perform_ripe_measurement("time.some_server.com", settings)
 
     mock_m_ip.assert_not_called()
     mock_m_dn.assert_called_once()
@@ -381,7 +386,11 @@ def test_perform_ripe_measurement_with_ip(mock_m_ip, mock_m_dn):
     mock_m_ip.return_value = 123456
     mock_m_dn.return_value = 0
 
-    m_id = perform_ripe_measurement("18.252.12.124", "82.211.23.56", 4)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "82.211.23.56"
+    settings.wanted_ip_type = 4
+
+    m_id = perform_ripe_measurement("18.252.12.124", settings)
 
     mock_m_ip.assert_called_once()
     mock_m_dn.assert_not_called()

@@ -1,6 +1,7 @@
 import '../styles/Header.css'
 import github from '../assets/github-svgrepo-com.png'
 import NTPinfoLogo from '../assets/NTPinfo.png'
+import sidnLogo from '../assets/sidnlabs-log.svg';
 
 function Header() {
     return (
@@ -11,8 +12,13 @@ function Header() {
                 {/* <p>A tool to evaluate the accuracy of publicly available NTP servers</p> */}
             </div>
             <nav className="navbar">
+                
                 {/* <a href="#" aria-label="About">About</a> */}
                 <div className="img-and-text">
+                <a href="https://github.com/NTPinfo/NTPinfo" target="_blank" rel="noopener noreferrer"
+                       aria-label="GitHub Repository">
+                        <img src={sidnLogo} alt="Sidn Logo" className="sidn-logo"/>
+                    </a>
                     <a href="https://github.com/NTPinfo/NTPinfo" target="_blank" rel="noopener noreferrer"
                        aria-label="GitHub Repository">Github</a>
                     <a href="https://github.com/NTPinfo/NTPinfo" target="_blank" rel="noopener noreferrer"

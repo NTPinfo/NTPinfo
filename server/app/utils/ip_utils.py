@@ -93,6 +93,22 @@ def get_ip_family(ip_str: Optional[str]) -> int:
         return 4
     return 6
 
+def get_ip_family_with_default(ip_str: Optional[str], default_value: int) -> int:
+    """
+    This method returns the IP family of the given IP address. It returns 4 if we have an IPv4, and
+    it returns 6 if we have an IPv6 address. Otherwise, it returns the default value.
+    Args:
+        ip_str (Optional[str]): The IP address
+        default_value (int): The default value to return if the ip_str is not an IPv4 or IPv6 string address.
+    Returns:
+        int: The ip family or "default" if we do not get an IP address
+    """
+    ans = is_ip_address(ip_str)
+    if ans is None:
+        return default_value
+    if ans == "ipv4":
+        return 4
+    return 6
 
 def get_ip_network_details(ip_str: str) -> tuple[Optional[str], Optional[str], Optional[str]]:
     """
@@ -412,6 +428,18 @@ def is_this_ip_anycast(searched_ip: Optional[str]) -> bool:
         print(f"Error (safe) in is_anycast: {e}")
         return False
 
+def is_ip_or_dn(server: Optional[str]) -> str:
+    """
+    This method checks whether a server is an IP or DN.
+
+    Args:
+        server (Optional[str]): The server to check.
+    Returns:
+        str: Whether the server is an IP or DN (str).
+    """
+    if is_ip_address(server) is None:
+        return "server"
+    return "IP"
 
 def randomize_ip(ip: IPv4Address | IPv6Address) -> IPv4Address | IPv6Address | None:
     """

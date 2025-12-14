@@ -1,3 +1,4 @@
+[![Try the App](https://img.shields.io/badge/Try%20the%20App-Live-brightgreen)](https://ntpinfo.sidnlabs.nl/)
 [![Docs](https://img.shields.io/badge/Docs-Live-blue)](https://ntpinfo.github.io/NTPinfo/)
 
 # Are your time servers on time?
@@ -5,17 +6,43 @@
 ## Active Internet Measurements to evaluate time servers.
 
 ## About this project
-This project was developed by Group 15d as part of the **CSE2000 Software Project** course at the **Faculty of Electrical Engineering, Mathematics and Computer Science (EWI)**, **Delft University of Technology (TU Delft)**, as part of the **BSc Computer Science and Engineering** program.
+
+This project was developed by Group 15d as part of the **CSE2000 Software Project** course at the **Faculty of
+Electrical Engineering, Mathematics and Computer Science (EWI)**, **Delft University of Technology (TU Delft)**, as part
+of the **BSc Computer Science and Engineering** program.
 
 <p align="center">
   <img src="assets/NtpInfoLogo.png" alt="Project Logo" style="width:100%; max-width:100%;"/>
 </p>
 
 ---
+
+## RIPE Atlas Probe Selection
+
+When performing measurements, the system automatically selects RIPE Atlas probes to use based on several criteria. The selection process follows a priority-based approach:
+
+1. **Highest Priority**: Probes matching both ASN and prefix (if applicable), or both ASN and country
+2. **Medium Priority**: Probes matching by single attribute in this order:
+   - ASN match
+   - Prefix match (if applicable)
+   - Country match
+3. **Fallback**: If not enough probes are found with the above criteria, the system uses probes from the same geographic area or random probes
+
+The probes are selected to be as close as possible to your vantage point (client IP) using geographic distance calculations.
+
+<p align="center">
+  <img src="assets/SelectingRipeProbes.png" alt="RIPE Probe Selection Flow" style="width:100%; max-width:800px;"/>
+</p>
+
+**Note on Advanced Settings**: In the advanced measurement settings, you can specify a custom country or ASN for probe selection. However, please note that you can strictly select probes within a specific ASN or country, but this action may result in insufficient probes for the measurement.
+
+---
+
 ## Cloning the project
 
 Please use `git clone --recurse-submodules https://github.com/NTPinfo/NTPinfo.git` because the project has a submodule.
 If you already cloned it without `--recurse-submodules` then just run `git submodule update --init --recursive`
+
 ## Product Structure
 
 The product is split into 2 parts:
@@ -23,7 +50,7 @@ The product is split into 2 parts:
 ### Server Side
 
 - Handles time measurement logic and API interactions.
-- Uses `ntplib` and the **RIPE Atlas API** for performing measurements.
+- Uses nts-ntp-tool written in Go and the **RIPE Atlas API** for performing measurements.
 - Stores results in a PostgreSQL database.
 - Provides an API to:
     - Trigger and manage measurements
@@ -43,6 +70,7 @@ The product is split into 2 parts:
 
 ## Table of Contents
 
+- [RIPE Atlas Probe Selection](#ripe-atlas-probe-selection)
 - [Server Setup and Running](#server-setup-and-running)
 - [Client Setup and Running](#client-setup-and-running)
 - [Docker Setup](#docker-setup)
@@ -80,21 +108,20 @@ To set up and run the back-end server, follow these steps:
    2.1 Install PostgreSQL according to your operating system.
 
    👉 You can download it from the official site: https://www.postgresql.org/download/
-   
+
    2.2 Make sure the PostgreSQL service is running.
-   
+
    2.3 Create a database (recommended name: `measurements`)
-   
+
    2.4 Keep track of:
     - **Username** (e.g., `postgres`)
     - **Password**
     - **Port** (default: `5432`)
-   
+
    2.5 You can use tools like `psql` or GUI tools such as **pgAdmin** to manage your database.
    > The necessary tables will be created automatically when running the server.
 
-
-4. **Create a `.env` file** in the `root` directory with your accounts credentials in the following format:
+3. **Create a `.env` file** in the `root` directory with your accounts credentials in the following format:
 
     ```dotenv
     # needed for back-end (server)
@@ -232,10 +259,11 @@ To set up and run the back-end server, follow these steps:
 
 6. **Compile the NTP-NTS tool (for NTS and NTP versions analysis)**:
 
-   You will need to have a compiled version of this tool (it will be used by Python). In case there is not already a compiled version, please create it using the following steps.
+   You will need to have a compiled version of this tool (it will be used by Python). In case there is not already a
+   compiled version, please create it using the following steps.
    Steps:
-   - Go to folder `tools/ntp-nts-tool`
-   - Run the following command for your system :
+    - Go to folder `tools/ntp-nts-tool`
+    - Run the following command for your system :
         - linux: `GOOS=linux GOARCH=amd64 go build -o ntpnts_linux_amd64`
         - windows: `GOOS=windows GOARCH=amd64 go build -o ntpnts_windows_amd64.exe`
 7. **Run the server (from the root directory)**:
@@ -309,6 +337,18 @@ To run the full stack (server + client + database) using `docker-compose`, follo
    ```bash
    sudo apt update
    sudo apt install docker-compose
+   ```
+
+3. **Clone the project**
+   
+   The project includes a submodule (`tools/ntp-nts-tool`), so you need to clone with the `--recurse-submodules` flag:
+   ```bash
+   git clone --recurse-submodules https://github.com/NTPinfo/NTPinfo.git
+   ```
+   
+   If you already cloned the project without `--recurse-submodules`, you can initialize the submodule by running:
+   ```bash
+   git submodule update --init --recursive
    ```
 
 3. **Add a .env file in the root directory**

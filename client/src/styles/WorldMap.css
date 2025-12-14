@@ -1,7 +1,7 @@
 @import '../index.css';
 
 body {
-    color: var(--clr-font-white)
+    color: var(--text-dark)
 }
 
 .logo {
@@ -21,11 +21,12 @@ body {
     margin-right: 2%;
 }
 
+
 .leaflet-container {
     z-index: 1;
-    background: #262626 !important;
+    background: var(--bg-clr-secondary) !important;
     border-radius: var(--radius) !important;
-    border: 1px solid var(--border-color) !important;
+    border: 1px solid var(--clr-btn-border) !important;
 }
 
 .leaflet-control {
@@ -33,8 +34,8 @@ body {
 }
 
 .leaflet-legend {
-    background: rgba(0, 0, 0, 0.25) !important;
-    border-radius: 6px !important;
+    background: var(--bg-clr-secondary) !important;
+    border-radius: var(--radius) !important;
     -webkit-backdrop-filter: blur(0.75px) !important;
     backdrop-filter: blur(0.75px) !important;
     margin-bottom: 5px !important;
@@ -52,6 +53,7 @@ body {
   width: 25px !important;
   height: 25px !important;
   object-fit: contain !important;
+
 }
 
 @media screen and (max-width: 1000px) {
@@ -59,4 +61,109 @@ body {
         scale: 0.8 !important;
         transform: translateX(-18px) translateY(35px) !important;
     }
+}
+
+/* Dark mode styles for map */
+[data-theme="dark"] .map-container h2 {
+    color: #c9d1d9;
+}
+
+[data-theme="dark"] .leaflet-container {
+    background: #161b22 !important;
+    border-color: #30363d !important;
+}
+
+[data-theme="dark"] .leaflet-legend {
+    background: #161b22 !important;
+    color: #c9d1d9 !important;
+    border: 1px solid #30363d !important;
+}
+
+[data-theme="dark"] .leaflet-legend-item {
+    color: #c9d1d9 !important;
+}
+
+/* Dark mode for Leaflet popups */
+[data-theme="dark"] .leaflet-popup-content-wrapper {
+    background: #161b22 !important;
+    color: #c9d1d9 !important;
+    border: 1px solid #30363d !important;
+}
+
+[data-theme="dark"] .leaflet-popup-tip {
+    background: #161b22 !important;
+    border: 1px solid #30363d !important;
+}
+
+[data-theme="dark"] .leaflet-popup-content {
+    color: #c9d1d9 !important;
+}
+
+[data-theme="dark"] .leaflet-popup-content a {
+    color: #58a6ff !important;
+}
+
+[data-theme="dark"] .leaflet-popup-content a:hover {
+    color: #79c0ff !important;
+}
+
+/* Dark mode for Leaflet zoom controls */
+[data-theme="dark"] .leaflet-control-zoom {
+    border: 1px solid #30363d !important;
+}
+
+[data-theme="dark"] .leaflet-control-zoom-in,
+[data-theme="dark"] .leaflet-control-zoom-out {
+    background-color: #161b22 !important;
+    color: #c9d1d9 !important;
+    border-bottom: 1px solid #30363d !important;
+}
+
+[data-theme="dark"] .leaflet-control-zoom-in:hover,
+[data-theme="dark"] .leaflet-control-zoom-out:hover {
+    background-color: #21262d !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .leaflet-control-zoom-in:active,
+[data-theme="dark"] .leaflet-control-zoom-out:active {
+    background-color: #30363d !important;
+}
+
+[data-theme="dark"] .leaflet-control-zoom a {
+    color: #c9d1d9 !important;
+}
+
+[data-theme="dark"] .leaflet-control-zoom a:hover {
+    color: #ffffff !important;
+}
+
+/* Dark mode for vantage point icon - make it white/visible */
+[data-theme="dark"] .leaflet-marker-icon[src*="vantage-point"] {
+    filter: brightness(0) invert(1) !important;
+}
+
+/* Dark mode for vantage point icon in legend */
+[data-theme="dark"] .leaflet-legend-item img[src*="vantage-point"] {
+    filter: brightness(0) invert(1) !important;
+}
+
+/* Dark mode for NTP server icons in legend (they're also black) */
+[data-theme="dark"] .leaflet-legend-item img[src*="ntp-server-icon-black"] {
+    filter: brightness(0) invert(1) !important;
+}
+
+/* Dark mode for NTP server icons on the map - make them white/visible */
+[data-theme="dark"] .leaflet-marker-icon[src*="ntp-server-icon-black"] {
+    filter: brightness(0) invert(1) !important;
+}
+
+/* Dark mode for unavailable NTP server icons on the map - make them red-tinted to distinguish from regular servers */
+[data-theme="dark"] .leaflet-marker-icon[src*="unavailable-ntp-server-icon"] {
+    filter: brightness(0) invert(1) sepia(1) saturate(3) hue-rotate(340deg) !important;
+}
+
+/* Dark mode for unavailable NTP server icons in legend - red-tinted */
+[data-theme="dark"] .leaflet-legend-item img[src*="unavailable-ntp-server-icon"] {
+    filter: brightness(0) invert(1) sepia(1) saturate(3) hue-rotate(340deg) !important;
 }

@@ -1,4 +1,6 @@
 import pytest
+
+from server.app.dtos.AdvancedSettings import AdvancedSettings
 from server.app.models.CustomError import InputError
 from server.app.utils.ripe_probes import get_random_probes, get_area_probes, get_asn_probes, get_prefix_probes, \
     get_country_probes, get_best_probes_with_multiple_attributes, get_probes, get_available_probes_asn, \
@@ -28,7 +30,11 @@ def test_get_probes_all_good(mock_get_prefix_from_ip, mock_get_network_details, 
     mock_get_prefix_from_ip.return_value = "80.211.224.0/20"
     mock_get_network_details.return_value = ("AS15169", "IT", "West")
 
-    probes_result = get_probes("80.211.238.247", 4, 10)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "80.211.238.247"
+    settings.wanted_ip_type = 4
+
+    probes_result = get_probes(settings,10)
 
     answer = [{'requested': 10, 'type': 'probes', 'value': '345,11,22,33,45,55,66,77,88,99'}
               ]
@@ -54,10 +60,14 @@ def test_get_probes_some_found_from_first_try(mock_get_prefix_from_ip, mock_get_
     mock_get_prefix_from_ip.return_value = None
     mock_get_network_details.return_value = ("AS15169", "IT", None)
 
-    probes_result = get_probes("80.211.238.247", 4, 5)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "80.211.238.247"
+    settings.wanted_ip_type = 4
+
+    probes_result = get_probes(settings, 5)
     mock_get_multiple_attributes.assert_called_with(client_ip="80.211.238.247", current_probes_set=set(), ip_asn="AS15169",
                                             ip_prefix=None, ip_country="IT", ip_family=4,
-                                            probes_requested=5)
+                                            probes_requested=5, strict_this_country=False)
 
     assert mock_get_multiple_attributes.call_count == 1
     assert mock_get_best_single.call_count == 0
@@ -84,10 +94,14 @@ def test_get_probes_some_found_from_first_try_ipv4_ask_ipv6(mock_get_prefix_from
     mock_get_prefix_from_ip.return_value = "80.211.224.0/20"
     mock_get_network_details.return_value = ("AS15169", "IT", None)
 
-    probes_result = get_probes("80.211.238.247", 6, 5)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "80.211.238.247"
+    settings.wanted_ip_type = 6
+
+    probes_result = get_probes(settings, 5)
     mock_get_multiple_attributes.assert_called_with(client_ip="80.211.238.247", current_probes_set=set(), ip_asn="AS15169",
                                             ip_prefix=None, ip_country="IT", ip_family=6,
-                                            probes_requested=5)
+                                            probes_requested=5, strict_this_country=False)
 
     assert mock_get_multiple_attributes.call_count == 1
     assert mock_get_best_single.call_count == 0
@@ -115,10 +129,15 @@ def test_get_probes_area(mock_get_prefix_from_ip, mock_get_network_details, mock
     mock_get_prefix_from_ip.return_value = "80.211.224.0/20"
     mock_get_network_details.return_value = ("AS15169", "IT", "West")
 
-    probes_result = get_probes("80.211.238.247", 4, 10)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "80.211.238.247"
+    settings.wanted_ip_type = 4
+
+    probes_result = get_probes(settings, 10)
     mock_get_best_single.assert_called_with(client_ip="80.211.238.247", current_probes_set={345}, ip_asn="AS15169",
                                             ip_prefix="80.211.224.0/20", ip_country="IT", ip_family=4,
-                                            probes_requested=9)
+                                            probes_requested=9,
+                                            strict_this_asn=False, strict_this_country=False)
 
     answer = [{'requested': 8, 'type': 'probes', 'value': '345,11,22,33,45,55,66,77'},
               {'requested': 2, 'type': 'area', 'value': 'West'}]
@@ -145,10 +164,15 @@ def test_get_probes_area_ipv4_ask_ipv6(mock_get_prefix_from_ip, mock_get_network
     mock_get_prefix_from_ip.return_value = "80.211.224.0/20"
     mock_get_network_details.return_value = ("AS15169", "IT", "West")
 
-    probes_result = get_probes("80.211.238.247", 6, 10)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "80.211.238.247"
+    settings.wanted_ip_type = 6
+
+    probes_result = get_probes(settings, 10)
     mock_get_best_single.assert_called_with(client_ip="80.211.238.247", current_probes_set={345}, ip_asn="AS15169",
                                             ip_prefix=None, ip_country="IT", ip_family=6,
-                                            probes_requested=9)
+                                            probes_requested=9,
+                                            strict_this_asn=False, strict_this_country=False)
 
     answer = [{'requested': 8, 'type': 'probes', 'value': '345,11,22,33,45,55,66,77'},
               {'requested': 2, 'type': 'area', 'value': 'West'}]
@@ -175,15 +199,21 @@ def test_get_probes_area_ipv6_ask_ipv4(mock_get_prefix_from_ip, mock_get_network
     mock_get_prefix_from_ip.return_value = "2a06:93c0::/48"
     mock_get_network_details.return_value = ("AS15169", "IT", "West")
 
-    probes_result = get_probes("2a06:93c0::24", 4, 10)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "2a06:93c0::24"
+    settings.wanted_ip_type = 4
+
+    probes_result = get_probes(settings, 10)
 
     mock_get_multiple_attributes.assert_called_with(client_ip="2a06:93c0::24", current_probes_set=set(),
                                                     ip_asn="AS15169",
                                                     ip_prefix=None, ip_country="IT", ip_family=4,
-                                                    probes_requested=10)
+                                                    probes_requested=10,
+                                                    strict_this_country=False)
     mock_get_best_single.assert_called_with(client_ip="2a06:93c0::24", current_probes_set={345}, ip_asn="AS15169",
                                             ip_prefix=None, ip_country="IT", ip_family=4,
-                                            probes_requested=9)
+                                            probes_requested=9,
+                                            strict_this_asn=False, strict_this_country=False)
 
     answer = [{'requested': 8, 'type': 'probes', 'value': '345,11,22,33,45,55,66,77'},
               {'requested': 2, 'type': 'area', 'value': 'West'}]
@@ -210,10 +240,15 @@ def test_get_probes_random(mock_get_prefix_from_ip, mock_get_network_details, mo
     mock_get_prefix_from_ip.return_value = "80.211.224.0/20"
     mock_get_network_details.return_value = ("AS15169", "IT", None)
 
-    probes_result = get_probes("80.211.238.247", 4, 10)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "80.211.238.247"
+    settings.wanted_ip_type = 4
+
+    probes_result = get_probes(settings, 10)
     mock_get_best_single.assert_called_with(client_ip="80.211.238.247", current_probes_set={345}, ip_asn="AS15169",
                                             ip_prefix="80.211.224.0/20", ip_country="IT", ip_family=4,
-                                            probes_requested=9)
+                                            probes_requested=9,
+                                            strict_this_asn=False, strict_this_country=False)
 
     answer = [{'requested': 8, 'type': 'probes', 'value': '345,11,22,33,45,55,66,77'},
               {'requested': 2, 'type': 'area', 'value': 'WW'}]
@@ -235,7 +270,11 @@ def test_get_probes_only_area(mock_get_prefix_from_ip, mock_get_network_details,
     mock_get_prefix_from_ip.return_value = "80.211.224.0/20"
     mock_get_network_details.return_value = ("AS15169", "IT", "West")
 
-    probes_result = get_probes("80.211.238.247", 4, 11)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "80.211.238.247"
+    settings.wanted_ip_type = 4
+
+    probes_result = get_probes(settings, 11)
     mock_get_multiple_attributes.assert_called_once()
     mock_get_best_single.assert_called_once()
     mock_get_probes_by_ids.assert_not_called()

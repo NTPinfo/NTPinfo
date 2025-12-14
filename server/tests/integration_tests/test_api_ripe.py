@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from server.app.dtos.AdvancedSettings import AdvancedSettings
 from server.app.utils.load_config_data import get_ripe_api_token
 from server.app.main import create_app
 from server.app.utils.ripe_fetch_data import check_all_measurements_scheduled, check_all_measurements_done, \
@@ -179,31 +180,46 @@ def test_get_available_probes_country():
 
 def test_get_probes():
     # Germany
-    result = get_probes("95.223.228.43", 4, 15)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "95.223.228.43"
+    settings.wanted_ip_type = 4
+    result = get_probes(settings,15)
     counter = 0
     for r in result:
         counter += r["requested"]
     assert counter == 15
     # Germany but IPv6
-    result = get_probes("95.223.228.43", 6, 3)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "95.223.228.43"
+    settings.wanted_ip_type = 6
+    result = get_probes(settings, 3)
     counter = 0
     for r in result:
         counter += r["requested"]
     assert counter == 3
     # Romania
-    result = get_probes("46.97.170.106", 4, 1)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "46.97.170.106"
+    settings.wanted_ip_type = 4
+    result = get_probes(settings, 1)
     counter = 0
     for r in result:
         counter += r["requested"]
     assert counter == 1
     # Cambodia
-    result = get_probes("202.79.26.65", 4, 10)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "202.79.26.65"
+    settings.wanted_ip_type = 4
+    result = get_probes(settings, 10)
     counter = 0
     for r in result:
         counter += r["requested"]
     assert counter == 10
     # Netherlands
-    result = get_probes("145.92.210.165", 4, 20)
+    settings = AdvancedSettings()
+    settings.custom_client_ip = "145.92.210.165"
+    settings.wanted_ip_type = 4
+    result = get_probes(settings, 20)
     counter = 0
     for r in result:
         counter += r["requested"]

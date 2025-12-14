@@ -20,6 +20,13 @@ export const transformJSONDataToRIPEData = (fetchedData: any): RIPEData | null =
 
     const measurement = fetchedData.result[0]
 
+    const NTP_TO_UNIX_EPOCH_OFFSET = 2208988800;
+    const clientSentTimeNtp = measurement.client_sent_time;
+
+    const clientSentSeconds = Math.floor(clientSentTimeNtp / 2 ** 32);
+    const clientSentFraction = clientSentTimeNtp % 2 ** 32;
+    const clientSentMs = (clientSentSeconds - NTP_TO_UNIX_EPOCH_OFFSET) * 1000 + (clientSentFraction / 2 ** 32) * 1000;
+
     const measurementData: NTPData = {
         ntp_version: fetchedData.ntp_version,
         vantage_point_ip: fetchedData.vantage_point_ip,
@@ -30,10 +37,10 @@ export const transformJSONDataToRIPEData = (fetchedData: any): RIPEData | null =
         coordinates: [fetchedData.ntp_server_location.coordinates[0],fetchedData.ntp_server_location.coordinates[1]],
         ntp_server_ref_parent_ip: "", 
         ref_id: fetchedData.ref_id,
-        client_sent_time: [measurement.client_sent_time.seconds, measurement.client_sent_time.fraction],
-        server_recv_time: [measurement.server_recv_time.seconds, measurement.server_recv_time.fraction],
-        server_sent_time: [measurement.server_sent_time.seconds, measurement.server_sent_time.fraction],
-        client_recv_time: [measurement.client_recv_time.seconds, measurement.client_recv_time.fraction],
+         client_sent_time: measurement.client_sent_time,
+        server_recv_time: measurement.server_recv_time,
+        server_sent_time: measurement.server_sent_time,
+        client_recv_time: measurement.client_recv_time,
         offset: Number((measurement.offset * 1000).toFixed(3)),
         RTT: Number((measurement.rtt * 1000).toFixed(3)), 
         stratum: fetchedData.stratum,
@@ -41,12 +48,12 @@ export const transformJSONDataToRIPEData = (fetchedData: any): RIPEData | null =
         root_delay: fetchedData.root_delay,
         poll: fetchedData.poll,
         root_dispersion: fetchedData.root_dispersion,
-        ntp_last_sync_time: [-1, -1],
+        ntp_last_sync_time: -1,
         leap: -1,
         jitter: -1,
         nr_measurements_jitter: -1,
         asn_ntp_server: fetchedData.asn_ntp_server,
-        time: (measurement.client_sent_time.seconds - 2208988800) * 1000,
+        time: clientSentMs,
         measurement_id: fetchedData.id
     }
     return{

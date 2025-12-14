@@ -1,4 +1,5 @@
 import {useEffect, useCallback } from 'react'
+import axios from 'axios'
 import { HomeCacheState, MeasurementRequest } from '../utils/types' // new import for caching result
 import '../styles/HomeTab.css'
 import InputSection from '../components/InputSection.tsx'
@@ -9,7 +10,7 @@ import LoadingSpinner from '../components/LoadingSpinner'
 import DynamicGraph from '../components/DynamicGraph.tsx'
 import { useFetchHistoricalIPData } from '../hooks/useFetchHistoricalIPData.ts'
 import { dateFormatConversion } from '../utils/dateFormatConversion.ts'
-import {downloadJSON, downloadCSV} from '../utils/downloadFormats.ts'
+import {downloadCSV} from '../utils/downloadFormats.ts'
 import WorldMap from '../components/WorldMap.tsx'
 import Header from '../components/Header.tsx';
 
@@ -19,11 +20,17 @@ import 'leaflet/dist/leaflet.css'
 import ConsentPopup from '../components/ConsentPopup.tsx'
 import NTSResultBox from '../components/NTSResultBox.tsx'
 import ripeLogo from '../assets/ripe_ncc_white.png'
+
 import { NtpVersionAnalysis } from '../components/NTPVersions.tsx'
+import { simplifyErrorMessage } from '../utils/simplifyErrorMessage'
+
+import sidnLogo from '../assets/sidnlabs-log.svg';
 
 import { useTriggerMeasurement } from "../hooks/useTriggerFullMeasurement";
-import { usePollFullMeasurement } from "../hooks/usePollFullMeasurement";
+import { usePollIncrementalMeasurement } from "../hooks/usePollIncrementalMeasurement";
 import { useFetchServerDetails } from '../hooks/useFetchServerDetails.ts'
+import MeasurementStatusIndicator from '../components/MeasurementStatusIndicator.tsx'
+import MeasurementSettings from '../components/MeasurementSettings.tsx'
 interface HomeTabProps {
   cache: HomeCacheState;
   setCache: React.Dispatch<React.SetStateAction<HomeCacheState>>;
@@ -57,8 +64,12 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
     vantagePointInfo,
     allNtpMeasurements,
     ripeMeasurementStatus,
+    ripeMeasurementId,
     ipv6Selected,
-    measurementSessionActive
+    measurementSessionActive,
+    measurementSettings,
+    currentNtpIndex,
+    currentRipeIndex
   } = cache;
 
   // still local UI state
@@ -72,7 +83,6 @@ function HomeTab({ cache, setCache, onVisualizationDataChange }: HomeTabProps) {
 
   const handleIPv6Toggle = (value: boolean) => {
   updateCache({ ipv6Selected: value });
-  console.log(ntpData?.coordinates)
   };
 
 
@@ -82,11 +92,11 @@ const {fetchData: fetchHistoricalData} = useFetchHistoricalIPData()
   
 const {fetchServerDetails} = useFetchServerDetails()
 const { triggerMeasurement, loading: triggerLoading, measurementId: fullMeasurementId, httpStatus, error, errorMessage} = useTriggerMeasurement();
-const { ntpData: fullNTP, ntsData, ripeData, versionData: fullVersionData, /* status: fullStatus, */ 
-      ripeStatus: fetchedRIPEStatus, ripeError: ripeMeasurementError, ripeId: fullRipeId, ntpVerLoading
-} = usePollFullMeasurement(fullMeasurementId);
+const { ntpData: fullNTP, ntsData, ripeData, versionData: fullVersionData, 
+      ripeStatus: fetchedRIPEStatus, ripeError: ripeMeasurementError, ripeId: fullRipeId, 
+      ntpVerLoading, status: measurementStatus, error: pollingError, expectedIpCount
+} = usePollIncrementalMeasurement(fullMeasurementId, 3000);
 
-const apiDataLoading = triggerLoading;
 const ripeTriggerErr = null;
 // const ntsLoading = false;
 // const ntsError = null;
@@ -95,16 +105,30 @@ const ripeTriggerErr = null;
     updateCache({ isLoading: triggerLoading });
   }, [triggerLoading, updateCache]);
 
-  // End measurement session when RIPE measurements complete or fail
+  // End measurement session when measurements complete or fail
   useEffect(() => {
-    if (measurementSessionActive && ripeMeasurementStatus) {
-      if (ripeMeasurementStatus === 'complete' ||
-          ripeMeasurementStatus === 'timeout' ||
-          ripeMeasurementStatus === 'error') {
+    if (measurementSessionActive) {
+      // Check if main measurement has finished or failed
+      const mainMeasurementDone = measurementStatus === 'finished' || measurementStatus === 'failed';
+      
+      // Check if RIPE measurements have completed or failed
+      const ripeMeasurementDone = ripeMeasurementStatus === 'complete' ||
+                                  ripeMeasurementStatus === 'timeout' ||
+                                  ripeMeasurementStatus === 'error';
+      
+      // Check if RIPE failed completely (id_ripe is null with error message)
+      const ripeFailedCompletely = (fullRipeId === null || ripeMeasurementId === null) && 
+                                   (typeof ripeMeasurementError === 'string' ? ripeMeasurementError : (ripeMeasurementError?.message || null));
+      
+      // End session if:
+      // 1. Main measurement failed (don't wait for RIPE if main measurement failed)
+      // 2. OR main measurement finished AND (RIPE is done OR RIPE failed completely OR RIPE never started OR RIPE is still pending after main finished)
+      if (measurementStatus === 'failed' || 
+          (mainMeasurementDone && (ripeMeasurementDone || ripeFailedCompletely || !ripeMeasurementStatus || ripeMeasurementStatus === null || ripeMeasurementStatus === 'pending'))) {
         updateCache({ measurementSessionActive: false });
       }
     }
-  }, [ripeMeasurementStatus, measurementSessionActive, updateCache]);
+  }, [measurementStatus, ripeMeasurementStatus, measurementSessionActive, updateCache, fullRipeId, ripeMeasurementId, ripeMeasurementError]);
 
   useEffect(() => {
     if (!fetchedRIPEStatus) return;
@@ -114,27 +138,103 @@ const ripeTriggerErr = null;
     });
   }, [ripeData, fetchedRIPEStatus, updateCache]);
 
-  // When RIPE data arrives, set vantage point info for the map
+  // Handle case when RIPE measurement fails completely (id_ripe is null with error)
   useEffect(() => {
-    if (ripeData && ripeData.length > 0) {
-      const vpIp = ripeData[0]?.measurementData?.vantage_point_ip ?? null;
-      const vpLoc = ripeData[0]?.probe_location ?? null;
-      if (vpIp && vpLoc) {
-        updateCache({ vantagePointInfo: [vpLoc, vpIp] });
-      }
+    // If RIPE ID is null and we have an error message, mark RIPE as failed
+    if ((fullRipeId === null && ripeMeasurementId === null) && 
+        (typeof ripeMeasurementError === 'string' ? ripeMeasurementError : (ripeMeasurementError?.message || null))) {
+      updateCache({
+        ripeMeasurementStatus: 'error',
+      });
     }
-  }, [ripeData, updateCache]);
+  }, [fullRipeId, ripeMeasurementId, ripeMeasurementError, updateCache]);
+
+  // Ensure RIPE index stays within bounds when array updates
+  useEffect(() => {
+    if (!ripeMeasurementResp || ripeMeasurementResp.length === 0) {
+      updateCache({ currentRipeIndex: 0 });
+      return;
+    }
+    const safeIndex = Math.max(0, Math.min(currentRipeIndex, ripeMeasurementResp.length - 1));
+    if (safeIndex !== currentRipeIndex) {
+      updateCache({ currentRipeIndex: safeIndex });
+    }
+  }, [ripeMeasurementResp, currentRipeIndex, updateCache]);
 
   // When full NTP data arrives, select a display row and populate cache
+  // Update incrementally - don't clear existing measurements when new ones arrive
   useEffect(() => {
-    if (!fullNTP || fullNTP.length === 0) return;
-    const display = selectResult(fullNTP);
-    updateCache({
-      ntpData: display ?? null,
-      allNtpMeasurements: fullNTP ?? null,
-      measured: true,
+    if (!fullNTP || fullNTP.length === 0) {
+      // Don't clear allNtpMeasurements if we're still loading - only clear if explicitly reset
+      return;
+    }
+    // Merge new measurements with existing ones, avoiding duplicates
+    setCache((prev) => {
+      const existing = prev.allNtpMeasurements || [];
+      if (existing.length === 0) {
+        // First time, just set it
+        return {
+          ...prev,
+          allNtpMeasurements: fullNTP,
+          measured: true,
+        };
+      }
+      
+      // Merge, avoiding duplicates based on measurement_id or ip+server_name
+      const existingIds = new Set(existing.map(m => m.measurement_id || `${m.ip}-${m.server_name}`));
+      
+      const newMeasurements = fullNTP.filter(m => {
+        const id = m.measurement_id || `${m.ip}-${m.server_name}`;
+        return !existingIds.has(id);
+      });
+      
+      const merged = [...existing, ...newMeasurements];
+      
+      return {
+        ...prev,
+        allNtpMeasurements: merged.length > 0 ? merged : null,
+        measured: true,
+      };
     });
-  }, [fullNTP, updateCache]);
+  }, [fullNTP, setCache]);
+
+  // Update displayed NTP measurement based on current index - show data immediately when available
+  useEffect(() => {
+    // Priority: Use allNtpMeasurements if available, otherwise use fullNTP directly for immediate display
+    const availableMeasurements = allNtpMeasurements && allNtpMeasurements.length > 0 
+      ? allNtpMeasurements 
+      : (fullNTP && fullNTP.length > 0 ? fullNTP : null);
+    
+    if (!availableMeasurements || availableMeasurements.length === 0) {
+      // Only clear if we're not expecting more (no expectedIpCount or measurement finished)
+      if (!expectedIpCount || (measurementStatus === 'finished' || measurementStatus === 'failed')) {
+        updateCache({ ntpData: null });
+      }
+      return;
+    }
+    
+    // If current index is beyond available data but within expected count, keep current index but show last available
+    // Otherwise, ensure index is within bounds of actual data
+    const maxAvailableIndex = availableMeasurements.length - 1;
+    let displayIndex = currentNtpIndex;
+    const stillLoading = measurementSessionActive || triggerLoading;
+    
+    if (currentNtpIndex > maxAvailableIndex) {
+      // Index is beyond available data - if we're still loading and within expected count, keep index but show last available
+      if (stillLoading && expectedIpCount && currentNtpIndex < expectedIpCount) {
+        displayIndex = maxAvailableIndex; // Show last available while waiting
+      } else {
+        // Out of bounds - clamp to last available
+        displayIndex = maxAvailableIndex;
+        if (displayIndex !== currentNtpIndex) {
+          updateCache({ currentNtpIndex: displayIndex });
+        }
+      }
+    }
+    
+    const display = availableMeasurements[displayIndex] ?? selectResult(availableMeasurements);
+    updateCache({ ntpData: display ?? null });
+  }, [allNtpMeasurements, fullNTP, currentNtpIndex, expectedIpCount, measurementStatus, measurementSessionActive, triggerLoading, updateCache]);
 
   // Sync NTS and NTP Versions when present
   useEffect(() => {
@@ -181,7 +281,8 @@ const ripeTriggerErr = null;
     if (query.trim().length == 0)
       return
 
-    // Reset cached values for a fresh run and start measurement session
+    // Reset ALL cached values for a fresh run and start measurement session
+    // Clear all measurement results to avoid showing stale data
     updateCache({
       measurementId: null,
       ripeMeasurementId: null,
@@ -194,21 +295,56 @@ const ripeTriggerErr = null;
       ntsResult: null,
       allNtpMeasurements: null,
       vantagePointInfo: null,
+      error: null,
+      isLoading: false,
       measurementSessionActive: true,  // Start measurement session
+      currentNtpIndex: 0,  // Reset navigation indices
+      currentRipeIndex: 0,
     });
+    
+    // Also clear visualization data for the graph
+    onVisualizationDataChange(null);
 
     /**
-     * The payload for the measurement call, containing the server and the choice of using IPv6 or not
+     * The payload for the measurement call, containing the server and settings
      */
-    const payload: MeasurementRequest = {
+    const defaultSettings: MeasurementRequest = {
       server: query.trim(),
       ipv6_measurement: useIPv6,
       wanted_ip_type: useIPv6 ? 6 : 4,
-      ntp_versions_to_analyze: ["ntpv3", "ntpv2", "ntpv4", "ntpv5"], 
+      measurement_type: 'ntpv4',
+      ntpv5_draft: "draft-ietf-ntp-ntpv5-06",
       analyse_all_ntp_versions: false,
-      ntpv5_draft: "draft-ietf-ntp-ntpv5"
-  
-    }
+      ntp_versions_to_analyze: ['ntpv3', 'ntpv4', 'ntpv5'],
+      ntp_versions_analysis_on_each_ip: false,
+      nts_analysis_on_each_ip: false
+    };
+    
+    // Merge with user settings if they exist
+    const payload: MeasurementRequest = measurementSettings 
+      ? { 
+          server: query.trim(), 
+          ipv6_measurement: useIPv6, 
+          wanted_ip_type: useIPv6 ? 6 : 4,
+          measurement_type: measurementSettings.measurement_type || 'ntpv4',
+          ntpv5_draft: measurementSettings.ntpv5_draft || "draft-ietf-ntp-ntpv5-06",
+          custom_probes_asn: measurementSettings.custom_probes_asn || undefined,
+          custom_probes_country: measurementSettings.custom_probes_country || undefined,
+          custom_client_ip: measurementSettings.custom_client_ip || undefined,
+          // Handle NTP versions settings properly
+          // If analyse_all_ntp_versions is true, set it and don't send ntp_versions_to_analyze
+          // Otherwise, if ntp_versions_to_analyze has values, send them and set analyse_all_ntp_versions to false
+          // If neither is set or both are empty/false, use defaults: analyze v3, v4, v5
+          ...(measurementSettings.analyse_all_ntp_versions === true
+            ? { analyse_all_ntp_versions: true }
+            : (measurementSettings.ntp_versions_to_analyze && Array.isArray(measurementSettings.ntp_versions_to_analyze) && measurementSettings.ntp_versions_to_analyze.length > 0)
+              ? { ntp_versions_to_analyze: measurementSettings.ntp_versions_to_analyze, analyse_all_ntp_versions: false }
+              : { ntp_versions_to_analyze: ['ntpv3', 'ntpv4', 'ntpv5'], analyse_all_ntp_versions: false }),
+          // Hidden options - always set to false
+          ntp_versions_analysis_on_each_ip: false,
+          nts_analysis_on_each_ip: false
+        }
+      : defaultSettings;
 
     /**
      * Get the response from the measurement data endpoint
@@ -235,21 +371,25 @@ const ripeTriggerErr = null;
 
       const measurementId  = await triggerMeasurement(serverUrl, payload);
   
-      // If triggering failed, end the session
+      // If triggering failed, end the session and clear all data
       if (!measurementId) {
-  
         updateCache({
-          measured: true,
+          measured: false,
+          measurementId: null,
+          ripeMeasurementId: null,
           ntpData: null,
           ntsResult: null,
           versionData: null,
           chartData: null,
           allNtpMeasurements: null,
           ripeMeasurementResp: null,
+          ripeMeasurementStatus: null,
+          vantagePointInfo: null,
           measurementSessionActive: false,
-          ripeMeasurementStatus: "error",
-          //error: "Measurement trigger failed",
+          error: error || null,
         });
+        // Also clear visualization data
+        onVisualizationDataChange(null);
         return;
       } 
 
@@ -271,25 +411,12 @@ const ripeTriggerErr = null;
       const chartData = new Map<string, NTPData[]>();
       chartData.set(payload.server, apiHistoricalResp);
       onVisualizationDataChange(chartData);
-      updateCache({ chartData });
-
-    //   /**
-    //   * Update the stored data and show it again
-    //   */
-        const data = selectResult(fullNTP)
-        const chartData2 = new Map<string, NTPData[]>()
-        chartData2.set(payload.server, apiHistoricalResp)
-        onVisualizationDataChange(chartData2)
-        updateCache({
-            measured: true,
-            ntpData: data ?? null,
-            chartData: chartData2,
-            allNtpMeasurements: fullNTP ?? null,
-            ripeMeasurementResp: null,          // clear old map
-            ripeMeasurementStatus: undefined,        //  "     "
-            ntsResult: null,                    // Keep NTS result reset until new data arrives
-            measurementSessionActive: true      // Keep session active for RIPE measurements
-        })
+      // Only update chart data - don't set ntpData/allNtpMeasurements here
+      // The polling hook will update ntpData when new measurements arrive
+      updateCache({
+        chartData,
+        // Keep everything else cleared/reset until new measurement data arrives
+      });
 
        
     } catch {
@@ -317,109 +444,193 @@ const ripeTriggerErr = null;
       <div className="input-wrapper">
         <InputSection
           onClick={handleInput}
-          loading={triggerLoading || (!fullNTP)}
           ipv6Selected={ipv6Selected}
           onIPv6Toggle={handleIPv6Toggle}
-          ripeMeasurementStatus={ripeMeasurementStatus}
           measurementSessionActive={measurementSessionActive}
         />
+        <MeasurementSettings
+          settings={measurementSettings || {
+            server: '',
+            ipv6_measurement: ipv6Selected,
+            wanted_ip_type: ipv6Selected ? 6 : 4,
+            measurement_type: 'ntpv4',
+            ntpv5_draft: "draft-ietf-ntp-ntpv5-06",
+            analyse_all_ntp_versions: false,
+            ntp_versions_to_analyze: ['ntpv3', 'ntpv4', 'ntpv5']
+          }}
+          onSettingsChange={(newSettings) => updateCache({ measurementSettings: newSettings })}
+          disabled={measurementSessionActive || triggerLoading}
+        />
       </div>
+      {/* Status indicator showing current measurement step */}
+      {(measurementSessionActive || measurementStatus) && (
+        <MeasurementStatusIndicator 
+          status={measurementStatus} 
+          isLoading={measurementSessionActive && measurementStatus !== "finished" && measurementStatus !== "failed"}
+        />
+      )}
       {/* <h3 id="disclaimer">DISCLAIMER: Your IP may be used to get a RIPE probe close to you for the most accurate data. Your IP will not be stored.</h3> */}
-        <div className="result-text">
-          {(!apiDataLoading && measured && (<p>Results</p>)) ||
+        {/* <div className="result-text">
+          {((triggerLoading || measurementSessionActive) && measured && (<p>Results</p>)) ||
                     (apiDataLoading && <div className="loading-div">
                         <p>Loading...</p>
                         <LoadingSpinner size="small"/>
                     </div>
                         )}
+        </div> */}
+      {/* Check if this is any server error (400, 404, 422, 500, 503, etc.) - show only error message, no sections */}
+      {/* Priority: Show error if httpStatus >= 400 AND errorMessage exists AND we're not actively loading/measuring with a valid measurement ID */}
+      {(httpStatus >= 400 && errorMessage && !triggerLoading && !(measurementSessionActive && (fullMeasurementId || measurementId))) ? (
+        <div className="error-only-message">
+          <h2>⚠️ Error {httpStatus || 'Unknown'}</h2>
+          <p>
+            {simplifyErrorMessage(errorMessage) || errorMessage || 'An error occurred while processing the measurement.'}
+          </p>
         </div>
-        {/* The main page shown after the main measurement is done */}
-      {((ntpData || ripeData) && (<div className="results-and-graph">
-        <ResultSummary data={ntpData}
-                       ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null}
-                       ripeErr={ripeTriggerErr ?? ripeMeasurementError}
-                       err={error}
-                       errMessage={errorMessage}
-                       httpStatus={httpStatus}
-                       ripeStatus={ripeTriggerErr ? "error" : ripeMeasurementStatus}
-                       measurementId={measurementId || null}/>
+      ) : (!(httpStatus >= 400 && errorMessage) && ((fullNTP && fullNTP.length > 0) || (allNtpMeasurements && allNtpMeasurements.length > 0) || ripeData || pollingError || error || fullMeasurementId || measurementId || measured || measurementStatus === 'failed' || (expectedIpCount && expectedIpCount > 0))) ? (
+        <div className="results-and-graph">
+          <ResultSummary 
+            data={ntpData}
+            ripeData={ripeMeasurementResp && ripeMeasurementResp.length > 0 ? ripeMeasurementResp[currentRipeIndex] : null}
+            ripeErr={ripeTriggerErr ?? (ripeMeasurementError ? (typeof ripeMeasurementError === 'string' ? new Error(ripeMeasurementError) : ripeMeasurementError) : null)}
+            err={error || (pollingError ? new Error(pollingError) : null)}
+            errMessage={errorMessage || pollingError || null}
+            httpStatus={httpStatus}
+            ripeStatus={ripeTriggerErr ? "error" : ripeMeasurementStatus}
+            measurementId={measurementId || fullMeasurementId || null}
+            allNtpMeasurements={allNtpMeasurements}
+            allRipeMeasurements={ripeMeasurementResp}
+            currentNtpIndex={currentNtpIndex}
+            currentRipeIndex={currentRipeIndex}
+            onNtpIndexChange={(index) => updateCache({ currentNtpIndex: index })}
+            onRipeIndexChange={(index) => updateCache({ currentRipeIndex: index })}
+            expectedIpCount={expectedIpCount}
+            isLoading={measurementSessionActive || triggerLoading}
+            ripeId={fullRipeId || ripeMeasurementId || null}
+            ripeErrorMessage={typeof ripeMeasurementError === 'string' ? ripeMeasurementError : (ripeMeasurementError?.message || null)}
+          />
 
-        {/* Div for the visualization graph, and the radios for setting the what measurement to show */}
-        {!error && ntpData && chartData && (
-        <div className="graphs">
-          <div className='graph-box'>
-            <DynamicGraph
-              servers={chartData ? Array.from(chartData.keys()) : []}
-              selectedMeasurement={selMeasurement}
-              onMeasurementChange={(measurement) => updateCache({ selMeasurement: measurement })}
-              legendDisplay={false}
-              showTimeInput={false}
-              existingData={chartData}
-            />
-          </div>
-        </div>)}
-      </div>)) || 
-      /* Show loading spinner for main-details when measurement is in progress */
-      (triggerLoading || measurementSessionActive) && (
+          {/* Div for the visualization graph, and the radios for setting the what measurement to show */}
+          {!error && ntpData && chartData && (
+            <div className="graphs">
+              <div className='graph-box'>
+                <DynamicGraph
+                  servers={chartData ? Array.from(chartData.keys()) : []}
+                  selectedMeasurement={selMeasurement}
+                  onMeasurementChange={(measurement) => updateCache({ selMeasurement: measurement })}
+                  legendDisplay={false}
+                  showTimeInput={false}
+                  existingData={chartData}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      ) : ((triggerLoading || measurementSessionActive) && !fullNTP && !ripeData && !error && !pollingError && !errorMessage && !fullMeasurementId && !measurementId) ? (
         <div className="main-details-loading">
           <div className="loading-div">
-            <p>Loading measurement results...</p>
+            <p>Initializing measurement...</p>
             <LoadingSpinner size="medium"/>
           </div>
         </div>
-      ) ||
-      /* Show error state when measurement failed */
-      (!ntpData && !apiDataLoading && measured &&
-      <ResultSummary data={ntpData}  err={error} httpStatus={httpStatus} errMessage={errorMessage}
-      ripeData={ripeMeasurementResp?ripeMeasurementResp[0]:null} ripeErr={ripeTriggerErr ?? ripeMeasurementError} ripeStatus={ripeTriggerErr ? "error" :  ripeMeasurementStatus} measurementId={measurementId || null}/>) }
+      ) : null}
 
-      {/* NTS Results Box - shown when NTP data is available */}
-      {ntpData && !apiDataLoading && (
+      {/* NTS Results Box - shown when measurement has been attempted (hide if error) */}
+      {!((httpStatus >= 400) && errorMessage) && (fullNTP || measured || measurementSessionActive || ntsResult || ntsData || measurementId) && (
         <NTSResultBox 
-          ntsResult={ntsResult} 
-          loading={!ntsResult && (apiDataLoading || measurementSessionActive)} 
+          ntsResult={ntsResult || ntsData || null} 
+          loading={!ntsResult && !ntsData && measurementSessionActive} 
           error={null} 
         />
       )}
 
-      {/*Buttons to download results in JSON and CSV format as well as open a popup displaying historical data*/}
-      {/*The open popup button is commented out, because it is implemented as a separate tab*/}
-      {ntpData && !apiDataLoading && (<div className="download-buttons">
+      {/*Buttons to download results in JSON and CSV format as well as open a popup displaying historical data (hide if error) */}
+      {!((httpStatus >= 400) && errorMessage) && fullNTP && (<div className="download-buttons">
         <DownloadButton 
           name="Download JSON" 
-          onclick={() => {
-            const bundle: any[] = [ntpData];
-            if (ripeMeasurementResp) bundle.push(ripeMeasurementResp[0]);
-            if (ntsResult) {
-              // Create a wrapper object for NTS data to match the expected format
-              const ntsWrapper = { type: 'NTS Data', ...ntsResult };
-              bundle.push(ntsWrapper as any);
+          onclick={async () => {
+            try {
+              const serverUrl = `${import.meta.env.VITE_SERVER_HOST_ADDRESS}`;
+              const bundle: any = {
+                download_timestamp: new Date().toISOString(),
+                measurement_id: measurementId || null,
+                ripe_measurement_id: ripeMeasurementId || null
+              };
+              
+              // Fetch raw NTP measurement data from server
+              if (measurementId) {
+                try {
+                  console.log(`Fetching NTP measurement: ${measurementId}`);
+                  const ntpResponse = await axios.get(`${serverUrl}/measurements/results/${measurementId}`);
+                  bundle.ntp_measurement = ntpResponse.data;
+                  console.log('NTP measurement fetched successfully');
+                } catch (ntpError: any) {
+                  console.error('Failed to fetch NTP measurement:', ntpError);
+                  bundle.ntp_measurement_error = {
+                    message: ntpError.response?.data?.detail || ntpError.message || 'Error occurred',
+                    status: ntpError.response?.status,
+                    statusText: ntpError.response?.statusText
+                  };
+                }
+              } else {
+                bundle.ntp_measurement_error = 'No measurement ID available';
+              }
+              
+              // Fetch raw RIPE measurement data from server
+              if (ripeMeasurementId) {
+                try {
+                  // Convert to string in case it's a number
+                  const ripeIdStr = String(ripeMeasurementId);
+                  console.log(`Fetching RIPE measurement: ${ripeIdStr}`);
+                  const ripeResponse = await axios.get(`${serverUrl}/measurements/ripe/${ripeIdStr}`);
+                  bundle.ripe_measurement = ripeResponse.data;
+                  console.log('RIPE measurement fetched successfully');
+                } catch (ripeError: any) {
+                  console.error('Failed to fetch RIPE measurement:', ripeError);
+                  bundle.ripe_measurement_error = {
+                    message: ripeError.response?.data?.detail || ripeError.message || 'Error occurred',
+                    status: ripeError.response?.status,
+                    statusText: ripeError.response?.statusText
+                  };
+                }
+              } else {
+                bundle.ripe_measurement_error = 'No RIPE measurement ID available';
+              }
+              
+              // Always download the bundle, even if there are errors (so user can see what went wrong)
+              // Download raw JSON object directly (not using downloadJSON which expects an array)
+              const json = JSON.stringify(bundle, null, 2);
+              const blob = new Blob([json], {type: 'application/json'});
+              const downloadLink = document.createElement('a');
+              downloadLink.href = window.URL.createObjectURL(blob);
+              downloadLink.download = `measurement_data_${measurementId || 'unknown'}_${new Date().toISOString().split('T')[0]}.json`;
+              downloadLink.click();
+              window.URL.revokeObjectURL(downloadLink.href);
+            } catch (error: any) {
+              console.error('Failed to download raw JSON:', error);
+              const errorMsg = error.response?.data?.detail || error.message || 'Error occurred';
+              alert(`Failed to download raw JSON data: ${errorMsg}\n\nCheck the browser console (F12) for more details.`);
             }
-            downloadJSON(bundle);
           }} 
         />
         <DownloadButton 
           name="Download CSV" 
-          onclick={() => downloadCSV(ripeMeasurementResp ? [ntpData, ripeMeasurementResp[0]] : [ntpData])} 
+          onclick={() => {
+            const ntpDataArray = allNtpMeasurements ? (Array.isArray(allNtpMeasurements) ? allNtpMeasurements : [allNtpMeasurements]) : [];
+            const ripeDataArray = ripeMeasurementResp ? (Array.isArray(ripeMeasurementResp) ? ripeMeasurementResp : [ripeMeasurementResp]) : [];
+            downloadCSV([...ntpDataArray, ...ripeDataArray]);
+          }} 
         />
-        {ntsResult && (
-          <DownloadButton 
-            name="Download NTS Result" 
-            onclick={() => {
-              const ntsWrapper = { type: 'NTS Data', ...ntsResult };
-              downloadJSON([ntsWrapper as any]);
-            }} 
-          />
-        )}
       </div>)}
-       {(ntpData && ntpVerLoading && <div className="loading-div">
+       {!((httpStatus >= 400) && errorMessage) && (fullNTP || ntpData || measured || measurementSessionActive || versionData || fullVersionData || measurementId) && ntpVerLoading && <div className="loading-div">
                         <p>Loading NTP Versions Analysis...</p>
                         <LoadingSpinner size="small"/>
                     </div>
-      )}
-      {ntpData && (versionData || !ntpVerLoading) && (<NtpVersionAnalysis data={versionData}/>)} 
+      }
+      {!((httpStatus >= 400) && errorMessage) && (fullNTP || ntpData || measured || measurementSessionActive || versionData || fullVersionData || measurementId) && (versionData || fullVersionData || !ntpVerLoading) && (<NtpVersionAnalysis data={versionData || fullVersionData || null}/>)} 
       {/*Map compoment that shows the NTP servers, the vantage point, and the RIPE probes*/}
-       {(ripeMeasurementStatus === "complete" || ripeMeasurementStatus === "partial_results" || ripeMeasurementStatus === "timeout") && (
+       {/* Show map when we have NTP data or vantage point, regardless of RIPE status */}
+       {((allNtpMeasurements && allNtpMeasurements.length > 0) || (fullNTP && fullNTP.length > 0) || (ntpData !== null) || vantagePointInfo) && (
         <div className='map-box'>
           <WorldMap
             probes={ripeMeasurementResp}
@@ -431,13 +642,45 @@ const ripeTriggerErr = null;
         )}
     </div>
     <footer className="home-footer">
-      <div className="footer-content">
-        <span className="powered-by">Powered by</span>
-        <a href="https://ripe.net" target="_blank" rel="noopener noreferrer" aria-label="RIPE NCC">
-          <img src={ripeLogo} alt="RIPE NCC" className="ripe-logo" />
-        </a>
-      </div>
-    </footer>
+  <div className="footer-content">
+    {/* Hosted by SIDN Labs (logo only) */}
+    <div className="hosted-by-section">
+      <span className="footer-label">Hosted by</span>
+      <a
+        href="https://sidnlabs.nl"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="SIDN Labs"
+      >
+        <img src={sidnLogo} alt="SIDN Labs" className="footer-logo" />
+      </a>
+    </div>
+
+    {/* Powered by TIME.nl (text) and RIPE Atlas (logo) */}
+    <div className="powered-by-section">
+      <span className="footer-label">Powered by</span>
+      <a
+        href="https://time.nl"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="footer-text-link"
+      >
+        TIME.nl
+      </a>
+
+      <span className="footer-and">and</span>
+
+      <a
+        href="https://atlas.ripe.net"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="RIPE Atlas"
+      >
+        <img src={ripeLogo} alt="RIPE Atlas" className="footer-logo-ripe" />
+      </a>
+    </div>
+  </div>
+</footer>
     </div>
     );
 }

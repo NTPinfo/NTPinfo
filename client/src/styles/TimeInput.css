@@ -16,34 +16,34 @@
 .dropdown-label {
   font-size: 1.2em;
   font-weight: 500;
-  color: var(--text-white);
+  color: var(--text-dark);
   display: flex;
   padding-left: 0.5rem;
 }
+
 
 .time-dropdown .dropdown-select {
   width: 10em;
   height: 2.6em;
   font-weight: 600;
   font-size: 1.1em;
-  background-color: var(--bg-secondary);
-  color: var(--clr-font-white);
-  border: 1px solid var(--border-color);
+  background-color: var(--bg-clr-secondary);
+  color: var(--text-dark);
+  border: 1px solid var(--clr-btn-border);
   border-radius: var(--radius);
 }
 
-
 .dropdown-select option {
-  background-color: white;
-  color: var(--clr-font-dark);
+  background-color: var(--bg-clr-secondary);
+  color: var(--text-dark);
   font-weight: 500;
   padding: 0.5em;
 }
 
 .dropdown-select option:hover,
 .dropdown-select option:focus {
-  background-color: #f0f0f0;
-  color: var(--clr-font-dark);
+  background-color: var(--bg-clr-primary);
+  color: var(--text-dark);
 }
 
 .dropdown-values {
@@ -56,10 +56,10 @@
   height: 2.4em;
   font-weight: 600;
   font-size: 1.1em;
-  background-color: var(--clr-font-white);
+  background-color: var(--bg-clr-secondary);
   /* color: black; */
   border-radius: 8px;
-  border-color: #d9d9d9;
+  border-color: var(--clr-btn-border);
   border-width: 2px;
 }
 
@@ -81,7 +81,7 @@
 .custom-time-amount .dt-label {
   font-size: 1.2em;
   font-weight: 600;
-  color: var(--clr-font-white);
+  color: var(--text-dark);
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -92,10 +92,10 @@
   padding: 0.35rem 0.6rem;
   font-size: 1.05em;
   font-weight: 600;
-  color: var(--clr-font-white);
-  background: rgba(255, 255, 255, 0.12);
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-radius: 8px;
+  color: var(--text-dark);
+  background: var(--bg-clr-secondary);
+  border: 1px solid var(--clr-btn-border);
+  border-radius: var(--radius);
   outline: none;
   min-width: 12ch;
   transition: background 150ms ease, border-color 150ms ease;
@@ -104,7 +104,7 @@
 .custom-time-amount .dt-input:hover,
 .custom-time-amount .dt-input:focus {
   background: rgba(255, 255, 255, 0.18);
-  border-color: var(--clr-accent, #66b2ff);
+  border-color: var(--clr-btn-hover);
 }
 
 .custom-time-amount .dt-input::-webkit-calendar-picker-indicator,
@@ -177,7 +177,7 @@
 
 .compare-tab .dropdown-select:focus-visible,
 .compare-tab .dt-input:focus-visible {
-    outline: 0.5px solid var(--text-white);
+    outline: 0.5px solid var(--text-dark);
     outline-offset: 0.5px;
 }
 
