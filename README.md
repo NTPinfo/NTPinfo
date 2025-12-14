@@ -34,7 +34,7 @@ The probes are selected to be as close as possible to your vantage point (client
   <img src="assets/SelectingRipeProbes.png" alt="RIPE Probe Selection Flow" style="width:100%; max-width:800px;"/>
 </p>
 
-**Note on Advanced Settings**: In the advanced measurement settings, you can specify a custom country or ASN for probe selection. However, please note that when multiple criteria are available, **ASN and prefix matches take higher priority than country matches**. This means if probes matching your specified ASN/prefix are available, they will be selected first, even if they don't match your specified country.
+**Note on Advanced Settings**: In the advanced measurement settings, you can specify a custom country or ASN for probe selection. However, please note that you can strictly select probes within a specific ASN or country, but this action may result in insufficient probes for the measurement.
 
 ---
 

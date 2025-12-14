@@ -479,14 +479,15 @@ const ripeTriggerErr = null;
                         )}
         </div> */}
       {/* Check if this is any server error (400, 404, 422, 500, 503, etc.) - show only error message, no sections */}
-      {(httpStatus >= 400 && errorMessage && !fullMeasurementId && !measurementId && !fullNTP && !allNtpMeasurements && !triggerLoading && !measurementSessionActive) ? (
+      {/* Priority: Show error if httpStatus >= 400 AND errorMessage exists AND we're not actively loading/measuring with a valid measurement ID */}
+      {(httpStatus >= 400 && errorMessage && !triggerLoading && !(measurementSessionActive && (fullMeasurementId || measurementId))) ? (
         <div className="error-only-message">
           <h2>⚠️ Error {httpStatus || 'Unknown'}</h2>
           <p>
             {simplifyErrorMessage(errorMessage) || errorMessage || 'An error occurred while processing the measurement.'}
           </p>
         </div>
-      ) : ((fullNTP && fullNTP.length > 0) || (allNtpMeasurements && allNtpMeasurements.length > 0) || ripeData || pollingError || error || errorMessage || fullMeasurementId || measurementId || measured || measurementStatus === 'failed' || (expectedIpCount && expectedIpCount > 0)) ? (
+      ) : (!(httpStatus >= 400 && errorMessage) && ((fullNTP && fullNTP.length > 0) || (allNtpMeasurements && allNtpMeasurements.length > 0) || ripeData || pollingError || error || fullMeasurementId || measurementId || measured || measurementStatus === 'failed' || (expectedIpCount && expectedIpCount > 0))) ? (
         <div className="results-and-graph">
           <ResultSummary 
             data={ntpData}
@@ -628,7 +629,8 @@ const ripeTriggerErr = null;
       }
       {!((httpStatus >= 400) && errorMessage) && (fullNTP || ntpData || measured || measurementSessionActive || versionData || fullVersionData || measurementId) && (versionData || fullVersionData || !ntpVerLoading) && (<NtpVersionAnalysis data={versionData || fullVersionData || null}/>)} 
       {/*Map compoment that shows the NTP servers, the vantage point, and the RIPE probes*/}
-       {(ripeMeasurementStatus === "complete" || ripeMeasurementStatus === "partial_results" || ripeMeasurementStatus === "timeout") && (
+       {/* Show map when we have NTP data or vantage point, regardless of RIPE status */}
+       {((allNtpMeasurements && allNtpMeasurements.length > 0) || (fullNTP && fullNTP.length > 0) || (ntpData !== null) || vantagePointInfo) && (
         <div className='map-box'>
           <WorldMap
             probes={ripeMeasurementResp}

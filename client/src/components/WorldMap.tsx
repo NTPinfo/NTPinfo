@@ -414,7 +414,16 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
     /**
      * Checks done in case that either RIPE or the vantage point didn't return results
      */
-    if (!probes && !ntpServers) return
+    // Reset status message and clear all locations when data is cleared
+    if ((!probes || (Array.isArray(probes) && probes.length === 0)) && 
+        (!ntpServers || (Array.isArray(ntpServers) && ntpServers.length === 0))) {
+      setStatusMessage("")
+      setRipeOnlyLocations([])
+      setNtpOnlyLocations([])
+      setIntersectedLocations([])
+      setFailedLocations([])
+      return
+    }
 
     if (!probes && ntpServers) {
       setRipeOnlyLocations([])
@@ -526,15 +535,36 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
    * Effect to check if the NTP servers used use anycast, which would lead to less accurate geolocation data
    */
   useEffect(() => {
-    if (!probes || !ntpServers) return
+    if ((!probes || (Array.isArray(probes) && probes.length === 0)) && 
+        (!ntpServers || (Array.isArray(ntpServers) && ntpServers.length === 0))) {
+      setIsAnycast(false)
+      return
+    }
 
-    setIsAnycast(probes.some(x => x.measurementData.is_anycast === true) || ntpServers.some(x => x.is_anycast === true))
+    // Check for anycast in probes (if available)
+    const probesAnycast = probes && probes.length > 0 
+      ? probes.some(x => x.measurementData.is_anycast === true)
+      : false
+    
+    // Check for anycast in ntpServers (if available)
+    const ntpServersAnycast = ntpServers && ntpServers.length > 0
+      ? ntpServers.some(x => x.is_anycast === true)
+      : false
+
+    setIsAnycast(probesAnycast || ntpServersAnycast)
   }, [probes, ntpServers])
 
   /**
    * Effect to dynamically update the status shown depening on the progress of the RIPE measurement
    */
   useEffect(() => {
+    // Reset status message when data is cleared
+    if ((!probes || (Array.isArray(probes) && probes.length === 0)) && 
+        (!ntpServers || (Array.isArray(ntpServers) && ntpServers.length === 0))) {
+      setStatusMessage("")
+      return
+    }
+
     if (status === "pending"){
       setRipeOnlyLocations([])
       setNtpOnlyLocations([])
@@ -548,7 +578,7 @@ export default function WorldMap ({probes, ntpServers, vantagePointInfo, status}
     } else if (status === "error") {
       setStatusMessage("Error loading RIPE data")
     }
-    }, [probes, status])
+    }, [probes, ntpServers, status])
 
   const probe_locations = probes?.map(x => x.probe_location) ?? []
   const icons = probes?.map(x => getIconByRTT(x.measurementData.RTT, x.got_results)) ?? []

@@ -14,9 +14,29 @@ const StatisticsDisplay: React.FC<StatisticsDisplayProps> = ({
   if (!data) return null;
 
   const calculateStats = (serverData: NTPData[]) => {
+    if (!serverData || serverData.length === 0) {
+      return {
+        min: "N/A",
+        max: "N/A",
+        avg: "N/A",
+      };
+    }
+
     const validValues = serverData
-      .map(d => d[selectedMeasurement])
-      .filter(value => value !== null && value !== undefined && !isNaN(value) && isFinite(value));
+      .map(d => {
+        if (selectedMeasurement === "RTT") {
+          return d.RTT;
+        } else {
+          return d.offset;
+        }
+      })
+      .filter((value): value is number => 
+        value !== null && 
+        value !== undefined && 
+        typeof value === 'number' &&
+        !isNaN(value) && 
+        isFinite(value)
+      );
 
     // show N/A if there are no values to show
     if (validValues.length === 0) {

@@ -15,6 +15,7 @@ interface HistoricalDataTabProps {
 const HistoricalDataTab: React.FC<HistoricalDataTabProps> = ({ data }) => {
   const [selMeasurement, setSelMeasurement] = useState<Measurement>("RTT");
   const [currentServer, setCurrentServer] = useState<string>("");
+  const [graphData, setGraphData] = useState<Map<string, NTPData[]> | null>(data);
 
   // Extract server name from the initial data prop
   useEffect(() => {
@@ -24,13 +25,18 @@ const HistoricalDataTab: React.FC<HistoricalDataTabProps> = ({ data }) => {
     }
   }, [data]);
 
+  // Update graphData when initial data changes
+  useEffect(() => {
+    setGraphData(data);
+  }, [data]);
+
   return (
     <div className="historical-data-tab">
       <Header />
       <div className="graph-statistics-container">
         <div className="data-display-container">
           <StatisticsDisplay
-            data={data}
+            data={graphData}
             selectedMeasurement={selMeasurement}
           />
           <div className="chart-box">
@@ -41,6 +47,7 @@ const HistoricalDataTab: React.FC<HistoricalDataTabProps> = ({ data }) => {
               legendDisplay={false}
               showTimeInput={true}
               existingData={data}
+              onDataChange={setGraphData}
             />
           </div>
         </div>

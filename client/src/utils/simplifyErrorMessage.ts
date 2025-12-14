@@ -54,6 +54,12 @@ export function simplifyErrorMessage(errorMessage: string | null | undefined): s
     return 'Rate limit exceeded';
   }
 
+  // Check for RIPE probe availability errors (when no probes match the criteria)
+  // Error format: ... 'pointer': '/probes' ... 'This list may not be empty'
+  if (error.includes('/probes') && error.includes('may not be empty')) {
+    return 'RIPE measurement failed: No probes available for the specified requirements';
+  }
+
   // If no pattern matches, return the first part of the error (before colon if present)
   // This gives a more readable error without all the technical details
   const colonIndex = errorMessage.indexOf(':');
